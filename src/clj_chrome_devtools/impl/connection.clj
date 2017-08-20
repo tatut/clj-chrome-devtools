@@ -40,8 +40,12 @@
 (defn connect
   ([] (connect "localhost" 9222))
   ([host port]
-   (let [url (fetch-ws-debugger-url host port)]
-     (ws/connect url :on-receive on-receive))))
+   (let [client (ws/client)
+         url (fetch-ws-debugger-url host port)]
+     (doto (.getPolicy client)
+       (.setMaxTextMessageSize (* 1024 1024)))
+     (.start client)
+     (ws/connect url :on-receive on-receive :client client))))
 
 (defn send-command [connection payload id callback]
   (swap! requests assoc id callback)
