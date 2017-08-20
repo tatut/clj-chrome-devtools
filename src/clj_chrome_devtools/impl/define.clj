@@ -62,8 +62,6 @@
                                     :error error#}))
                    (:result result#)))))))))
 
-(define-command-functions "Page")
-
 (comment
   ;; To regenerate the command namespaces, run this
   (doseq [{:keys [domain description]} (proto/all-domains)]
