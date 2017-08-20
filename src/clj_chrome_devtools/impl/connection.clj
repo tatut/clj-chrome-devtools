@@ -1,8 +1,9 @@
-(ns clj-chrome-devtools.connection
+(ns clj-chrome-devtools.impl.connection
   "The remote debugging WebSocket connection"
   (:require [gniazdo.core :as ws]
             [org.httpkit.client :as http]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [clj-chrome-devtools.impl.util :refer [camel->clojure]]))
 
 (defonce current-connection (atom nil))
 
@@ -15,7 +16,7 @@
     c))
 
 (defn- parse-json [string]
-  (cheshire/parse-string string true))
+  (cheshire/parse-string string (comp keyword camel->clojure)))
 
 (defn- on-receive [msg]
   (try
@@ -34,7 +35,7 @@
       :body
       parse-json
       first
-      :webSocketDebuggerUrl))
+      :web-socket-debugger-url))
 
 (defn connect
   ([] (connect "localhost" 9222))

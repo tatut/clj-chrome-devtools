@@ -1,4 +1,12 @@
 (ns clj-chrome-devtools.core
-  (:require [org.httpkit.client :as http]
-            [clojure.java.io :as io]
-            [cheshire.core :as cheshire]))
+  (:require [clj-chrome-devtools.impl.connection :as connection]))
+
+
+(def current-connection connection/current-connection)
+
+(defn set-current-connection!
+  "Set the globally used current connection"
+  [c]
+  (reset! connection/current-connection c))
+
+(def connect connection/connect)

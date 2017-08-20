@@ -1,19 +1,12 @@
-(ns clj-chrome-devtools.define
+(ns clj-chrome-devtools.impl.define
   "Macro for defining a domain of commands."
   (:require [clj-chrome-devtools.protocol-definitions :as proto]
-            [clj-chrome-devtools.connection :as connection]
+            [clj-chrome-devtools.impl.connection :as connection]
             [clojure.string :as str]
             [clojure.core.async :as async :refer [go <!! >!]]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clj-chrome-devtools.impl.util :refer [camel->clojure]]))
 
-(defn camel->clojure [string]
-  (-> string
-      ;; Add dashes before uppercase letters that come after a lowercase letter
-      (str/replace #"([a-z])([A-Z])"
-                   (fn [[_ lower upper]]
-                     (str lower "-" upper)))
-      ;; Lower case everything
-      (str/lower-case)))
 
 (def to-symbol (comp symbol camel->clojure))
 
@@ -41,7 +34,7 @@
      ~@(for [{:keys [name description parameters returns]} (proto/commands-for-domain domain)
              :let [fn-name (to-symbol name)
                    params (mapv (comp to-symbol :name) parameters)
-                   param-names (zipmap (map (comp keyword :name) parameters)
+                   param-names (zipmap (map (comp keyword camel->clojure :name) parameters)
                                        (map :name parameters))
                    [required-params optional-params] (split-with (comp not :optional) params)]]
          `(defn ~fn-name
@@ -80,5 +73,5 @@
             (str "(ns clj-chrome-devtools.commands." (str/lower-case clj-name) "\n"
                  (when description
                    (str "  " (pr-str description) "\n"))
-                 "  (:require [clj-chrome-devtools.define :refer [define-command-functions]]))\n"
+                 "  (:require [clj-chrome-devtools.impl.define :refer [define-command-functions]]))\n"
                  "(define-command-functions \"" domain "\")")))))
