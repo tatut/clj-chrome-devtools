@@ -9,10 +9,14 @@
        (cheshire/parse-string it true)))
 
 (def browser-protocol-json (load-json "browser_protocol.json"))
+(def js-protocol-json (load-json "js_protocol.json"))
+
+(defn all-domains []
+  (concat (:domains browser-protocol-json)
+          (:domains js-protocol-json)))
 
 (defn commands-for-domain [domain]
-  (->> browser-protocol-json
-       :domains
+  (->> (all-domains)
        (filter #(= (:domain %) domain))
        first
        :commands))
@@ -20,4 +24,4 @@
 (defn domains []
   (into #{}
         (map :domain)
-        (:domains browser-protocol-json)))
+        (all-domains)))

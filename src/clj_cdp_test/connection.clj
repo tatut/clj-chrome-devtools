@@ -18,10 +18,14 @@
   (cheshire/parse-string string true))
 
 (defn- on-receive [msg]
-  (let [{id :id :as response} (parse-json msg)
-        callback (@requests id)]
-    (swap! requests dissoc id)
-    (callback response)))
+  (try
+    (let [{id :id :as response} (parse-json msg)
+          callback (@requests id)]
+      (swap! requests dissoc id)
+      (callback response))
+    (catch Throwable t
+      (println "Exception in devtools WebSocket receive, msg: " msg
+               ", throwable: " t))))
 
 (defn- fetch-ws-debugger-url [host port]
   (-> (str "http://" host ":" port "/json/list")
