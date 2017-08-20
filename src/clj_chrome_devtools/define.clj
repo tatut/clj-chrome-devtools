@@ -71,13 +71,14 @@
 
 (define-command-functions "Page")
 
-;; To regenerate the command namespaces, run this
-(doseq [{:keys [domain description]} (proto/all-domains)]
-  (let [clj-name (camel->clojure domain)
-        file-name (str "src/clj_cdp_test/commands/" (str/lower-case (str/replace clj-name "-" "_")) ".clj")]
-    (spit file-name
-          (str "(ns clj-chrome-devtools.commands." (str/lower-case clj-name) "\n"
-               (when description
-                 (str "  " (pr-str description) "\n"))
-               "  (:require [clj-chrome-devtools.define :refer [define-command-functions]]))\n"
-               "(define-command-functions \"" domain "\")"))))
+(comment
+  ;; To regenerate the command namespaces, run this
+  (doseq [{:keys [domain description]} (proto/all-domains)]
+    (let [clj-name (camel->clojure domain)
+          file-name (str "src/clj_chrome_devtools/commands/" (str/lower-case (str/replace clj-name "-" "_")) ".clj")]
+      (spit file-name
+            (str "(ns clj-chrome-devtools.commands." (str/lower-case clj-name) "\n"
+                 (when description
+                   (str "  " (pr-str description) "\n"))
+                 "  (:require [clj-chrome-devtools.define :refer [define-command-functions]]))\n"
+                 "(define-command-functions \"" domain "\")")))))
