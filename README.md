@@ -5,6 +5,9 @@ Chrome DevTools Protocol. The protocol is based on a websocket connection betwee
 clojure and chrome. All the functions are automatically generated from the protocol
 specification JSON files.
 
+## API Docs
+
+See codox generated [API docs](https://tatut.github.io/clj-chrome-devtools/api/index.html).
 
 ## Example usage
 
