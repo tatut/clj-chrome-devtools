@@ -20,14 +20,22 @@
    :method name
    :params (set/rename-keys params parameter-names)})
 
+(defn process-doc [doc]
+  (some-> doc
+          (str/replace #"<code>" "`")
+          (str/replace #"</code>" "`")))
+
 (defn- describe-map-keys [ks]
-  (str/join "\n"
-            (map #(str (format "  :%-20s %s"
-                               (camel->clojure (:name %))
-                               (:description %))
-                       (when (:optional %)
-                         " (optional)"))
-                 ks)))
+  (let [max-key-length (reduce max 0 (map (comp count camel->clojure :name) ks))]
+    (str "\n\n  Key " (str/join (repeat (- max-key-length 2) " ")) "| Description "
+         "\n  " (str/join (repeat (+ 2 max-key-length) "-")) "|------------ \n"
+         (str/join "\n"
+                   (map #(str (format (str "  :%-" max-key-length "s | %s")
+                                      (camel->clojure (:name %))
+                                      (process-doc (:description %)))
+                              (when (:optional %)
+                                " (optional)"))
+                        ks)))))
 
 (defmacro define-command-functions [domain]
   `(do
@@ -38,7 +46,7 @@
                                        (map :name parameters))
                    [required-params optional-params] (split-with (comp not :optional) params)]]
          `(defn ~fn-name
-            ~(str description
+            ~(str (process-doc description)
                   (when-not (empty? parameters)
                     (str "\n\nParameters map keys:\n"
                          (describe-map-keys parameters)))
@@ -70,6 +78,6 @@
       (spit file-name
             (str "(ns clj-chrome-devtools.commands." (str/lower-case clj-name) "\n"
                  (when description
-                   (str "  " (pr-str description) "\n"))
+                   (str "  " (pr-str (process-doc description)) "\n"))
                  "  (:require [clj-chrome-devtools.impl.define :refer [define-command-functions]]))\n"
                  "(define-command-functions \"" domain "\")")))))
