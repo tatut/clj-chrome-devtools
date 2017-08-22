@@ -7,15 +7,9 @@
             [clojure.core.async :as async]
             [clojure.string :as str]))
 
+(defrecord Connection [ws-connection requests event-chan event-pub])
+
 (defonce current-connection (atom nil))
-
-;; Request id to callback
-(defonce requests (atom {}))
-
-;; Event pub/sub channel
-(defonce event-chan (async/chan))
-
-(defonce event-pub (async/pub event-chan (juxt :domain :event)))
 
 (defn get-current-connection []
   (let [c @current-connection]
@@ -25,26 +19,25 @@
 (defn- parse-json [string]
   (cheshire/parse-string string (comp keyword camel->clojure)))
 
-(defn- publish-event [msg]
-  (println "PUBLISH: " msg)
+(defn- publish-event [event-chan msg]
   (let [[domain event] (map (comp keyword camel->clojure)
                             (str/split (:method msg) #"\."))
         event {:domain domain
                :event event
                :params (:params msg)}]
-    (println " => " event)
+    (println "PUBLISH: " event)
     (async/go
       (async/>! event-chan event))))
 
-(defn listen-to
-  "Listen to an event from chrome. Domain and event are keywords.
-  Returns channel where events can be read from."
-  [domain event]
+(defn listen [{event-pub :event-pub} domain event]
   (let [ch (async/chan)]
     (async/sub event-pub [domain event] ch)
     ch))
 
-(defn- on-receive [msg]
+(defn unlisten [{event-pub :event-pub} domain event listening-ch]
+  (async/unsub event-pub [domain event] listening-ch))
+
+(defn- on-receive [requests event-chan msg]
   (try
     (let [{id :id :as json-msg} (parse-json msg)]
       (if id
@@ -53,7 +46,7 @@
           (swap! requests dissoc id)
           (async/thread (callback json-msg)))
         ;; This is an event
-        (publish-event json-msg)))
+        (publish-event event-chan json-msg)))
     (catch Throwable t
       (println "Exception in devtools WebSocket receive, msg: " msg
                ", throwable: " t))))
@@ -71,12 +64,27 @@
   ([] (connect "localhost" 9222))
   ([host port]
    (let [client (ws/client)
-         url (fetch-ws-debugger-url host port)]
+         url (fetch-ws-debugger-url host port)
+
+         ;; Request id to callback
+         requests (atom {})
+         
+         ;; Event pub/sub channel
+         event-chan (async/chan)
+         event-pub (async/pub event-chan (juxt :domain :event))]
+
+     ;; Configure max message size to 1mb (default 64kb is way too small)
      (doto (.getPolicy client)
        (.setMaxTextMessageSize (* 1024 1024)))
+     
      (.start client)
-     (ws/connect url :on-receive on-receive :client client))))
+     (->Connection (ws/connect url
+                     :on-receive (partial on-receive requests event-chan)
+                     :client client)
+                   requests
+                   event-chan
+                   event-pub))))
 
-(defn send-command [connection payload id callback]
+(defn send-command [{requests :requests con :ws-connection} payload id callback]
   (swap! requests assoc id callback)
-  (ws/send-msg connection (cheshire/encode payload)))
+  (ws/send-msg con (cheshire/encode payload)))
