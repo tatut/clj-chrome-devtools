@@ -25,7 +25,7 @@
         event {:domain domain
                :event event
                :params (:params msg)}]
-    (println "PUBLISH: " event)
+    ;(println "PUBLISH: " event)
     (async/go
       (async/>! event-chan event))))
 
