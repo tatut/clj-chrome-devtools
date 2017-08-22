@@ -5,6 +5,7 @@
             [clj-chrome-devtools.commands.page :as page]
             [clj-chrome-devtools.commands.input :as input]
             [clj-chrome-devtools.commands.runtime :as runtime]
+            [clj-chrome-devtools.commands.network :as network]
             [clj-chrome-devtools.events :as events]
             [clj-chrome-devtools.impl.connection :as connection]
             [clojure.core.async :as async :refer [go-loop go <!! <!]]
@@ -173,7 +174,6 @@
                                 " var r = this.getBoundingClientRect(); "
                                 " return {x: r.left + r.width/2, y: r.top + r.height/2}; "
                                 "}")]
-     (println "SCROLLED " ret)
      {:x (Math/round (double x))
       :y (Math/round (double y))})))
 
@@ -191,7 +191,7 @@
 (defn click
   ([node] (click @current-automation node))
   ([{c :connection :as ctx} node]
-   (println "NÄKYYKÖS " (visible ctx node))
+   (visible ctx node)
    (let [{:keys [x y]} (scroll-into-view ctx node)
          event {:x x :y y :button "left" :click-count 1}]
      (input/dispatch-mouse-event c (assoc event :type "mousePressed"))
@@ -223,6 +223,37 @@
               (-> % :value :value))
            (:result (runtime/get-properties c {:object-id object-id :own-properties false}))))))
 
+
+
+(defn file-download
+  "Run the given interaction-fn which will interact with the page and cause a file download.
+  Monitors network activity to receive a file where the request matches the given URL pattern.
+  Returns a map describing the downloaded file and also has the content."
+  ([url-pattern interaction-fn]
+   (file-download @current-automation url-pattern interaction-fn))
+  ([{c :connection :as ctx} url-pattern interaction-fn]
+   (network/enable c {})
+   (page/enable c {})
+   (let [response-ch (events/listen c :network :response-received)
+         timeout-ch (async/timeout (:navigate *wait-ms*))
+         file-request
+         (go-loop [[v ch] (async/alts! [response-ch timeout-ch])]
+           (cond
+             (= ch timeout-ch)
+             nil
+
+             (->> v :params :response :url (re-find url-pattern))
+             (:params v)
+
+             :default
+             (recur (async/alts! [response-ch timeout-ch]))))]
+     (interaction-fn)
+     (let [file (<!! file-request)]
+       (events/unlisten c :network :response-received response-ch)
+       (when file
+         ;; PENDING: get-response-body does not work for downloaded files
+         (:response file))))))
+
 (defn screenshot
   ([] (screenshot @current-automation))
   ([{c :connection}]
@@ -231,3 +262,10 @@
          :data decode
          (java.io.ByteArrayInputStream.)
          (io/copy (io/file "screenshot.png"))))))
+
+(defn set-attribute
+  ([node attribute-name attribute-value]
+   (set-attribute @current-automation node attribute-name attribute-value))
+  ([{c :connection :as ctx} node attribute-name attribute-value]
+   (dom/set-attribute-value c (merge node {:name attribute-name
+                                           :value attribute-value}))))
