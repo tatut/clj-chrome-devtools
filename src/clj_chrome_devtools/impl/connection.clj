@@ -52,13 +52,11 @@
                ", throwable: " t))))
 
 (defn- fetch-ws-debugger-url [host port]
-  (-> (str "http://" host ":" port "/json/list")
-      http/get
-      deref
-      :body
-      parse-json
-      first
-      :web-socket-debugger-url))
+  (let [response @(http/get (str "http://" host ":" port "/json/list"))
+        url (some-> response :body parse-json first :web-socket-debugger-url)]
+    (assert url (str "No chrome remote debugging URL found, response: "
+                     (pr-str response)))
+    url))
 
 (defn connect
   ([] (connect "localhost" 9222))
@@ -68,7 +66,7 @@
 
          ;; Request id to callback
          requests (atom {})
-         
+
          ;; Event pub/sub channel
          event-chan (async/chan)
          event-pub (async/pub event-chan (juxt :domain :event))]
@@ -76,7 +74,7 @@
      ;; Configure max message size to 1mb (default 64kb is way too small)
      (doto (.getPolicy client)
        (.setMaxTextMessageSize (* 1024 1024)))
-     
+
      (.start client)
      (->Connection (ws/connect url
                      :on-receive (partial on-receive requests event-chan)

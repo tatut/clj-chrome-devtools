@@ -32,6 +32,8 @@
       (finally (.close s)))))
 
 (defn launch-chrome [binary-path remote-debugging-port]
+  (println "Launching Chrome headless, binary: " binary-path
+           ", remote debugging port: " remote-debugging-port)
   (.exec (Runtime/getRuntime)
          (into-array String
                      [binary-path
@@ -52,7 +54,8 @@
                         {:host host :port port}))
 
         :default
-        (recur @(http/head url))))))
+        (do (Thread/sleep 100)
+            (recur @(http/head url)))))))
 
 (defn create-chrome-fixture
   ([] (create-chrome-fixture (find-chrome-binary)))
