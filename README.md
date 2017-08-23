@@ -11,6 +11,13 @@ specification JSON files.
 
 See codox generated [API docs](https://tatut.github.io/clj-chrome-devtools/api/index.html).
 
+All the low-level auto-generated commands from Chrome Devtools Protocol are in `clj-chrome-devtools.command.*`
+namespaces. Note: to use the low-level API you need to implement event handlers for listening to data Chrome sends
+the client.
+
+There is the beginnings of a rudimentary higher level API in `clj-chrome-devtools.automation`.
+There is also a `clojure.test` fixture to run tests with a fresh headless chrome in `clj-chrome-devtools.automation.fixture`.
+
 ## Example usage
 
 The following shows a simple REPL usage, navigating to a page and inspecting content.
