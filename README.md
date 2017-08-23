@@ -1,5 +1,7 @@
 # clj-chrome-devtools
 
+[![Clojars Project](https://img.shields.io/clojars/v/clj-chrome-devtools.svg)](https://clojars.org/clj-chrome-devtools)
+
 clj-chrome-devtools is a simple library for controlling a headless Chrome with the
 Chrome DevTools Protocol. The protocol is based on a websocket connection between
 clojure and chrome. All the functions are automatically generated from the protocol
@@ -8,6 +10,13 @@ specification JSON files.
 ## API Docs
 
 See codox generated [API docs](https://tatut.github.io/clj-chrome-devtools/api/index.html).
+
+All the low-level auto-generated commands from Chrome Devtools Protocol are in `clj-chrome-devtools.command.*`
+namespaces. Note: to use the low-level API you need to implement event handlers for listening to data Chrome sends
+the client.
+
+There is the beginnings of a rudimentary higher level API in `clj-chrome-devtools.automation`.
+There is also a `clojure.test` fixture to run tests with a fresh headless chrome in `clj-chrome-devtools.automation.fixture`.
 
 ## Example usage
 
