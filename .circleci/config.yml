@@ -19,6 +19,8 @@ jobs:
     steps:
       - checkout
 
+      - run: git submodule update --init
+
       # Download and cache dependencies
       - restore_cache:
           keys:
