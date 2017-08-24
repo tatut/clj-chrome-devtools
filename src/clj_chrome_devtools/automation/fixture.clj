@@ -41,21 +41,7 @@
                       "--disable-gpu"
                       (str "--remote-debugging-port=" remote-debugging-port)])))
 
-(defn- wait-for-remote-debugging-port [host port]
-  (let [wait-until (+ (System/currentTimeMillis) 30000)
-        url (str "http://" host ":" port "/json/version")]
-    (loop [response @(http/head url)]
-      (cond
-        (= (:status response) 200)
-        :ok
 
-        (> (System/currentTimeMillis) wait-until)
-        (throw (ex-info "Chrome remote debugging port not up in 30s"
-                        {:host host :port port}))
-
-        :default
-        (do (Thread/sleep 100)
-            (recur @(http/head url)))))))
 
 (defn create-chrome-fixture
   ([] (create-chrome-fixture (find-chrome-binary)))
@@ -64,9 +50,8 @@
    (fn [tests]
      (let [port (or remote-debugging-port (random-free-port))
            process (launch-chrome chrome-binary port)
-           _ (wait-for-remote-debugging-port "localhost" port)
            automation (automation/create-automation
-                       (connection/connect "localhost" port))
+                       (connection/connect "localhost" port 30000))
            prev-current-automation @automation/current-automation]
        (reset! automation/current-automation automation)
        (try

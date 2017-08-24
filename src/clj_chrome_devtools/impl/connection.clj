@@ -54,13 +54,36 @@
 (defn- fetch-ws-debugger-url [host port]
   (let [response @(http/get (str "http://" host ":" port "/json/list"))
         url (some-> response :body parse-json first :web-socket-debugger-url)]
-    (assert url (str "No chrome remote debugging URL found, response: "
-                     (pr-str response)))
+    (when-not url
+      (throw (ex-info "No chrome remote debugging URL found"
+                      {:host host :port port
+                       :response response})))
     url))
 
+(defn- wait-for-remote-debugging-port [host port max-wait-time-ms]
+  (let [wait-until (+ (System/currentTimeMillis) max-wait-time-ms)
+        url (str "http://" host ":" port "/json/version")]
+    (loop [response @(http/head url)]
+      (cond
+        (= (:status response) 200)
+        :ok
+
+        (> (System/currentTimeMillis) wait-until)
+        (throw (ex-info "Chrome remote debugging port not up"
+                        {:host host :port port
+                         :max-wait-time-ms max-wait-time-ms}))
+
+        :default
+        (do (Thread/sleep 100)
+            (recur @(http/head url)))))))
+
 (defn connect
+  "Connect to a running headless Chrome "
   ([] (connect "localhost" 9222))
-  ([host port]
+  ([host port] (connect host port nil))
+  ([host port max-wait-time-ms]
+   (when max-wait-time-ms
+     (wait-for-remote-debugging-port host port max-wait-time-ms))
    (let [client (ws/client)
          url (fetch-ws-debugger-url host port)
 
