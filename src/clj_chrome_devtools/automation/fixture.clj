@@ -31,31 +31,39 @@
       (.getLocalPort s)
       (finally (.close s)))))
 
-(defn launch-chrome [binary-path remote-debugging-port]
+(defn launch-chrome [binary-path remote-debugging-port options]
   (println "Launching Chrome headless, binary: " binary-path
-           ", remote debugging port: " remote-debugging-port)
-  (.exec (Runtime/getRuntime)
-         (into-array String
+           ", remote debugging port: " remote-debugging-port
+           ", options: " (pr-str options))
+  (let [args (remove nil?
                      [binary-path
-                      "--headless"
+                      (when (:headless? options) "--headless")
                       "--disable-gpu"
-                      (str "--remote-debugging-port=" remote-debugging-port)])))
+                      (str "--remote-debugging-port=" remote-debugging-port)])]
+    (.exec (Runtime/getRuntime)
+           (into-array String args
+                       ))))
 
 
+(defn default-options []
+  {:chrome-binary (find-chrome-binary)
+   :remote-debugging-port nil
+   :headless? true})
 
 (defn create-chrome-fixture
-  ([] (create-chrome-fixture (find-chrome-binary)))
-  ([chrome-binary] (create-chrome-fixture chrome-binary nil))
-  ([chrome-binary remote-debugging-port]
-   (fn [tests]
-     (let [port (or remote-debugging-port (random-free-port))
-           process (launch-chrome chrome-binary port)
-           automation (automation/create-automation
-                       (connection/connect "localhost" port 30000))
-           prev-current-automation @automation/current-automation]
-       (reset! automation/current-automation automation)
-       (try
-         (tests)
-         (finally
-           (reset! automation/current-automation prev-current-automation)
-           (.destroy process)))))))
+  ([] (create-chrome-fixture {}))
+  ([options]
+   (let [options (merge (default-options) options)
+         {:keys [chrome-binary remote-debugging-port headless?]} options]
+     (fn [tests]
+       (let [port (or remote-debugging-port (random-free-port))
+             process (launch-chrome chrome-binary port options)
+             automation (automation/create-automation
+                         (connection/connect "localhost" port 30000))
+             prev-current-automation @automation/current-automation]
+         (reset! automation/current-automation automation)
+         (try
+           (tests)
+           (finally
+             (reset! automation/current-automation prev-current-automation)
+             (.destroy process))))))))
