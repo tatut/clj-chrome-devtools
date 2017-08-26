@@ -41,12 +41,16 @@
 
 (defn- to-node-ref [ctx node-like]
   (let [conformed-node-like (s/conform ::node-like node-like)]
-    (assert (not= conformed-node-like :s/invalid)
+    (assert (not= conformed-node-like ::s/invalid)
             (s/explain-str ::node-like node-like))
     (let [[ref-or-selector _] conformed-node-like]
       (if (= :node-ref ref-or-selector)
         node-like
-        (sel1 ctx (selector->string node-like))))))
+        (let [selected (sel1 ctx (selector->string node-like))]
+          (if-not selected
+            (throw (ex-info "Unable to find element by selector"
+                            {:selector node-like}))
+            selected)))))))
 
 ;; Automation context wraps a low-level CDP connection with state handling
 (defrecord Automation [connection root])
@@ -134,15 +138,15 @@
          (map (fn [id]
                 {:node-id id})
               (:node-ids (dom/query-selector-all c {:node-id (root-node-id ctx)
-                                                    :selector selector}))))))
+                                                    :selector (selector->string selector)}))))))
 
 (defn sel1
-  "Select a single element by path."
-  ([path] (sel1 @current-automation path))
-  ([{c :connection :as ctx} path]
+  "Select a single element by selector."
+  ([selector] (sel1 @current-automation selector))
+  ([{c :connection :as ctx} selector]
    (wait :element {:node-id 0} nil
          (dom/query-selector c {:node-id (root-node-id ctx)
-                                :selector path}))))
+                                :selector (selector->string selector)}))))
 
 (defn bounding-box
   ([node] (bounding-box @current-automation node))
@@ -285,3 +289,22 @@
    (let [node (to-node-ref ctx node)]
      (dom/set-attribute-value c (merge node {:name attribute-name
                                              :value attribute-value})))))
+
+(defn focus
+  "Focus an input element"
+  ([node] (focus @current-automation node))
+  ([{c :connection :as ctx} node]
+   (let [node (to-node-ref ctx node)]
+     (dom/focus c node))))
+
+(defn input-text
+  "Type text to an input field."
+  ([node text]
+   (input-text @current-automation node text))
+  ([{c :connection :as ctx} node text]
+   (focus ctx node)
+   (doseq [ch text]
+     (input/dispatch-key-event c {:type "char"
+                                  :text ch
+                                  :key ch
+                                  :unmodified-text ch}))))
