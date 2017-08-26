@@ -28,6 +28,10 @@
   (load-test-page)
   (testing "Typing into an input field works"
     (is (= "NO GREETING YET" (text-of "#greeting")))
-    (input-text [:#greeter :input] "old friend")
-    (click "#greeter button")
-    (is (= "Hello, old friend!" (text-of [:#greeting])))))
+    (doseq [txt ["old friend"
+                 "foo@bar"
+                 "keys [ that require $ modifiers"]]
+      (input-text [:#greeter :input] txt)
+      (click "#greeter button")
+      (is (= (str "Hello, " txt "!") (text-of [:#greeting])))
+      (clear-text-input [:#greeter :input]))))
