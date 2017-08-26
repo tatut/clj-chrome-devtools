@@ -218,10 +218,7 @@
 (defn text-of
   ([node] (text-of @current-automation node))
   ([{c :connection :as ctx} node]
-   (let [object-id (:object-id (:object (dom/resolve-node c node)))]
-     (some #(when (= (:name %) "innerText")
-              (-> % :value :value))
-           (:result (runtime/get-properties c {:object-id object-id :own-properties false}))))))
+   (eval-node ctx node "function() { return this.innerText; }")))
 
 
 
