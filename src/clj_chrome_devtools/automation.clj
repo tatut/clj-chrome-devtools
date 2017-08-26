@@ -10,7 +10,43 @@
             [clj-chrome-devtools.impl.connection :as connection]
             [clojure.core.async :as async :refer [go-loop go <!! <!]]
             [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.spec.alpha :as s]))
+
+;; Define what a node reference is
+
+(s/def ::node-id integer?)
+(s/def ::node-ref (s/keys :req-un [::node-id]))
+
+;; A hiccup selector is a vector of hiccup-like elements
+;; [:div.some-class :a]
+(s/def ::hiccup-selector (s/coll-of keyword?))
+
+(s/def ::selector (s/or :css-selector string?
+                        :hiccup-selector ::hiccup-selector))
+
+(s/def ::node-like (s/or :node-ref ::node-ref
+                         :selector ::selector))
+
+(defn- selector->string [selector]
+  (let [conformed-selector (s/conform ::selector selector)]
+    (assert (not= conformed-selector ::s/invalid)
+            (s/explain-str ::selector selector))
+    (let [[selector-type selector-value] conformed-selector]
+      (if (= selector-type :css-selector)
+        selector-value
+        (str/join " " (map name selector-value))))))
+
+(declare sel1)
+
+(defn- to-node-ref [ctx node-like]
+  (let [conformed-node-like (s/conform ::node-like node-like)]
+    (assert (not= conformed-node-like :s/invalid)
+            (s/explain-str ::node-like node-like))
+    (let [[ref-or-selector _] conformed-node-like]
+      (if (= :node-ref ref-or-selector)
+        node-like
+        (sel1 ctx (selector->string node-like))))))
 
 ;; Automation context wraps a low-level CDP connection with state handling
 (defrecord Automation [connection root])
@@ -91,14 +127,14 @@
    (:node-id @(:root ctx))))
 
 (defn sel
-  "Select elements by path. Path is a string."
-  ([path] (sel @current-automation path))
-  ([{c :connection :as ctx} path]
+  "Select elements by selector."
+  ([selector] (sel @current-automation selector))
+  ([{c :connection :as ctx} selector]
    (wait :element '()
          (map (fn [id]
                 {:node-id id})
               (:node-ids (dom/query-selector-all c {:node-id (root-node-id ctx)
-                                                    :selector path}))))))
+                                                    :selector selector}))))))
 
 (defn sel1
   "Select a single element by path."
@@ -111,7 +147,8 @@
 (defn bounding-box
   ([node] (bounding-box @current-automation node))
   ([{c :connection :as ctx} node]
-   (let [{:keys [width height content]} (:model (dom/get-box-model c node))
+   (let [node (to-node-ref ctx node)
+         {:keys [width height content]} (:model (dom/get-box-model c node))
          [x y] content]
      {:x x :y y
       :width width :height height
@@ -126,31 +163,7 @@
         ;; :value only works for simple values
         :result :value)))
 
-(comment
-  (defn scroll-visible
-    "Make the given node visible by scrolling to it. Returns the bounding box in
-  screen coordinates (NOT page).
-  Tries to center the viewport around the element."
-    ([node] (scroll-visible @current-automation node))
-    ([{c :connection :as ctx} node]
-     (println "SCROLL-VISIBLE: " node ", resolved: " (dom/resolve-node c node))
-     (let [[ww wh] (evaluate ctx "[window.innerHeight, window.innerWidth]")
-           [center-x center-y] (:center (bounding-box ctx node))
-           scroll-x (int (- center-x (/ ww 2)))
-           scroll-y (int (- center-y (/ wh 2)))]
-       (println "SCROLL TO " scroll-x ", " scroll-y)
-       (evaluate ctx (format "window.scrollTo(%d,%d)" scroll-x scroll-y))
-       (let [{:keys [x y width height]} (bounding-box ctx node)
-             [sx sy] (evaluate ctx "[window.scrollX, window.scrollY]")
-             screen-x (- x sx)
-             screen-y (- y sy)]
-         (println "scroll at: " sx "," sy)
-         {:x screen-x
-          :y screen-y
-          :center [(Math/round (double (+ screen-x (/ width 2))))
-                   (Math/round (double (+ screen-y (/ height 2))))]})))))
-
-(defn- node-object-id [{c :connection} node]
+(defn- node-object-id [{c :connection :as ctx} node]
   (->> node (dom/resolve-node c) :object :object-id))
 
 (defn- eval-node [{c :connection :as ctx} node-or-object-id & fn-def-strings]
@@ -167,7 +180,8 @@
   Returns the center X/Y of the element."
   ([node] (scroll-into-view @current-automation node))
   ([{c :connection :as ctx} node]
-   (let [node-object-id (node-object-id ctx node)
+   (let [node (to-node-ref ctx node)
+         node-object-id (node-object-id ctx node)
          {:keys [x y] :as ret} (eval-node
                                 ctx node
                                 "function() { this.scrollIntoViewIfNeeded(); "
@@ -181,7 +195,8 @@
   "Wait for element to become visible, return true if element is visible, false otherwise."
   ([node] (visible @current-automation node))
   ([{c :connection :as ctx} node]
-   (let [object-id (node-object-id ctx node)]
+   (let [node (to-node-ref ctx node)
+         object-id (node-object-id ctx node)]
      (wait :render false
            (eval-node ctx object-id
                       "function() {"
@@ -191,17 +206,18 @@
 (defn click
   ([node] (click @current-automation node))
   ([{c :connection :as ctx} node]
-   (visible ctx node)
-   (let [{:keys [x y]} (scroll-into-view ctx node)
-         event {:x x :y y :button "left" :click-count 1}]
-     (input/dispatch-mouse-event c (assoc event :type "mousePressed"))
-     (input/dispatch-mouse-event c (assoc event :type "mouseReleased"))
+   (let [node (to-node-ref ctx node)]
+     (visible ctx node)
+     (let [{:keys [x y]} (scroll-into-view ctx node)
+           event {:x x :y y :button "left" :click-count 1}]
+       (input/dispatch-mouse-event c (assoc event :type "mousePressed"))
+       (input/dispatch-mouse-event c (assoc event :type "mouseReleased"))
 
-     ;; FIXME: Artificial slowdown, nodes that appear after clicking may be found
-     ;; by a selector, but cannot be resolved (aren't sent to us by chrome yet?).
-     ;; Implement a "dom" model that has all the nodes and keep resolved nodes
-     ;; in the implementation. Always resolve a node from the "dom"
-     (Thread/sleep 100))))
+       ;; FIXME: Artificial slowdown, nodes that appear after clicking may be found
+       ;; by a selector, but cannot be resolved (aren't sent to us by chrome yet?).
+       ;; Implement a "dom" model that has all the nodes and keep resolved nodes
+       ;; in the implementation. Always resolve a node from the "dom"
+       (Thread/sleep 100)))))
 
 (defn click-navigate
   "Click element and wait for navigation to be done."
@@ -213,12 +229,14 @@
 (defn html-of
   ([node] (html-of @current-automation node))
   ([{c :connection :as ctx} node]
-   (:outer-html (dom/get-outer-html c node))))
+   (let [node (to-node-ref ctx node)]
+     (:outer-html (dom/get-outer-html c node)))))
 
 (defn text-of
   ([node] (text-of @current-automation node))
   ([{c :connection :as ctx} node]
-   (eval-node ctx node "function() { return this.innerText; }")))
+   (let [node (to-node-ref ctx node)]
+     (eval-node ctx node "function() { return this.innerText; }"))))
 
 
 
@@ -264,5 +282,6 @@
   ([node attribute-name attribute-value]
    (set-attribute @current-automation node attribute-name attribute-value))
   ([{c :connection :as ctx} node attribute-name attribute-value]
-   (dom/set-attribute-value c (merge node {:name attribute-name
-                                           :value attribute-value}))))
+   (let [node (to-node-ref ctx node)]
+     (dom/set-attribute-value c (merge node {:name attribute-name
+                                             :value attribute-value})))))
