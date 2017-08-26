@@ -1,6 +1,16 @@
 <html>
   <head>
     <title>clj-chrome-devtools test page</title>
+    <script>
+      function increment() {
+        let e = document.querySelector("#counter");
+        e.innerText = 1 + parseInt(e.innerText);
+      }
+      function greet() {
+        let target = document.querySelector("#greeter input").value;
+        document.querySelector("#greeting").innerText = 'Hello, ' + target + '!';
+      }
+    </script>
   </head>
   <body>
     <ul id="thelist">
@@ -8,5 +18,36 @@
       <li>bar</li>
       <li>baz</li>
     </ul>
+    <div id="mythings">
+      <table class="thingtable">
+        <thead>
+          <tr>
+            <td>id</td>
+            <td>name</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Foo Barsky</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Alan Smithee</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="countertest">
+      <div id="counter">0</div>
+      <button class="increment" onclick="increment()"> increment </button>
+    </div>
+
+    <div id="greeter">
+        <input type="text" value="">
+        <button onclick="greet()"> greet </button>
+        <div id="greeting">NO GREETING YET</div>
+    </div>
   </body>
 </html>
