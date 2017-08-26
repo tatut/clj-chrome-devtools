@@ -50,7 +50,7 @@
           (if-not selected
             (throw (ex-info "Unable to find element by selector"
                             {:selector node-like}))
-            selected)))))))
+            selected))))))
 
 ;; Automation context wraps a low-level CDP connection with state handling
 (defrecord Automation [connection root])
@@ -308,3 +308,10 @@
                                   :text ch
                                   :key ch
                                   :unmodified-text ch}))))
+
+(defn clear-text-input
+  "Clear a text input value."
+  ([node] (clear-text-input @current-automation node))
+  ([{c :connection :as ctx} node]
+   (let [node (to-node-ref ctx node)]
+     (eval-node ctx node "function() { this.value = ''; }"))))
