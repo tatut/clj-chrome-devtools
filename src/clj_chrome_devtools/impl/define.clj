@@ -76,8 +76,6 @@
                    ~(spec-for-type property-type)))
             (s/def ~name-kw ~(spec-for-type t))))))
 
-(define-type-specs "DOM")
-
 (defmacro define-command-functions [domain]
   `(do
      ~@(for [{:keys [name description parameters returns]} (proto/commands-for-domain domain)
