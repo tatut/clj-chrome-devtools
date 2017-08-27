@@ -3,7 +3,10 @@
   (:require [clj-chrome-devtools.automation.fixture :refer [create-chrome-fixture]]
             [clj-chrome-devtools.automation :refer :all]
             [clojure.test :as t :refer [deftest is testing]]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.spec.test.alpha :as stest]))
+
+(stest/instrument)
 
 (defonce chrome-fixture (create-chrome-fixture))
 (t/use-fixtures :each chrome-fixture)
