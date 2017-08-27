@@ -50,6 +50,18 @@
              ~@(when-not (empty? opt-un)
                  `(:opt-un [~@(map (comp ns-kw :name) opt-un)])))))
 
+(defn spec-for-type [{type :type :as t}]
+  (if (:enum t)
+    ;; Enumerated type, just output the set of valid values
+    (into #{} (:enum t))
+
+    (case type
+      "object" (keys-spec (:properties t))
+      "string" `string?
+      "integer" `integer?
+      "number" `number?
+      "boolean" `boolean?
+      "array" `(s/coll-of ~(spec-for-type (:items t))))))
 
 (defmacro define-type-specs [domain]
   `(do
@@ -58,30 +70,13 @@
 
          `(do
             ;; If this is an object, create specs for basic type keys
-            ~@(for [{:keys [name type]} (:properties t)
-                    :when (#{"string" "number" "integer" "boolean"} type)]
+            ~@(for [{name :name :as property-type} (:properties t)
+                    :when (#{"string" "number" "integer" "boolean" "array"} type)]
                 `(s/def ~(ns-kw name)
-                   ~(case type
-                      "string" `string?
-                      "number" `number?
-                      "integer" `integer?
-                      "boolean" `boolean?)))
-            (s/def ~name-kw
-              ~(cond
-                 (:enum t)
-                 (into #{} (:enum t))
+                   ~(spec-for-type property-type)))
+            (s/def ~name-kw ~(spec-for-type t))))))
 
-                 (= "object" type)
-                 (keys-spec (:properties t))
-
-                 "string" `string?
-                 "integer" `integer?
-                 "number" `number?
-                 "boolean" `boolean?
-
-                 :default
-                 ::FIXME))))))
-
+(define-type-specs "DOM")
 
 (defmacro define-command-functions [domain]
   `(do
@@ -117,7 +112,16 @@
                                       :error error#}))
                      (:result result#))))))
             (s/fdef ~fn-name
-                    :args ~(keys-spec parameters)
+                    :args (s/or :no-args
+                                (s/cat)
+
+                                :just-params
+                                (s/cat :params ~(keys-spec parameters))
+
+                                :connection-and-params
+                                (s/cat
+                                 :connection (s/? connection/connection?)
+                                 :params ~(keys-spec parameters)))
                     :ret ~(keys-spec returns))))))
 
 (defmacro define-domain [domain]
