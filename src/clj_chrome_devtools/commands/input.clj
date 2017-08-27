@@ -1,3 +1,3 @@
 (ns clj-chrome-devtools.commands.input
-  (:require [clj-chrome-devtools.impl.define :refer [define-command-functions]]))
-(define-command-functions "Input")
+  (:require [clj-chrome-devtools.impl.define :refer [define-domain]]))
+(define-domain "Input")
