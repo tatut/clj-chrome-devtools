@@ -9,6 +9,9 @@
 
 (defrecord Connection [ws-connection requests event-chan event-pub])
 
+(defn connection? [c]
+  (instance? Connection c))
+
 (defonce current-connection (atom nil))
 
 (defn get-current-connection []
