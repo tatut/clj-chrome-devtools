@@ -7,5 +7,9 @@
       (str/replace #"([a-z])([A-Z])"
                    (fn [[_ lower upper]]
                      (str lower "-" upper)))
+
+      ;; Replace underscores with dashes
+      (str/replace #"_" "-")
+
       ;; Lower case everything
       (str/lower-case)))

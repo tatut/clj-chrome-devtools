@@ -15,11 +15,14 @@
 (defn all-domains []
   (mapcat (comp :domains load-json) protocol-files))
 
+(defn domain-by-name [domain]
+  (some #(when (= (:domain %) domain) %) (all-domains)))
+
 (defn commands-for-domain [domain]
-  (->> (all-domains)
-       (filter #(= (:domain %) domain))
-       first
-       :commands))
+  (:commands (domain-by-name domain)))
+
+(defn types-for-domain [domain]
+  (:types (domain-by-name domain)))
 
 (defn domains []
   (into #{}
