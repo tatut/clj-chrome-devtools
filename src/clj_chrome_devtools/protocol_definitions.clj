@@ -24,6 +24,9 @@
 (defn types-for-domain [domain]
   (:types (domain-by-name domain)))
 
+(defn events-for-domain [domain]
+  (:events (domain-by-name domain)))
+
 (defn domains []
   (into #{}
         (map :domain)

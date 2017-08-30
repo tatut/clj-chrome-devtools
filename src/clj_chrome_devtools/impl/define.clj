@@ -122,10 +122,25 @@
                                  :params ~(keys-spec parameters)))
                     :ret ~(keys-spec returns))))))
 
+#_(defmacro define-event-handlers [domain]
+  `(do
+     ~@(for [{:keys [name parameters description] :as event} (proto/events-for-domain domain)
+             :let [fn-name (symbol (str "on-" (camel->clojure name)))]]
+         `(defn ~fn-name
+            ~(str "Register handler for " name " event.\n" description "\n\n"
+                  (when-not (empty? parameters)
+                    (str "The handler will be called with a map with the following keys: "
+                         (describe-map-keys parameters)))
+                  "\n\nReturns a 0 arity function that will remove this handler when called.")
+            [connection# handler#]
+            ))))
+
+
 (defmacro define-domain [domain]
   `(do
      (define-type-specs ~domain)
-     (define-command-functions ~domain)))
+     (define-command-functions ~domain)
+     #_(define-event-handlers domain)))
 
 (comment
   ;; To regenerate the command namespaces, run this
