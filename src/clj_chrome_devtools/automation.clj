@@ -243,7 +243,6 @@
      (eval-node ctx node "function() { return this.innerText; }"))))
 
 
-
 (defn file-download
   "Run the given interaction-fn which will interact with the page and cause a file download.
   Monitors network activity to receive a file where the request matches the given URL pattern.
@@ -272,6 +271,15 @@
        (when file
          ;; PENDING: get-response-body does not work for downloaded files
          (:response file))))))
+
+(defn wait-request
+  "Run the given interaction-fn that causes the page to fetch some resource.
+  Monitor network activity to and wait for a request that matches the URL pattern.
+  Returns response information."
+  [url-pattern interaction-fn]
+  ;; FIXME: this is currently just an alias,
+  ;; when file-download can actually read the file contents, refactor this
+  (file-download url-pattern interaction-fn))
 
 (defn screenshot
   ([] (screenshot @current-automation))
