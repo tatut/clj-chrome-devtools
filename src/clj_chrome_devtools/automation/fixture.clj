@@ -13,11 +13,21 @@
    "google-chrome-stable"
    "google-chrome"
    "chromium-browser"
-   "chromium"])
+   "chromium"
+   "chrome.exe"])
+
+(defn- is-windows? []
+  (str/starts-with? (System/getenv "os") "Windows"))
 
 (defn binary-path [candidate]
-  ;; PENDING: what about Windows? PR welcome
-  (let [{:keys [exit out]} (sh/sh "which" candidate)]
+  (let [{:keys [exit out]}
+        (if (is-windows?)
+          ;; Note: usually this is the default location
+          ;; "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+          ;; "C:/Program Files (x86)/Google/Chrome Beta/Application/chrome.exe"
+          (sh/sh "where.exe" candidate)
+          ;; Assume Linux/MacOS
+          (sh/sh "which" candidate))]
     (when (= exit 0)
       (str/trim-newline out))))
 
