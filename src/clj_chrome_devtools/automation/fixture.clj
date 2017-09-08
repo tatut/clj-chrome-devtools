@@ -17,7 +17,8 @@
    "chrome.exe"])
 
 (defn- is-windows? []
-  (str/starts-with? (System/getenv "os") "Windows"))
+  (when-let [os (System/getenv "os")]
+    (str/starts-with? os "Windows")))
 
 (defn binary-path [candidate]
   (let [{:keys [exit out]}
