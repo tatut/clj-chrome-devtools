@@ -6,7 +6,8 @@
             [clojure.java.shell :as sh]
             [clojure.string :as str]
             [clj-chrome-devtools.impl.connection :as connection]
-            [org.httpkit.client :as http]))
+            [org.httpkit.client :as http]
+            [taoensso.timbre :as log]))
 
 (def possible-chrome-binaries
   ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -43,9 +44,9 @@
       (finally (.close s)))))
 
 (defn launch-chrome [binary-path remote-debugging-port options]
-  (println "Launching Chrome headless, binary: " binary-path
-           ", remote debugging port: " remote-debugging-port
-           ", options: " (pr-str options))
+  (log/trace "Launching Chrome headless, binary: " binary-path
+             ", remote debugging port: " remote-debugging-port
+             ", options: " (pr-str options))
   (let [args (remove nil?
                      [binary-path
                       (when (:headless? options) "--headless")
