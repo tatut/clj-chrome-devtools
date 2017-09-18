@@ -11,15 +11,15 @@
 (defonce chrome-fixture (create-chrome-fixture))
 (t/use-fixtures :each chrome-fixture)
 
-(defn load-test-page []
-  (to (str "file://" (.getAbsolutePath (io/file "test/test-page.html")))))
+(def test-page
+  (io/resource "test-page.html"))
 
 (deftest simple-page-load
-  (load-test-page)
+  (to test-page)
   (is (= (map text-of (sel "ul#thelist li")) '("foo" "bar" "baz"))))
 
 (deftest selectors
-  (load-test-page)
+  (to test-page)
   (testing "Selectors work in place of node-refences"
     (is (= "0" (text-of "#counter")))
     (click [:div.countertest :button.increment])
@@ -28,7 +28,7 @@
     (is (= "2" (text-of "div#counter")))))
 
 (deftest input
-  (load-test-page)
+  (to test-page)
   (testing "Typing into an input field works"
     (is (= "NO GREETING YET" (text-of "#greeting")))
     (doseq [txt ["old friend"
