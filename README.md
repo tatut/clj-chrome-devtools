@@ -31,6 +31,8 @@ There is also a `clojure.test` fixture to run tests with a fresh headless chrome
 
 ## Example usage
 
+For using the higher level API for screen scraping and browser testing, see [chrome_test.clj](https://github.com/tatut/clj-chrome-devtools/blob/master/test/clj_chrome_devtools/chrome_test.clj) file.
+
 The following shows a simple REPL usage, navigating to a page and inspecting content.
 The connection is the first parameter of all calls. You can also set the connection to use with
 `set-current-connection!` and omit the connection parameter for convenience.
