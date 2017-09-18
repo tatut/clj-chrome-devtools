@@ -5,7 +5,8 @@
             [cheshire.core :as cheshire]
             [clj-chrome-devtools.impl.util :refer [camel->clojure]]
             [clojure.core.async :as async]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
 (defrecord Connection [ws-connection requests event-chan event-pub])
 
@@ -28,7 +29,6 @@
         event {:domain domain
                :event event
                :params (:params msg)}]
-    ;(println "PUBLISH: " event)
     (async/go
       (async/>! event-chan event))))
 
@@ -51,8 +51,8 @@
         ;; This is an event
         (publish-event event-chan json-msg)))
     (catch Throwable t
-      (println "Exception in devtools WebSocket receive, msg: " msg
-               ", throwable: " t))))
+      (log/error "Exception in devtools WebSocket receive, msg: " msg
+                 ", throwable: " t))))
 
 (defn- fetch-ws-debugger-url [host port]
   (let [response @(http/get (str "http://" host ":" port "/json/list"))

@@ -8,6 +8,7 @@
             [clj-chrome-devtools.commands.network :as network]
             [clj-chrome-devtools.events :as events]
             [clj-chrome-devtools.impl.connection :as connection]
+            [taoensso.timbre :as log]
             [clojure.core.async :as async :refer [go-loop go <!! <!]]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -98,7 +99,7 @@
     (go-loop [v (<! ch)]
       (when v
         (let [root (:root (dom/get-document connection {}))]
-          (println "Document updated, new root: " root)
+          (log/trace "Document updated, new root: " root)
           (reset! root-atom root))
         (recur (<! ch))))
     (->Automation connection root-atom)))
