@@ -11,7 +11,8 @@
             [clojure.core.async :as async :refer [go-loop go <!! <!]]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s])
+  (:import (java.net URL URI)))
 
 ;; Define what a node reference is
 
@@ -54,6 +55,10 @@
 
 ;; Automation context wraps a low-level CDP connection with state handling
 (defrecord Automation [connection root])
+
+(defn automation?
+  [a]
+  (instance? Automation a))
 
 (defonce current-automation (atom nil))
 
@@ -111,6 +116,23 @@
   ([{c :connection}]
    {:node-id (-> (dom/get-document c {}) :root :node-id)}))
 
+(defprotocol WebAddress
+  "A web address that can be converted into a string."
+  (as-string [this]))
+
+(extend-protocol WebAddress
+  String
+  (as-string [this] this)
+  URI
+  (as-string [this] (str this))
+  URL
+  (as-string [this] (str this)))
+
+(s/def ::web-address
+  (s/or :url (partial instance? URL)
+        :uri (partial instance? URI)
+        :string (partial instance? String)))
+
 (defn to
   "Navigate to the given URL. Waits for browser load to be finished before returning."
   ([url]
@@ -119,11 +141,16 @@
    (reset! r nil)
    (page/enable c {})
    (events/with-event-wait c :page :frame-stopped-loading
-     (page/navigate c {:url url}))
+     (page/navigate c {:url (as-string url)}))
 
    ;; Wait for root element to have been updated
    (wait :navigate nil @r)))
 
+(s/fdef to
+        :args (s/cat :connection (s/? (s/or :automation automation?
+                                            :connection connection/connection?))
+                     :url ::web-address)
+        :ret nil?)
 
 (defn- root-node-id
   ([] (root-node-id @current-automation))
