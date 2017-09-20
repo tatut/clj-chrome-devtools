@@ -25,7 +25,9 @@
     (click [:div.countertest :button.increment])
     (is (= "1" (text-of [:#counter])))
     (click (sel1 "button.increment"))
-    (is (= "2" (text-of "div#counter")))))
+    (is (= "2" (text-of "div#counter")))
+    (double-click "button.reset")
+    (is (= "0" (text-of [:div#counter])))))
 
 (deftest input
   (to test-page)
