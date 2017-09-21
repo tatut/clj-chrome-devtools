@@ -6,6 +6,10 @@
         let e = document.querySelector("#counter");
         e.innerText = 1 + parseInt(e.innerText);
       }
+      function reset() {
+          let e = document.querySelector("#counter");
+          e.innerText = 0;
+      }
       function greet() {
         let target = document.querySelector("#greeter input").value;
         document.querySelector("#greeting").innerText = 'Hello, ' + target + '!';
@@ -42,6 +46,7 @@
     <div class="countertest">
       <div id="counter">0</div>
       <button class="increment" onclick="increment()"> increment </button>
+      <button class="reset" ondblclick="reset()"> reset </button>
     </div>
 
     <div id="greeter">

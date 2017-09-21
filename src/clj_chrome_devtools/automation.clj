@@ -235,21 +235,32 @@
                       "  return (this.offsetParent !== null);"
                       "}")))))
 
+(defn- do-click
+  [ctx node event-dispatch-fn]
+  (let [node (to-node-ref ctx node)]
+    (visible ctx node)
+    (let [{:keys [x y]} (scroll-into-view ctx node)
+          default-event-params {:x x :y y :button "left" :type "mousePressed" :click-count 1}]
+      (event-dispatch-fn default-event-params)
+      ;; FIXME: Artificial slowdown, nodes that appear after clicking may be found
+      ;; by a selector, but cannot be resolved (aren't sent to us by chrome yet?).
+      ;; Implement a "dom" model that has all the nodes and keep resolved nodes
+      ;; in the implementation. Always resolve a node from the "dom"
+      (Thread/sleep 100))))
+
 (defn click
   ([node] (click @current-automation node))
   ([{c :connection :as ctx} node]
-   (let [node (to-node-ref ctx node)]
-     (visible ctx node)
-     (let [{:keys [x y]} (scroll-into-view ctx node)
-           event {:x x :y y :button "left" :click-count 1}]
-       (input/dispatch-mouse-event c (assoc event :type "mousePressed"))
-       (input/dispatch-mouse-event c (assoc event :type "mouseReleased"))
+   (do-click ctx node (fn [event]
+                        (input/dispatch-mouse-event c event)
+                        (input/dispatch-mouse-event c (assoc event :type "mouseReleased"))))))
 
-       ;; FIXME: Artificial slowdown, nodes that appear after clicking may be found
-       ;; by a selector, but cannot be resolved (aren't sent to us by chrome yet?).
-       ;; Implement a "dom" model that has all the nodes and keep resolved nodes
-       ;; in the implementation. Always resolve a node from the "dom"
-       (Thread/sleep 100)))))
+(defn double-click
+  ([node] (double-click @current-automation node))
+  ([{c :connection :as ctx} node]
+   (do-click ctx node (fn [event]
+                        (input/dispatch-mouse-event c (assoc event :click-count 2))
+                        (input/dispatch-mouse-event c (assoc event :type "mouseReleased"))))))
 
 (defn click-navigate
   "Click element and wait for navigation to be done."
