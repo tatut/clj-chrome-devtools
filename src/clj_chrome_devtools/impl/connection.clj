@@ -106,6 +106,7 @@
 
     ;; Configure max message size to 1mb (default 64kb is way too small)
     (doto (.getPolicy client)
+      (.setIdleTimeout 0)
       (.setMaxTextMessageSize (* 1024 1024)))
 
     (.start client)
