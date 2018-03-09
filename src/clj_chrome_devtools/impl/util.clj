@@ -15,3 +15,10 @@
       (str/replace #"_" "-")
       ;; Lower case everything
       (str/lower-case)))
+
+(defn random-free-port []
+  (let [s (doto (java.net.ServerSocket. 0)
+            (.setReuseAddress true))]
+    (try
+      (.getLocalPort s)
+      (finally (.close s)))))

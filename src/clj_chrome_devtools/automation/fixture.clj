@@ -6,6 +6,7 @@
             [clojure.java.shell :as sh]
             [clojure.string :as str]
             [clj-chrome-devtools.impl.connection :as connection]
+            [clj-chrome-devtools.impl.util :refer [random-free-port]]
             [org.httpkit.client :as http]
             [taoensso.timbre :as log]))
 
@@ -36,12 +37,7 @@
 (defn find-chrome-binary []
   (some binary-path possible-chrome-binaries))
 
-(defn random-free-port []
-  (let [s (doto (java.net.ServerSocket. 0)
-            (.setReuseAddress true))]
-    (try
-      (.getLocalPort s)
-      (finally (.close s)))))
+
 
 (defn launch-chrome [binary-path remote-debugging-port options]
   (log/trace "Launching Chrome headless, binary: " binary-path
