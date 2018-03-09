@@ -13,7 +13,7 @@
   (:import (java.io File)))
 
 
-(defn load-project-clj
+(defn- load-project-clj
   "Load project.clj file and turn it into a map."
   []
   (->> "project.clj" slurp read-string
@@ -22,7 +22,7 @@
        (map vec)
        (into {})))
 
-(defn build-by-id [project-clj build-id]
+(defn- build-by-id [project-clj build-id]
   (->> project-clj :cljsbuild :builds
        (some #(when (= build-id (:id %))
                 %))))
@@ -40,14 +40,12 @@
    "    (reset! PRINTED []) "
    "    (clj->js v)))\n"
    "(defn run-chrome-tests []"
-   " (.log js/console \"Starting test run\")\n"
    " (set! *print-fn* (fn [& msg] (swap! PRINTED conj (apply str msg))))\n"
    " (run-tests " (str/join "\n"
-                            (map #(str "'" %) namespaces)) ")\n"
-   " (.log js/console \"Test run finished\"))"))
+                            (map #(str "'" %) namespaces)) ")"))
 
 (defn with-test-runner-source [namespaces source-path fun]
-  ;; Create a test runner source file in the fiven source path
+  ;; Create a test runner source file in the given source path
   ;; We have to put this in an existing source path as
   ;; we can't add a new source path dynamically (files therein
   ;; won't be found with io/resource). It is simpler to add
@@ -68,7 +66,8 @@
       #(cljs-build/build
         (cljs-build/inputs source-paths)
         (assoc compiler
-               :main "clj-chrome-devtools-runner")))
+               :main "clj-chrome-devtools-runner"
+               :warnings {:single-segment-namespace false})))
     (assert (.exists (io/file (:output-to compiler)))
             "build output file exists")
     {:js (:output-to compiler)
