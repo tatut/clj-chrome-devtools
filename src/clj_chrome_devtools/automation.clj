@@ -127,7 +127,10 @@
   URI
   (as-string [this] (str this))
   URL
-  (as-string [this] (str this)))
+  (as-string [this] (str this))
+  java.io.File
+  (as-string [this]
+    (str (.toURI this))))
 
 (s/def ::web-address
   (s/or :url (partial instance? URL)
