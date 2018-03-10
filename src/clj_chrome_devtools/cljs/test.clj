@@ -44,7 +44,7 @@
    " (run-tests " (str/join "\n"
                             (map #(str "'" %) namespaces)) "))"))
 
-(defn with-test-runner-source [namespaces source-path fun]
+(defn- with-test-runner-source [namespaces source-path fun]
   ;; Create a test runner source file in the given source path
   ;; We have to put this in an existing source path as
   ;; we can't add a new source path dynamically (files therein
