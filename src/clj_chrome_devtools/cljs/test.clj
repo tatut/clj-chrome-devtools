@@ -42,7 +42,7 @@
    "(defn run-chrome-tests []"
    " (set! *print-fn* (fn [& msg] (swap! PRINTED conj (apply str msg))))\n"
    " (run-tests " (str/join "\n"
-                            (map #(str "'" %) namespaces)) ")"))
+                            (map #(str "'" %) namespaces)) "))"))
 
 (defn with-test-runner-source [namespaces source-path fun]
   ;; Create a test runner source file in the given source path
