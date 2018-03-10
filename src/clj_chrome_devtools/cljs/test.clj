@@ -116,8 +116,8 @@
 (defn- read-console-log-messages []
   (loop []
     (let [msgs (automation/evaluate "clj_chrome_devtools_runner.get_printed()")]
-      (when-not (empty? msgs)
-        (println (str/join msgs)))
+      (doseq [m (mapcat #(str/split % #"\n") msgs)]
+        (println "[CLJS]" m))
 
       (when-not (some assert-test-result msgs)
         (Thread/sleep 100)
