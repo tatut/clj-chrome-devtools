@@ -87,7 +87,6 @@
   (let [file (io/file "." (subs uri 1))]
     (if (and (= request-method :get) (.canRead file))
       (do
-        #_(println "GET " (.getName file))
         {:status 200
          :headers {"Content-Type" (cond
                                     (str/ends-with? uri ".html")
