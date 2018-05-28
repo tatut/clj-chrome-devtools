@@ -1,3 +1,6 @@
+## 20180528
+- Add `:no-sandbox?` option (mikkoronkkomaki)
+
 ## 20180310
 - ClojureScript test runner as a Clojure test (see `clj-chrome-devtools.cljs.test` namespace)
 - Moved to date based versioning
