@@ -46,6 +46,7 @@
   (let [args (remove nil?
                      [binary-path
                       (when (:headless? options) "--headless")
+                      (when (:no-sandbox? options) "--no-sandbox")
                       "--disable-gpu"
                       (str "--remote-debugging-port=" remote-debugging-port)])]
     (.exec (Runtime/getRuntime)

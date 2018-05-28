@@ -122,27 +122,33 @@
         (Thread/sleep 100)
         (recur)))))
 
-(defn run-tests [{:keys [js js-directory]}]
-  (let [chrome-fixture (create-chrome-fixture {:headless? true})]
-    (chrome-fixture
-     (fn []
-       (let [con (.-connection @automation/current-automation)
-             port (random-free-port)
-             server (http-server/run-server file-handler {:port port})
-             dir (io/file ".")
-             f (File/createTempFile "test" ".html"
-                                    (io/file "."))]
-         (try
-           (spit f (test-page js))
-           (automation/to (str "http://localhost:" port "/" (.getName f)))
+(defn run-tests
+  ([build-output]
+   (run-tests build-output nil))
+  ([{:keys [js js-directory]} {:keys [no-sandbox?]}]
+   (let [chrome-fixture (create-chrome-fixture {:headless? true :no-sandbox? no-sandbox?})]
+     (chrome-fixture
+       (fn []
+         (let [con (.-connection @automation/current-automation)
+               port (random-free-port)
+               server (http-server/run-server file-handler {:port port})
+               dir (io/file ".")
+               f (File/createTempFile "test" ".html"
+                                      (io/file "."))]
+           (try
+             (spit f (test-page js))
+             (automation/to (str "http://localhost:" port "/" (.getName f)))
 
-           (read-console-log-messages)
+             (read-console-log-messages)
 
-           (server)
-           (finally
-             (io/delete-file f))))))))
+             (server)
+             (finally
+               (io/delete-file f)))))))))
 
-(defn build-and-test [build-id namespaces]
-  (let [project-clj (load-project-clj)
-        build-output (build project-clj build-id namespaces)]
-    (run-tests build-output)))
+(defn build-and-test
+  ([build-id namespaces]
+   (build-and-test build-id namespaces nil))
+  ([build-id namespaces options]
+   (let [project-clj (load-project-clj)
+         build-output (build project-clj build-id namespaces)]
+     (run-tests build-output options))))
