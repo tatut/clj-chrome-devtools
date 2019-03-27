@@ -91,23 +91,28 @@
       (throw (ex-info "No debuggable pages found"
                       {:pages pages}))))
 
+(defn- make-ws-client [ & [{:keys [idle-timeout max-msg-size-mb]
+                            :or {idle-timeout 0
+                                 max-msg-size-mb (* 1024 1024)}}]]
+  (let [client (ws/client)]
+    (doto (.getPolicy client)
+      (.setIdleTimeout idle-timeout)
+      (.setMaxTextMessageSize max-msg-size-mb))
+    client))
+
 (defn connect-url
   "Establish a websocket connection to web-socket-debugger-url, as given by
    inspectable-pages."
-  [web-socket-debugger-url]
+  [web-socket-debugger-url & [ws-client]]
   (assert web-socket-debugger-url)
-  (let [client     (ws/client)
+  (let [client     (or ws-client
+                       (make-ws-client))
         ;; Request id to callback
         requests   (atom {})
 
         ;; Event pub/sub channel
         event-chan (async/chan)
         event-pub  (async/pub event-chan (juxt :domain :event))]
-
-    ;; Configure max message size to 1mb (default 64kb is way too small)
-    (doto (.getPolicy client)
-      (.setIdleTimeout 0)
-      (.setMaxTextMessageSize (* 1024 1024)))
 
     (.start client)
     (->Connection (ws/connect web-socket-debugger-url
@@ -127,11 +132,13 @@
   ([host port]
    (connect host port 1000))
   ([host port max-wait-time-ms]
+   (connect host port max-wait-time-ms (make-ws-client)))
+  ([host port max-wait-time-ms ws-client]
    (when max-wait-time-ms
      (wait-for-remote-debugging-port host port max-wait-time-ms))
     (let [url (-> (inspectable-pages host port)
                   (first-inspectable-page))]
-      (connect-url url))))
+      (connect-url url ws-client))))
 
 (defn send-command [{requests :requests con :ws-connection} payload id callback]
   (swap! requests assoc id callback)
