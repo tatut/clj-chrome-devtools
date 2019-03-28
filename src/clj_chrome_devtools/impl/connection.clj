@@ -91,9 +91,12 @@
       (throw (ex-info "No debuggable pages found"
                       {:pages pages}))))
 
-(defn- make-ws-client [ & [{:keys [idle-timeout max-msg-size-mb]
-                            :or {idle-timeout 0
-                                 max-msg-size-mb (* 1024 1024)}}]]
+(defn make-ws-client
+  "Constructs ws client. Idle timeout defaults to 0, which means keep it
+  alive for the session. The `max-msg-size-mb` defaults to 1MB."
+  [ & [{:keys [idle-timeout max-msg-size-mb]
+        :or {idle-timeout 0
+             max-msg-size-mb (* 1024 1024)}}]]
   (let [client (ws/client)]
     (doto (.getPolicy client)
       (.setIdleTimeout idle-timeout)

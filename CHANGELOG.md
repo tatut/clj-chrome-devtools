@@ -1,3 +1,6 @@
+## 20190328
+- Made ws client optionally configurable
+
 ## 20180528
 - Add `:no-sandbox?` option (mikkoronkkomaki)
 
