@@ -1,0 +1,5 @@
+{:deps {http-kit               {:mvn/version "2.2.0"}
+        cheshire               {:mvn/version "5.8.0"}
+        stylefruits/gniazdo    {:mvn/version "1.0.1"}
+        org.clojure/core.async {:mvn/version "0.4.474"}
+        com.taoensso/timbre    {:mvn/version "4.10.0"}}}

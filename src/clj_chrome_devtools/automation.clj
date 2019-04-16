@@ -156,11 +156,6 @@
                      :url ::web-address)
         :ret nil?)
 
-(defn- root-node-id
-  ([] (root-node-id @current-automation))
-  ([ctx]
-   (:node-id @(:root ctx))))
-
 (defn sel
   "Select elements by selector."
   ([selector] (sel @current-automation selector))
@@ -168,16 +163,16 @@
    (wait :element '()
          (map (fn [id]
                 {:node-id id})
-              (:node-ids (dom/query-selector-all c {:node-id (root-node-id ctx)
-                                                    :selector (selector->string selector)}))))))
+              (:node-ids (dom/query-selector-all c (merge (root ctx)
+                                                          {:selector (selector->string selector)})))))))
 
 (defn sel1
   "Select a single element by selector."
   ([selector] (sel1 @current-automation selector))
   ([{c :connection :as ctx} selector]
    (wait :element {:node-id 0} nil
-         (dom/query-selector c {:node-id (root-node-id ctx)
-                                :selector (selector->string selector)}))))
+         (dom/query-selector c (merge (root ctx)
+                                      {:selector (selector->string selector)})))))
 
 (defn bounding-box
   ([node] (bounding-box @current-automation node))
