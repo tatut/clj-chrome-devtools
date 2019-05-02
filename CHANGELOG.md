@@ -1,3 +1,6 @@
+## 20190502
+- Deps update release
+
 ## 20190329
 - Made ws client optionally configurable
 
