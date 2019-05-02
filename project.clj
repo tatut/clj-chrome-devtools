@@ -1,4 +1,4 @@
-(defproject clj-chrome-devtools "20190329"
+(defproject clj-chrome-devtools "20190502"
   :description "Clojure API for Chrome DevTools remote"
   :license {:name "MIT License"}
   :url "https://github.com/tatut/clj-chrome-devtools"
