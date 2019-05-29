@@ -1,3 +1,6 @@
+## 20190529
+- More reliable project.clj loading in cljs test runner
+
 ## 20190502
 - Deps update release
 

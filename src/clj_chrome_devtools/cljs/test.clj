@@ -13,10 +13,24 @@
   (:import (java.io File)))
 
 
+(defn- find-defproject [file]
+  (with-open [in (java.io.PushbackReader. (io/reader file))]
+    (loop [form (read in false ::eof)]
+      (cond
+        (= ::eof form)
+        (throw (ex-info "Can't find defproject form" {:file file}))
+
+
+        (and (coll? form) (= (first form) 'defproject))
+        form
+
+        :else
+        (recur (read in))))))
+
 (defn- load-project-clj
   "Load project.clj file and turn it into a map."
   []
-  (->> "project.clj" slurp read-string
+  (->> "project.clj" find-defproject
        (drop 3) ;; remove defproject, name and version
        (partition 2) ;; take top level :key val pairs
        (map vec)
