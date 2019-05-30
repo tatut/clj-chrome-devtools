@@ -33,5 +33,6 @@
 (aset js/window "screenshot" screenshot)
 
 (defn run-chrome-tests []
+  (aset js/window "CLJ_TESTS_STARTED" true)
   (set! *print-fn* (fn [& msg] (swap! PRINTED conj (apply str msg))))
   (run-tests __TEST_NAMESPACES__ ))

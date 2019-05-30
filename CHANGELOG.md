@@ -1,3 +1,13 @@
+## 20190530.1
+- Add :verbose? flag to test runner (for better troubleshooting)
+- Add :ring-handler flag to test runner (if tests need to load some resources)
+- Detect if test page has error before tests are started
+
+## 20190530
+- Ability to take screenshots in cljs tests (use `(js/screenshot)`)
+- Combine multiple screenshots to GIF animation
+
+
 ## 20190529
 - More reliable project.clj loading in cljs test runner
 

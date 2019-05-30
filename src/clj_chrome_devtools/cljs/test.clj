@@ -14,7 +14,17 @@
   (:import (java.io File)))
 
 
+
+(defn no-op-log [& args]
+  nil)
+
+(defn println-log [& args]
+  (println (str/join " " args)))
+
+(def ^:dynamic log no-op-log)
+
 (defn- find-defproject [file]
+  (log "Loading leiningen project from: " file)
   (with-open [in (java.io.PushbackReader. (io/reader file))]
     (loop [form (read in false ::eof)]
       (cond
@@ -23,7 +33,9 @@
 
 
         (and (coll? form) (= (first form) 'defproject))
-        form
+        (do
+          (log "Found defproject: " (nth form 1) (nth form 2))
+          form)
 
         :else
         (recur (read in))))))
@@ -45,6 +57,7 @@
 (defn- test-runner-forms
   "ClojureScript forms for test runner"
   [namespaces]
+  (log "Generating test runner forms for namespaces: " namespaces)
   (-> "clj_chrome_devtools_runner.tpl"
       io/resource slurp
       (str/replace "__REQUIRE_NAMESPACES__"
@@ -70,7 +83,7 @@
 (defn build [project-clj build-id test-runner-namespaces]
   (let [{:keys [source-paths compiler] :as build}
         (build-by-id project-clj build-id)]
-
+    (log "Building ClojureScript, source paths: " source-paths)
     (with-test-runner-source test-runner-namespaces (last source-paths)
       #(cljs-build/build
         (cljs-build/inputs source-paths)
@@ -83,16 +96,11 @@
      :js-directory (:output-dir compiler)}))
 
 (defn- test-page [js]
-  (str "<html>"
-       "  <head>"
-       "  </head>"
-       "  <body onload=\"clj_chrome_devtools_runner.run_chrome_tests();\">"
-       "    <script type=\"text/javascript\" src=\"" js "\">"
-       "    </script>"
-       "  </body>"
-       "</html>"))
+  (-> "test-page.tpl" io/resource slurp
+      (str/replace "__JS__" js)))
 
 (defn- file-handler [{:keys [uri request-method] :as req}]
+  (log "REQUEST: " uri)
   (let [file (io/file "." (subs uri 1))]
     (if (and (= request-method :get) (.canRead file))
       {:status 200
@@ -121,24 +129,37 @@
       true)))
 
 (defn- poll-test-execution []
-  (loop [screenshots []]
-    (if-let [screenshot-file-name (automation/evaluate "window.CLJ_SCREENSHOT_NAME || null")]
-      (do
-        ;; Take screenshot if requested
-        (println "Taking screenshot to:" screenshot-file-name)
-        (automation/screenshot @automation/current-automation screenshot-file-name)
-        (automation/evaluate "window.CLJ_SCREENSHOT_NAME = null")
-        (automation/evaluate "window.CLJ_SCREENSHOT_RESOLVE(true)")
-        (recur (conj screenshots screenshot-file-name)))
-      (let [msgs (automation/evaluate "clj_chrome_devtools_runner.get_printed()")]
-        (doseq [m (mapcat #(str/split % #"\n") msgs)]
-          (println "[CLJS]" m))
+  (loop [started? false
+         screenshots []]
+    (if (not started?)
+      ;; Tests have not started yet, check for fatal error or start flag
+      (if-let [fatal-error (automation/evaluate "window['CLJ_FATAL_ERROR'] || null")]
+        (throw (ex-info "Test page had error before tests were started." {:error fatal-error}))
 
-        (if-not (some assert-test-result msgs)
+        (if (automation/evaluate "window['CLJ_TESTS_STARTED'] || false")
+          (recur true screenshots)
           (do
             (Thread/sleep 100)
-            (recur screenshots))
-          screenshots)))))
+            (recur false screenshots))))
+
+      ;; Tests have started, poll for screenshots and printed output
+      (if-let [screenshot-file-name (automation/evaluate "window['CLJ_SCREENSHOT_NAME'] || null")]
+        (do
+          ;; Take screenshot if requested
+          (log "Taking screenshot to:" screenshot-file-name)
+          (automation/screenshot @automation/current-automation screenshot-file-name)
+          (automation/evaluate "window.CLJ_SCREENSHOT_NAME = null")
+          (automation/evaluate "window.CLJ_SCREENSHOT_RESOLVE(true)")
+          (recur started? (conj screenshots screenshot-file-name)))
+        (let [msgs (automation/evaluate "clj_chrome_devtools_runner.get_printed()")]
+          (doseq [m (mapcat #(str/split % #"\n") msgs)]
+            (println "[CLJS]" m))
+
+          (if-not (some assert-test-result msgs)
+            (do
+              (Thread/sleep 100)
+              (recur started? screenshots))
+            screenshots))))))
 
 (defn output-screenshot-videos [screenshots framerate]
   (let [video-names (into #{}
@@ -161,32 +182,48 @@
 (defn run-tests
   ([build-output]
    (run-tests build-output nil))
-  ([{:keys [js js-directory]} {:keys [no-sandbox? screenshot-video? framerate]}]
-   (let [chrome-fixture (create-chrome-fixture {:headless? true :no-sandbox? no-sandbox?})]
+  ([{:keys [js js-directory]} {:keys [headless? no-sandbox? screenshot-video? framerate
+                                      ring-handler]}]
+   (log "Run compiled js test file:" js)
+   (let [chrome-fixture (create-chrome-fixture {:headless? (if (some? headless?)
+                                                             headless?
+                                                             true)
+                                                :no-sandbox? no-sandbox?})]
      (chrome-fixture
-       (fn []
-         (let [con (.-connection @automation/current-automation)
-               port (random-free-port)
-               server (http-server/run-server file-handler {:port port})
-               dir (io/file ".")
-               f (File/createTempFile "test" ".html"
-                                      (io/file "."))]
-           (try
-             (spit f (test-page js))
-             (automation/to (str "http://localhost:" port "/" (.getName f)))
+      (fn []
+        (log "Chrome launched")
+        (let [con (.-connection @automation/current-automation)
+              port (random-free-port)
+              server (http-server/run-server (fn [req]
+                                               (or (and ring-handler (ring-handler req))
+                                                   (file-handler req)))
+                                             {:port port})
+              dir (io/file ".")
+              f (File/createTempFile "test" ".html" (io/file "."))
+              url (str "http://localhost:" port "/" (.getName f))]
+          (try
+            (spit f (test-page js))
 
-             (let [screenshots (poll-test-execution)]
-               (when screenshot-video?
-                 (output-screenshot-videos screenshots (or framerate 2))))
+            (log "Navigate to:" url)
+            (automation/to url)
 
-             (server)
-             (finally
-               (io/delete-file f)))))))))
+            (log "Wait for test output")
+            (let [screenshots (poll-test-execution)]
+              (when screenshot-video?
+                (output-screenshot-videos screenshots (or framerate 2))))
+
+            (log "Tests done, cleanup")
+            (server)
+            (finally
+              (io/delete-file f)))))))))
 
 (defn build-and-test
   ([build-id namespaces]
    (build-and-test build-id namespaces nil))
   ([build-id namespaces options]
-   (let [project-clj (load-project-clj)
-         build-output (build project-clj build-id namespaces)]
-     (run-tests build-output options))))
+   (binding [log (if (:verbose? options)
+                   println-log
+                   no-op-log)]
+     (let [project-clj (load-project-clj)
+           build-output (build project-clj build-id namespaces)]
+       (run-tests build-output options)))))
