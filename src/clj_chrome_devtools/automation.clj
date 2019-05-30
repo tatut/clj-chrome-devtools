@@ -319,13 +319,16 @@
   (file-download url-pattern interaction-fn))
 
 (defn screenshot
-  ([] (screenshot @current-automation))
-  ([{c :connection}]
+  ([]
+   (screenshot @current-automation))
+  ([automation]
+   (screenshot automation "screenshot.png"))
+  ([{c :connection} filename]
    (let [decode #(.decode (java.util.Base64/getDecoder) %)]
      (-> (page/capture-screenshot c {})
          :data decode
          (java.io.ByteArrayInputStream.)
-         (io/copy (io/file "screenshot.png"))))))
+         (io/copy (io/file filename))))))
 
 (defn set-attribute
   ([node attribute-name attribute-value]

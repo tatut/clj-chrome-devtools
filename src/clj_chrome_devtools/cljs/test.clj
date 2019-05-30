@@ -9,7 +9,8 @@
             [clj-chrome-devtools.impl.util :refer [random-free-port]]
             [org.httpkit.server :as http-server]
             [clojure.string :as str]
-            [clojure.test])
+            [clojure.test]
+            [clojure.java.shell :as sh])
   (:import (java.io File)))
 
 
@@ -44,19 +45,13 @@
 (defn- test-runner-forms
   "ClojureScript forms for test runner"
   [namespaces]
-  (str
-   "(ns clj-chrome-devtools-runner
-      (:require [cljs.test :refer [run-tests]]
-                " (str/join "\n" namespaces) "))\n"
-   "(def PRINTED (atom []))\n"
-   "(defn get-printed [] "
-   "  (let [v @PRINTED] "
-   "    (reset! PRINTED []) "
-   "    (clj->js v)))\n"
-   "(defn run-chrome-tests []"
-   " (set! *print-fn* (fn [& msg] (swap! PRINTED conj (apply str msg))))\n"
-   " (run-tests " (str/join "\n"
-                            (map #(str "'" %) namespaces)) "))"))
+  (-> "clj_chrome_devtools_runner.tpl"
+      io/resource slurp
+      (str/replace "__REQUIRE_NAMESPACES__"
+                   (str/join "\n        " namespaces))
+      (str/replace "__TEST_NAMESPACES__"
+                   (str/join "\n         "
+                             (map #(str "'" %) namespaces)))))
 
 (defn- with-test-runner-source [namespaces source-path fun]
   ;; Create a test runner source file in the given source path
@@ -100,18 +95,17 @@
 (defn- file-handler [{:keys [uri request-method] :as req}]
   (let [file (io/file "." (subs uri 1))]
     (if (and (= request-method :get) (.canRead file))
-      (do
-        {:status 200
-         :headers {"Content-Type" (cond
-                                    (str/ends-with? uri ".html")
-                                    "text/html"
+      {:status 200
+       :headers {"Content-Type" (cond
+                                  (str/ends-with? uri ".html")
+                                  "text/html"
 
-                                    (str/ends-with? uri ".js")
-                                    "application/javascript"
+                                  (str/ends-with? uri ".js")
+                                  "application/javascript"
 
-                                    :default
-                                    "application/octet-stream")}
-         :body (slurp file)})
+                                  :else
+                                  "application/octet-stream")}
+       :body (slurp file)}
 
       {:status 404})))
 
@@ -126,20 +120,48 @@
               "ClojureScript tests had failures or errors, see previous output for details.")
       true)))
 
-(defn- read-console-log-messages []
-  (loop []
-    (let [msgs (automation/evaluate "clj_chrome_devtools_runner.get_printed()")]
-      (doseq [m (mapcat #(str/split % #"\n") msgs)]
-        (println "[CLJS]" m))
+(defn- poll-test-execution []
+  (loop [screenshots []]
+    (if-let [screenshot-file-name (automation/evaluate "window.CLJ_SCREENSHOT_NAME || null")]
+      (do
+        ;; Take screenshot if requested
+        (println "Taking screenshot to:" screenshot-file-name)
+        (automation/screenshot @automation/current-automation screenshot-file-name)
+        (automation/evaluate "window.CLJ_SCREENSHOT_NAME = null")
+        (automation/evaluate "window.CLJ_SCREENSHOT_RESOLVE(true)")
+        (recur (conj screenshots screenshot-file-name)))
+      (let [msgs (automation/evaluate "clj_chrome_devtools_runner.get_printed()")]
+        (doseq [m (mapcat #(str/split % #"\n") msgs)]
+          (println "[CLJS]" m))
 
-      (when-not (some assert-test-result msgs)
-        (Thread/sleep 100)
-        (recur)))))
+        (if-not (some assert-test-result msgs)
+          (do
+            (Thread/sleep 100)
+            (recur screenshots))
+          screenshots)))))
+
+(defn output-screenshot-videos [screenshots framerate]
+  (let [video-names (into #{}
+                          (keep #(second (re-matches #"^([^\d]+)(\d+)\.png$" %)))
+                          screenshots)]
+    (loop [[video-name & video-names] video-names]
+      (when video-name
+        (let [input (str video-name "%d.png")
+              output (str video-name ".gif")
+              cmd ["ffmpeg" "-framerate" "2" "-y" "-i" input output]]
+          (println "Generate video " output)
+          (let [{exit :exit err :err} (apply sh/sh cmd)]
+            (if (zero? exit)
+              (recur video-names)
+              (println "Failed to generate video with command: \n  > "
+                       (str/join " " cmd)
+                       "\n Check ffmpeg installation, subprocess err: \n"
+                       err))))))))
 
 (defn run-tests
   ([build-output]
    (run-tests build-output nil))
-  ([{:keys [js js-directory]} {:keys [no-sandbox?]}]
+  ([{:keys [js js-directory]} {:keys [no-sandbox? screenshot-video? framerate]}]
    (let [chrome-fixture (create-chrome-fixture {:headless? true :no-sandbox? no-sandbox?})]
      (chrome-fixture
        (fn []
@@ -153,7 +175,9 @@
              (spit f (test-page js))
              (automation/to (str "http://localhost:" port "/" (.getName f)))
 
-             (read-console-log-messages)
+             (let [screenshots (poll-test-execution)]
+               (when screenshot-video?
+                 (output-screenshot-videos screenshots (or framerate 2))))
 
              (server)
              (finally
