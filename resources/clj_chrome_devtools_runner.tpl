@@ -14,6 +14,7 @@
 (defn screenshot-file-name []
   (let [test-name (-> (cljs.test/get-current-env) :testing-vars first meta :name)]
     (str test-name
+         "-"
          (:number (swap! screenshot-number
                          (fn [{:keys [name number]}]
                            {:name test-name

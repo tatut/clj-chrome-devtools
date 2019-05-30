@@ -142,11 +142,11 @@
 
 (defn output-screenshot-videos [screenshots framerate]
   (let [video-names (into #{}
-                          (keep #(second (re-matches #"^([^\d]+)(\d+)\.png$" %)))
+                          (keep #(second (re-matches #"^([^\d]+)-(\d+)\.png$" %)))
                           screenshots)]
     (loop [[video-name & video-names] video-names]
       (when video-name
-        (let [input (str video-name "%d.png")
+        (let [input (str video-name "-%d.png")
               output (str video-name ".gif")
               cmd ["ffmpeg" "-framerate" "2" "-y" "-i" input output]]
           (println "Generate video " output)
