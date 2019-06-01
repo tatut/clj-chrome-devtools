@@ -9,7 +9,7 @@
             [clj-chrome-devtools.impl.util :refer [random-free-port]]
             [org.httpkit.server :as http-server]
             [clojure.string :as str]
-            [clojure.test]
+            [clojure.test :refer [is]]
             [clojure.java.shell :as sh])
   (:import (java.io File)))
 
@@ -121,12 +121,14 @@
        :private true}
   final-test-report-pattern #"(\d+) failures, (\d+) errors.")
 
-(defn- assert-test-result [msg]
+(defn- test-result [msg]
   (let [[match errors failures] (re-matches final-test-report-pattern msg)]
     (when match
-      (assert (= "0" errors failures)
-              "ClojureScript tests had failures or errors, see previous output for details.")
-      true)))
+      (if (= "0" errors failures)
+        :ok
+        :fail
+        ;"ClojureScript tests had failures or errors, see previous output for details."
+        ))))
 
 (defn- poll-test-execution []
   (loop [started? false
@@ -155,13 +157,14 @@
           (doseq [m (mapcat #(str/split % #"\n") msgs)]
             (println "[CLJS]" m))
 
-          (if-not (some assert-test-result msgs)
+          (if-let [result (some test-result msgs)]
+            {:result result
+             :screenshots screenshots}
             (do
               (Thread/sleep 100)
-              (recur started? screenshots))
-            screenshots))))))
+              (recur started? screenshots))))))))
 
-(defn output-screenshot-videos [screenshots framerate]
+(defn output-screenshot-videos [screenshots framerate loop-video?]
   (let [video-names (into #{}
                           (keep #(second (re-matches #"^([^\d]+)-(\d+)\.png$" %)))
                           screenshots)]
@@ -169,7 +172,11 @@
       (when video-name
         (let [input (str video-name "-%d.png")
               output (str video-name ".png")
-              cmd ["ffmpeg" "-framerate" (str framerate) "-y" "-i" input "-f" "apng" "-plays" "0" output]]
+              cmd ["ffmpeg"
+                   "-framerate" (str framerate)
+                   "-y" "-i" input "-f" "apng"
+                   "-plays" (if loop-video? "0" "1")
+                   output]]
           (println "Generate video " output)
           (let [{exit :exit err :err} (apply sh/sh cmd)]
             (if (zero? exit)
@@ -182,7 +189,8 @@
 (defn run-tests
   ([build-output]
    (run-tests build-output nil))
-  ([{:keys [js js-directory]} {:keys [headless? no-sandbox? screenshot-video? framerate
+  ([{:keys [js js-directory]} {:keys [headless? no-sandbox?
+                                      screenshot-video? framerate loop-video?
                                       ring-handler]}]
    (log "Run compiled js test file:" js)
    (let [chrome-fixture (create-chrome-fixture {:headless? (if (some? headless?)
@@ -208,9 +216,11 @@
             (automation/to url)
 
             (log "Wait for test output")
-            (let [screenshots (poll-test-execution)]
+            (let [{:keys [result screenshots]} (poll-test-execution)]
               (when screenshot-video?
-                (output-screenshot-videos screenshots (or framerate 2))))
+                (output-screenshot-videos screenshots (or framerate 2) loop-video?))
+              (is (= result :ok)
+                  "ClojureScript tests had failures or errors, see previous output for details "))
 
             (log "Tests done, cleanup")
             (server)
