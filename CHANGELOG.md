@@ -1,5 +1,7 @@
 ## 20190601
 - Change test output video to APNG for better quality
+- Generate videos even if cljs tests fail
+- Add :loop-video? option to control looping
 
 ## 20190530.1
 - Add :verbose? flag to test runner (for better troubleshooting)
