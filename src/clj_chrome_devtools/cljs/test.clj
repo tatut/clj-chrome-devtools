@@ -168,8 +168,8 @@
     (loop [[video-name & video-names] video-names]
       (when video-name
         (let [input (str video-name "-%d.png")
-              output (str video-name ".gif")
-              cmd ["ffmpeg" "-framerate" "2" "-y" "-i" input output]]
+              output (str video-name ".png")
+              cmd ["ffmpeg" "-framerate" (str framerate) "-y" "-i" input "-f" "apng" "-plays" "0" output]]
           (println "Generate video " output)
           (let [{exit :exit err :err} (apply sh/sh cmd)]
             (if (zero? exit)

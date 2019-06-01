@@ -1,3 +1,6 @@
+## 20190601
+- Change test output video to APNG for better quality
+
 ## 20190530.1
 - Add :verbose? flag to test runner (for better troubleshooting)
 - Add :ring-handler flag to test runner (if tests need to load some resources)
