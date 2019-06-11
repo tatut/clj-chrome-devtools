@@ -126,9 +126,7 @@
     (when match
       (if (= "0" errors failures)
         :ok
-        :fail
-        ;"ClojureScript tests had failures or errors, see previous output for details."
-        ))))
+        :fail))))
 
 (defn- poll-test-execution []
   (loop [started? false
@@ -200,7 +198,7 @@
      (chrome-fixture
       (fn []
         (log "Chrome launched")
-        (let [con (.-connection @automation/current-automation)
+        (let [con (:connection @automation/current-automation)
               port (random-free-port)
               server (http-server/run-server (fn [req]
                                                (or (and ring-handler (ring-handler req))
