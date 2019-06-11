@@ -21,17 +21,11 @@
 (defn create-chrome-fixture
   ([] (create-chrome-fixture {}))
   ([options]
-   (let [options (merge (launcher/default-options) options)
-         {:keys [chrome-binary remote-debugging-port headless?]} options]
-     (fn [tests]
-       (let [port (or remote-debugging-port (random-free-port))
-             process (launcher/launch-chrome chrome-binary port options)
-             automation (automation/create-automation
-                         (connection/connect "localhost" port 30000))
-             prev-current-automation @automation/current-automation]
-         (reset! automation/current-automation automation)
-         (try
-           (tests)
-           (finally
-             (reset! automation/current-automation prev-current-automation)
-             (.destroy process))))))))
+   (fn [tests]
+     (let [prev-current-automation @automation/current-automation]
+       (try
+         (with-open [^java.lang.AutoCloseable automation (launcher/launch-automation options)]
+           (reset! automation/current-automation automation)
+           (tests))
+         (finally
+           (reset! automation/current-automation prev-current-automation)))))))

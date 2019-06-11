@@ -15,6 +15,7 @@
             [clojure.spec.alpha :as s])
   (:import (java.net URL URI)))
 
+(set! *warn-on-reflection* true)
 ;; Define what a node reference is
 
 (s/def ::node-id integer?)
@@ -55,7 +56,11 @@
             selected))))))
 
 ;; Automation context wraps a low-level CDP connection with state handling
-(defrecord Automation [connection root])
+(defrecord Automation [connection root on-close]
+  java.lang.AutoCloseable
+  (close [this]
+    (when on-close
+      (on-close this))))
 
 (defn automation?
   [a]
@@ -93,16 +98,18 @@
           (do (Thread/sleep 100)
               (recur (evaluate#))))))))
 
-(defn create-automation [connection]
-  (let [root-atom (atom nil)
-        ch (events/listen connection :page :frame-stopped-loading)]
-    (go-loop [v (<! ch)]
-      (when v
-        (let [root (:root (dom/get-document connection {}))]
-          (log/trace "Document updated, new root: " root)
-          (reset! root-atom root))
-        (recur (<! ch))))
-    (->Automation connection root-atom)))
+(defn create-automation
+  ([connection] (create-automation connection :ignore))
+  ([connection on-close]
+   (let [root-atom (atom nil)
+         ch (events/listen connection :page :frame-stopped-loading)]
+     (go-loop [v (<! ch)]
+       (when v
+         (let [root (:root (dom/get-document connection {}))]
+           (log/trace "Document updated, new root: " root)
+           (reset! root-atom root))
+         (recur (<! ch))))
+     (->Automation connection root-atom on-close))))
 
 (defn start!
   "Start a new CDP connection and an automation context for it.
@@ -110,6 +117,15 @@
   []
   (reset! current-automation
           (create-automation (connection/connect "localhost" 9222))))
+
+(defn dispose!
+  "Dispose the current automation and set it to nil."
+  []
+  (swap! current-automation
+         (fn [^java.lang.AutoCloseable automation]
+           (when automation
+             (.close automation))
+           nil)))
 
 (defn root
   "Returns the root node for id reference."
@@ -300,7 +316,7 @@
              (->> v :params :response :url (re-find url-pattern))
              (:params v)
 
-             :default
+             :else
              (recur (async/alts! [response-ch timeout-ch]))))]
      (interaction-fn)
      (let [file (<!! file-request)]
@@ -324,7 +340,8 @@
   ([automation]
    (screenshot automation "screenshot.png"))
   ([{c :connection} filename]
-   (let [decode #(.decode (java.util.Base64/getDecoder) %)]
+   (let [decode (fn [^String s]
+                  (.decode (java.util.Base64/getDecoder) s))]
      (-> (page/capture-screenshot c {})
          :data decode
          (java.io.ByteArrayInputStream.)

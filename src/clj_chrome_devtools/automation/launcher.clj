@@ -2,7 +2,12 @@
   "Launch a headless Chrome for automation purposes."
   (:require [clojure.java.shell :as sh]
             [clojure.string :as str]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clj-chrome-devtools.automation :as automation]
+            [clj-chrome-devtools.impl.util :as util]
+            [clj-chrome-devtools.impl.connection :as connection]))
+
+(set! *warn-on-reflection* true)
 
 (def possible-chrome-binaries
   ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -42,10 +47,19 @@
                       "--disable-gpu"
                       (str "--remote-debugging-port=" remote-debugging-port)])]
     (.exec (Runtime/getRuntime)
-           (into-array String args
-                       ))))
+           ^"[Ljava.lang.String;" (into-array String args))))
 
 (defn default-options []
   {:chrome-binary (find-chrome-binary)
    :remote-debugging-port nil
    :headless? true})
+
+(defn launch-automation [options]
+  (let [options (merge (default-options) options)
+        {:keys [chrome-binary remote-debugging-port headless?]} options
+        port (or remote-debugging-port (util/random-free-port))
+        ^java.lang.Process process (launch-chrome chrome-binary port options)]
+    (automation/create-automation
+     (connection/connect "localhost" port 30000)
+     (fn [_]
+       (.destroy process)))))
