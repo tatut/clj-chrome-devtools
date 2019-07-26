@@ -4,9 +4,11 @@
             [clj-chrome-devtools.automation :refer :all]
             [clojure.test :as t :refer [deftest is testing]]
             [clojure.java.io :as io]
-            [clojure.spec.test.alpha :as stest]))
+            [clojure.spec.test.alpha :as stest]
+            [taoensso.timbre :as log]))
 
 (stest/instrument)
+(log/merge-config! {:appenders {:println {:enabled? false}}})
 
 (defonce chrome-fixture (create-chrome-fixture))
 (t/use-fixtures :each chrome-fixture)
