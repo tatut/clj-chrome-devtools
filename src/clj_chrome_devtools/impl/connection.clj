@@ -8,7 +8,12 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(defrecord Connection [ws-connection requests event-chan event-pub])
+(defrecord Connection [ws-connection requests event-chan event-pub]
+  java.lang.AutoCloseable
+  (close [{ws-conn :ws-connection}] 
+    (when ws-conn 
+      (ws/close ws-conn))))
+
 
 (defn connection? [c]
   (instance? Connection c))
@@ -148,7 +153,8 @@
                               :on-error #(log/error
                                           "Error in devtools WebSocket connection; throwable:" %)
                               :on-close on-close
-                              :client client)
+                              :client client
+                              :gniazdo.core/cleanup #(.stop client)) 
                   requests
                   event-chan
                   event-pub)))
