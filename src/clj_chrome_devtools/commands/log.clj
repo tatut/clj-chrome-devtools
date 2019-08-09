@@ -1,6 +1,7 @@
 (ns clj-chrome-devtools.commands.log
   "Provides access to log entries."
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clj-chrome-devtools.impl.connection :as c]))
 (s/def
  ::log-entry
  (s/keys
@@ -28,49 +29,49 @@
  "Clears the log."
  ([]
   (clear
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (clear
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Log.clear"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  clear
@@ -84,7 +85,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -95,49 +96,49 @@
  "Disables log domain, prevents further log entries from being reported to the client."
  ([]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Log.disable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  disable
@@ -151,7 +152,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -162,49 +163,49 @@
  "Enables log domain, sends the entries collected so far to the client by means of the\n`entryAdded` notification."
  ([]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Log.enable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  enable
@@ -218,7 +219,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -229,49 +230,49 @@
  "start violation reporting.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :config | Configuration for violations."
  ([]
   (start-violations-report
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [config]}]
   (start-violations-report
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [config]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Log.startViolationsReport"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:config "config"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  start-violations-report
@@ -289,7 +290,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -302,49 +303,49 @@
  "Stop violation reporting."
  ([]
   (stop-violations-report
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (stop-violations-report
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Log.stopViolationsReport"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  stop-violations-report
@@ -358,7 +359,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret

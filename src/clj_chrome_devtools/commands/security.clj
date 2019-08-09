@@ -1,6 +1,7 @@
 (ns clj-chrome-devtools.commands.security
   "Security"
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clj-chrome-devtools.impl.connection :as c]))
 (s/def
  ::certificate-id
  integer?)
@@ -46,49 +47,49 @@
  "Disables tracking security state changes."
  ([]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Security.disable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  disable
@@ -102,7 +103,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -113,49 +114,49 @@
  "Enables tracking security state changes."
  ([]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Security.enable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  enable
@@ -169,7 +170,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -180,49 +181,49 @@
  "Enable/disable whether all certificate errors should be ignored.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :ignore | If true, all certificate errors will be ignored."
  ([]
   (set-ignore-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [ignore]}]
   (set-ignore-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [ignore]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Security.setIgnoreCertificateErrors"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:ignore "ignore"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-ignore-certificate-errors
@@ -240,7 +241,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -253,49 +254,49 @@
  "Handles a certificate error that fired a certificateError event.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :event-id | The ID of the event.\n  :action   | The action to take on the certificate error."
  ([]
   (handle-certificate-error
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [event-id action]}]
   (handle-certificate-error
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [event-id action]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Security.handleCertificateError"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:event-id "eventId", :action "action"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  handle-certificate-error
@@ -314,7 +315,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -328,49 +329,49 @@
  "Enable/disable overriding certificate errors. If enabled, all certificate error events need to\nbe handled by the DevTools client and should be answered with `handleCertificateError` commands.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :override | If true, certificate errors will be overridden."
  ([]
   (set-override-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [override]}]
   (set-override-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [override]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Security.setOverrideCertificateErrors"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:override "override"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-override-certificate-errors
@@ -388,7 +389,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un

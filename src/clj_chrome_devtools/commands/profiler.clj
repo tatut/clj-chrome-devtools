@@ -1,5 +1,6 @@
 (ns clj-chrome-devtools.commands.profiler
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clj-chrome-devtools.impl.connection :as c]))
 (s/def
  ::profile-node
  (s/keys
@@ -79,49 +80,49 @@
  ""
  ([]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.disable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  disable
@@ -135,7 +136,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -146,49 +147,49 @@
  ""
  ([]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.enable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  enable
@@ -202,7 +203,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -213,49 +214,49 @@
  "Collect coverage data for the current isolate. The coverage data may be incomplete due to\ngarbage collection.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
  ([]
   (get-best-effort-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (get-best-effort-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.getBestEffortCoverage"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  get-best-effort-coverage
@@ -269,7 +270,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -282,49 +283,49 @@
  "Changes CPU profiler sampling interval. Must be called before CPU profiles recording started.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :interval | New sampling interval in microseconds."
  ([]
   (set-sampling-interval
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [interval]}]
   (set-sampling-interval
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [interval]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.setSamplingInterval"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:interval "interval"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-sampling-interval
@@ -342,7 +343,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -355,49 +356,49 @@
  ""
  ([]
   (start
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (start
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.start"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  start
@@ -411,7 +412,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -422,49 +423,49 @@
  "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code\ncoverage may be incomplete. Enabling prevents running optimized code and resets execution\ncounters.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :call-count | Collect accurate call counts beyond simple 'covered' or 'not covered'. (optional)\n  :detailed   | Collect block-based coverage. (optional)"
  ([]
   (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [call-count detailed]}]
   (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [call-count detailed]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.startPreciseCoverage"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:call-count "callCount", :detailed "detailed"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  start-precise-coverage
@@ -483,7 +484,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :opt-un
@@ -497,49 +498,49 @@
  "Enable type profile."
  ([]
   (start-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (start-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.startTypeProfile"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  start-type-profile
@@ -553,7 +554,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -564,49 +565,49 @@
  "\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :profile | Recorded profile."
  ([]
   (stop
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (stop
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.stop"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  stop
@@ -620,7 +621,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -633,49 +634,49 @@
  "Disable precise code coverage. Disabling releases unnecessary execution count records and allows\nexecuting optimized code."
  ([]
   (stop-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (stop-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.stopPreciseCoverage"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  stop-precise-coverage
@@ -689,7 +690,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -700,49 +701,49 @@
  "Disable type profile. Disabling releases type profile data collected so far."
  ([]
   (stop-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (stop-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.stopTypeProfile"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  stop-type-profile
@@ -756,7 +757,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -767,49 +768,49 @@
  "Collect coverage data for the current isolate, and resets execution counters. Precise code\ncoverage needs to have started.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
  ([]
   (take-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (take-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.takePreciseCoverage"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  take-precise-coverage
@@ -823,7 +824,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -836,49 +837,49 @@
  "Collect type profile.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Type profile for all scripts since startTypeProfile() was turned on."
  ([]
   (take-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (take-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Profiler.takeTypeProfile"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  take-type-profile
@@ -892,7 +893,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret

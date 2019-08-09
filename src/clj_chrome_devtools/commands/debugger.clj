@@ -1,6 +1,7 @@
 (ns clj-chrome-devtools.commands.debugger
   "Debugger domain exposes JavaScript debugging capabilities. It allows setting and removing\nbreakpoints, stepping through execution, exploring stack traces, etc."
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clj-chrome-devtools.impl.connection :as c]))
 (s/def
  ::breakpoint-id
  string?)
@@ -71,49 +72,49 @@
  "Continues execution until specific location is reached.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :location           | Location to continue to.\n  :target-call-frames | null (optional)"
  ([]
   (continue-to-location
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [location target-call-frames]}]
   (continue-to-location
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [location target-call-frames]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.continueToLocation"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:location "location", :target-call-frames "targetCallFrames"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  continue-to-location
@@ -133,7 +134,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -148,49 +149,49 @@
  "Disables debugger for given page."
  ([]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.disable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  disable
@@ -204,7 +205,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -215,49 +216,49 @@
  "Enables debugger for the given page. Clients should not assume that the debugging has been\nenabled until the result for this command is received.\n\nParameters map keys:\n\n\n  Key                     | Description \n  ------------------------|------------ \n  :max-scripts-cache-size | The maximum size in bytes of collected scripts (not referenced by other heap objects)\nthe debugger can hold. Puts no limit if paramter is omitted. (optional)\n\nReturn map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :debugger-id | Unique identifier of the debugger."
  ([]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [max-scripts-cache-size]}]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [max-scripts-cache-size]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.enable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:max-scripts-cache-size "maxScriptsCacheSize"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  enable
@@ -275,7 +276,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :opt-un
@@ -290,7 +291,7 @@
  "Evaluates expression on a given call frame.\n\nParameters map keys:\n\n\n  Key                       | Description \n  --------------------------|------------ \n  :call-frame-id            | Call frame identifier to evaluate on.\n  :expression               | Expression to evaluate.\n  :object-group             | String object group name to put result into (allows rapid releasing resulting object handles\nusing `releaseObjectGroup`). (optional)\n  :include-command-line-api | Specifies whether command line API should be available to the evaluated expression, defaults\nto false. (optional)\n  :silent                   | In silent mode exceptions thrown during evaluation are not reported and do not pause\nexecution. Overrides `setPauseOnException` state. (optional)\n  :return-by-value          | Whether the result is expected to be a JSON object that should be sent by value. (optional)\n  :generate-preview         | Whether preview should be generated for the result. (optional)\n  :throw-on-side-effect     | Whether to throw an exception if side effect cannot be ruled out during evaluation. (optional)\n  :timeout                  | Terminate execution after timing out (number of milliseconds). (optional)\n\nReturn map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :result            | Object wrapper for the evaluation result.\n  :exception-details | Exception details. (optional)"
  ([]
   (evaluate-on-call-frame
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params,
     :keys
@@ -304,7 +305,7 @@
      throw-on-side-effect
      timeout]}]
   (evaluate-on-call-frame
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection
    {:as params,
@@ -319,16 +320,16 @@
      throw-on-side-effect
      timeout]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.evaluateOnCallFrame"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:object-group "objectGroup",
       :expression "expression",
@@ -339,29 +340,29 @@
       :timeout "timeout",
       :generate-preview "generatePreview",
       :include-command-line-api "includeCommandLineAPI"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  evaluate-on-call-frame
@@ -388,7 +389,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -414,51 +415,51 @@
  "Returns possible locations for breakpoint. scriptId in start and end range locations should be\nthe same.\n\nParameters map keys:\n\n\n  Key                   | Description \n  ----------------------|------------ \n  :start                | Start of range to search possible breakpoint locations in.\n  :end                  | End of range to search possible breakpoint locations in (excluding). When not specified, end\nof scripts is used as end of range. (optional)\n  :restrict-to-function | Only consider locations which are in the same (non-nested) function as start. (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :locations | List of the possible breakpoint locations."
  ([]
   (get-possible-breakpoints
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [start end restrict-to-function]}]
   (get-possible-breakpoints
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [start end restrict-to-function]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.getPossibleBreakpoints"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:start "start",
       :end "end",
       :restrict-to-function "restrictToFunction"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  get-possible-breakpoints
@@ -479,7 +480,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -497,49 +498,49 @@
  "Returns source for the script with given id.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :script-id | Id of the script to get source for.\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :script-source | Script source."
  ([]
   (get-script-source
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [script-id]}]
   (get-script-source
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [script-id]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.getScriptSource"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:script-id "scriptId"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  get-script-source
@@ -557,7 +558,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -572,49 +573,49 @@
  "Returns stack trace with given `stackTraceId`.\n\nParameters map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :stack-trace-id | null\n\nReturn map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :stack-trace | null"
  ([]
   (get-stack-trace
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [stack-trace-id]}]
   (get-stack-trace
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [stack-trace-id]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.getStackTrace"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:stack-trace-id "stackTraceId"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  get-stack-trace
@@ -632,7 +633,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -647,49 +648,49 @@
  "Stops on the next JavaScript statement."
  ([]
   (pause
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (pause
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.pause"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  pause
@@ -703,7 +704,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -714,49 +715,49 @@
  "\n\nParameters map keys:\n\n\n  Key                    | Description \n  -----------------------|------------ \n  :parent-stack-trace-id | Debugger will pause when async call with given stack trace is started."
  ([]
   (pause-on-async-call
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [parent-stack-trace-id]}]
   (pause-on-async-call
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [parent-stack-trace-id]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.pauseOnAsyncCall"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:parent-stack-trace-id "parentStackTraceId"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  pause-on-async-call
@@ -774,7 +775,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -787,49 +788,49 @@
  "Removes JavaScript breakpoint.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :breakpoint-id | null"
  ([]
   (remove-breakpoint
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [breakpoint-id]}]
   (remove-breakpoint
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [breakpoint-id]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.removeBreakpoint"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:breakpoint-id "breakpointId"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  remove-breakpoint
@@ -847,7 +848,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -860,49 +861,49 @@
  "Restarts particular call frame from the beginning.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :call-frame-id | Call frame identifier to evaluate on.\n\nReturn map keys:\n\n\n  Key                   | Description \n  ----------------------|------------ \n  :call-frames          | New stack trace.\n  :async-stack-trace    | Async stack trace, if any. (optional)\n  :async-stack-trace-id | Async stack trace, if any. (optional)"
  ([]
   (restart-frame
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [call-frame-id]}]
   (restart-frame
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [call-frame-id]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.restartFrame"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:call-frame-id "callFrameId"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  restart-frame
@@ -920,7 +921,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -938,49 +939,49 @@
  "Resumes JavaScript execution."
  ([]
   (resume
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (resume
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.resume"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  resume
@@ -994,7 +995,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -1005,53 +1006,53 @@
  "Searches for given string in script content.\n\nParameters map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :script-id      | Id of the script to search in.\n  :query          | String to search for.\n  :case-sensitive | If true, search is case sensitive. (optional)\n  :is-regex       | If true, treats string parameter as regex. (optional)\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | List of search matches."
  ([]
   (search-in-content
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [script-id query case-sensitive is-regex]}]
   (search-in-content
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection
    {:as params, :keys [script-id query case-sensitive is-regex]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.searchInContent"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:script-id "scriptId",
       :query "query",
       :case-sensitive "caseSensitive",
       :is-regex "isRegex"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  search-in-content
@@ -1073,7 +1074,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1092,49 +1093,49 @@
  "Enables or disables async call stacks tracking.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :max-depth | Maximum depth of async call stacks. Setting to `0` will effectively disable collecting async\ncall stacks (default)."
  ([]
   (set-async-call-stack-depth
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [max-depth]}]
   (set-async-call-stack-depth
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [max-depth]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setAsyncCallStackDepth"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:max-depth "maxDepth"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-async-call-stack-depth
@@ -1152,7 +1153,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1165,49 +1166,49 @@
  "Replace previous blackbox patterns with passed ones. Forces backend to skip stepping/pausing in\nscripts with url matching one of the patterns. VM will try to leave blackboxed script by\nperforming 'step in' several times, finally resorting to 'step out' if unsuccessful.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :patterns | Array of regexps that will be used to check script url for blackbox state."
  ([]
   (set-blackbox-patterns
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [patterns]}]
   (set-blackbox-patterns
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [patterns]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setBlackboxPatterns"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:patterns "patterns"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-blackbox-patterns
@@ -1225,7 +1226,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1238,49 +1239,49 @@
  "Makes backend skip steps in the script in blackboxed ranges. VM will try leave blacklisted\nscripts by performing 'step in' several times, finally resorting to 'step out' if unsuccessful.\nPositions array contains positions where blackbox state is changed. First interval isn't\nblackboxed. Array should be sorted.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :script-id | Id of the script.\n  :positions | null"
  ([]
   (set-blackboxed-ranges
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [script-id positions]}]
   (set-blackboxed-ranges
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [script-id positions]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setBlackboxedRanges"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:script-id "scriptId", :positions "positions"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-blackboxed-ranges
@@ -1299,7 +1300,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1313,49 +1314,49 @@
  "Sets JavaScript breakpoint at a given location.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :location  | Location to set breakpoint in.\n  :condition | Expression to use as a breakpoint condition. When specified, debugger will only stop on the\nbreakpoint if this expression evaluates to true. (optional)\n\nReturn map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :breakpoint-id   | Id of the created breakpoint for further reference.\n  :actual-location | Location this breakpoint resolved into."
  ([]
   (set-breakpoint
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [location condition]}]
   (set-breakpoint
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [location condition]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setBreakpoint"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:location "location", :condition "condition"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-breakpoint
@@ -1375,7 +1376,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1393,49 +1394,49 @@
  "Sets instrumentation breakpoint.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :instrumentation | Instrumentation name.\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :breakpoint-id | Id of the created breakpoint for further reference."
  ([]
   (set-instrumentation-breakpoint
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [instrumentation]}]
   (set-instrumentation-breakpoint
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [instrumentation]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setInstrumentationBreakpoint"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:instrumentation "instrumentation"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-instrumentation-breakpoint
@@ -1453,7 +1454,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1468,29 +1469,29 @@
  "Sets JavaScript breakpoint at given location specified either by URL or URL regex. Once this\ncommand is issued, all existing parsed scripts will have breakpoints resolved and returned in\n`locations` property. Further matching script parsing will result in subsequent\n`breakpointResolved` events issued. This logical breakpoint will survive page reloads.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :line-number   | Line number to set breakpoint at.\n  :url           | URL of the resources to set breakpoint on. (optional)\n  :url-regex     | Regex pattern for the URLs of the resources to set breakpoints on. Either `url` or\n`urlRegex` must be specified. (optional)\n  :script-hash   | Script hash of the resources to set breakpoint on. (optional)\n  :column-number | Offset in the line to set breakpoint at. (optional)\n  :condition     | Expression to use as a breakpoint condition. When specified, debugger will only stop on the\nbreakpoint if this expression evaluates to true. (optional)\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :breakpoint-id | Id of the created breakpoint for further reference.\n  :locations     | List of the locations this breakpoint resolved into upon addition."
  ([]
   (set-breakpoint-by-url
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params,
     :keys
     [line-number url url-regex script-hash column-number condition]}]
   (set-breakpoint-by-url
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection
    {:as params,
     :keys
     [line-number url url-regex script-hash column-number condition]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setBreakpointByUrl"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:line-number "lineNumber",
       :url "url",
@@ -1498,29 +1499,29 @@
       :script-hash "scriptHash",
       :column-number "columnNumber",
       :condition "condition"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-breakpoint-by-url
@@ -1544,7 +1545,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1566,49 +1567,49 @@
  "Sets JavaScript breakpoint before each call to the given function.\nIf another function was created from the same source as a given one,\ncalling it will also trigger the breakpoint.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :object-id | Function object id.\n  :condition | Expression to use as a breakpoint condition. When specified, debugger will\nstop on the breakpoint if this expression evaluates to true. (optional)\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :breakpoint-id | Id of the created breakpoint for further reference."
  ([]
   (set-breakpoint-on-function-call
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [object-id condition]}]
   (set-breakpoint-on-function-call
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [object-id condition]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setBreakpointOnFunctionCall"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:object-id "objectId", :condition "condition"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-breakpoint-on-function-call
@@ -1628,7 +1629,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1645,49 +1646,49 @@
  "Activates / deactivates all breakpoints on the page.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :active | New value for breakpoints active state."
  ([]
   (set-breakpoints-active
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [active]}]
   (set-breakpoints-active
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [active]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setBreakpointsActive"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:active "active"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-breakpoints-active
@@ -1705,7 +1706,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1718,49 +1719,49 @@
  "Defines pause on exceptions state. Can be set to stop on all exceptions, uncaught exceptions or\nno exceptions. Initial pause on exceptions state is `none`.\n\nParameters map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :state | Pause on exceptions mode."
  ([]
   (set-pause-on-exceptions
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [state]}]
   (set-pause-on-exceptions
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [state]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setPauseOnExceptions"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:state "state"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-pause-on-exceptions
@@ -1778,7 +1779,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1791,49 +1792,49 @@
  "Changes return value in top frame. Available only at return break position.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :new-value | New return value."
  ([]
   (set-return-value
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [new-value]}]
   (set-return-value
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [new-value]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setReturnValue"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:new-value "newValue"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-return-value
@@ -1851,7 +1852,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1864,51 +1865,51 @@
  "Edits JavaScript source live.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :script-id     | Id of the script to edit.\n  :script-source | New content of the script.\n  :dry-run       | If true the change will not actually be applied. Dry run may be used to get result\ndescription without actually modifying the code. (optional)\n\nReturn map keys:\n\n\n  Key                   | Description \n  ----------------------|------------ \n  :call-frames          | New stack trace in case editing has happened while VM was stopped. (optional)\n  :stack-changed        | Whether current call stack  was modified after applying the changes. (optional)\n  :async-stack-trace    | Async stack trace, if any. (optional)\n  :async-stack-trace-id | Async stack trace, if any. (optional)\n  :exception-details    | Exception details if any. (optional)"
  ([]
   (set-script-source
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [script-id script-source dry-run]}]
   (set-script-source
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [script-id script-source dry-run]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setScriptSource"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:script-id "scriptId",
       :script-source "scriptSource",
       :dry-run "dryRun"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-script-source
@@ -1929,7 +1930,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -1951,49 +1952,49 @@
  "Makes page not interrupt on any pauses (breakpoint, exception, dom exception etc).\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :skip | New value for skip pauses state."
  ([]
   (set-skip-all-pauses
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [skip]}]
   (set-skip-all-pauses
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [skip]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setSkipAllPauses"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:skip "skip"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-skip-all-pauses
@@ -2011,7 +2012,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -2024,55 +2025,55 @@
  "Changes value of variable in a callframe. Object-based scopes are not supported and must be\nmutated manually.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :scope-number  | 0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch'\nscope types are allowed. Other scopes could be manipulated manually.\n  :variable-name | Variable name.\n  :new-value     | New variable value.\n  :call-frame-id | Id of callframe that holds variable."
  ([]
   (set-variable-value
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params,
     :keys [scope-number variable-name new-value call-frame-id]}]
   (set-variable-value
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection
    {:as params,
     :keys [scope-number variable-name new-value call-frame-id]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.setVariableValue"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:scope-number "scopeNumber",
       :variable-name "variableName",
       :new-value "newValue",
       :call-frame-id "callFrameId"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  set-variable-value
@@ -2093,7 +2094,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -2109,49 +2110,49 @@
  "Steps into the function call.\n\nParameters map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :break-on-async-call | Debugger will issue additional Debugger.paused notification if any async task is scheduled\nbefore next pause. (optional)"
  ([]
   (step-into
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [break-on-async-call]}]
   (step-into
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [break-on-async-call]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.stepInto"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:break-on-async-call "breakOnAsyncCall"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  step-into
@@ -2169,7 +2170,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :opt-un
@@ -2182,49 +2183,49 @@
  "Steps out of the function call."
  ([]
   (step-out
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (step-out
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.stepOut"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  step-out
@@ -2238,7 +2239,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -2249,49 +2250,49 @@
  "Steps over the statement."
  ([]
   (step-over
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (step-over
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "Debugger.stepOver"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  step-over
@@ -2305,7 +2306,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret

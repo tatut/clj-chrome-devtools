@@ -1,6 +1,7 @@
 (ns clj-chrome-devtools.commands.dom-snapshot
   "This domain facilitates obtaining document snapshots with DOM, layout, and style information."
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clj-chrome-devtools.impl.connection :as c]))
 (s/def
  ::dom-node
  (s/keys
@@ -166,49 +167,49 @@
  "Disables DOM snapshot agent for the given page."
  ([]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "DOMSnapshot.disable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  disable
@@ -222,7 +223,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -233,49 +234,49 @@
  "Enables DOM snapshot agent for the given page."
  ([]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
   (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "DOMSnapshot.enable"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  enable
@@ -289,7 +290,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys)))
  :ret
@@ -300,7 +301,7 @@
  "Returns a document snapshot, including the full DOM tree of the root node (including iframes,\ntemplate contents, and imported documents) in a flattened array, as well as layout and\nwhite-listed computed style information for the nodes. Shadow DOM in the returned DOM tree is\nflattened.\n\nParameters map keys:\n\n\n  Key                             | Description \n  --------------------------------|------------ \n  :computed-style-whitelist       | Whitelist of computed styles to return.\n  :include-event-listeners        | Whether or not to retrieve details of DOM listeners (default false). (optional)\n  :include-paint-order            | Whether to determine and include the paint order index of LayoutTreeNodes (default false). (optional)\n  :include-user-agent-shadow-tree | Whether to include UA shadow tree in the snapshot (default false). (optional)\n\nReturn map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :dom-nodes         | The nodes in the DOM tree. The DOMNode at index 0 corresponds to the root document.\n  :layout-tree-nodes | The nodes in the layout tree.\n  :computed-styles   | Whitelisted ComputedStyle properties for each node in the layout tree."
  ([]
   (get-snapshot
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params,
     :keys
@@ -309,7 +310,7 @@
      include-paint-order
      include-user-agent-shadow-tree]}]
   (get-snapshot
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection
    {:as params,
@@ -319,44 +320,44 @@
      include-paint-order
      include-user-agent-shadow-tree]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "DOMSnapshot.getSnapshot"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:computed-style-whitelist "computedStyleWhitelist",
       :include-event-listeners "includeEventListeners",
       :include-paint-order "includePaintOrder",
       :include-user-agent-shadow-tree "includeUserAgentShadowTree"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  get-snapshot
@@ -378,7 +379,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un
@@ -399,50 +400,50 @@
  "Returns a document snapshot, including the full DOM tree of the root node (including iframes,\ntemplate contents, and imported documents) in a flattened array, as well as layout and\nwhite-listed computed style information for the nodes. Shadow DOM in the returned DOM tree is\nflattened.\n\nParameters map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :computed-styles   | Whitelist of computed styles to return.\n  :include-dom-rects | Whether to include DOM rectangles (offsetRects, clientRects, scrollRects) into the snapshot (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :documents | The nodes in the DOM tree. The DOMNode at index 0 corresponds to the root document.\n  :strings   | Shared string table that all string properties refer to with indexes."
  ([]
   (capture-snapshot
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    {}))
  ([{:as params, :keys [computed-styles include-dom-rects]}]
   (capture-snapshot
-   (clj-chrome-devtools.impl.connection/get-current-connection)
+   (c/get-current-connection)
    params))
  ([connection {:as params, :keys [computed-styles include-dom-rects]}]
   (let
-   [id__36878__auto__
+   [id__62694__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
+    method__62695__auto__
     "DOMSnapshot.captureSnapshot"
-    ch__36880__auto__
+    ch__62696__auto__
     (clojure.core.async/chan)
-    payload__36881__auto__
+    payload__62697__auto__
     (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
+     id__62694__auto__
+     method__62695__auto__
      params
      {:computed-styles "computedStyles",
       :include-dom-rects "includeDOMRects"})]
-   (clj-chrome-devtools.impl.connection/send-command
+   (c/send-command
     connection
-    payload__36881__auto__
-    id__36878__auto__
+    payload__62697__auto__
+    id__62694__auto__
     (fn*
-     [p1__36877__36882__auto__]
+     [p1__62693__62698__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
+       ch__62696__auto__
+       p1__62693__62698__auto__))))
    (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
     (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
+     [error__62700__auto__ (:error result__62699__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__36879__auto__
+        method__62695__auto__
         ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
+        (:message error__62700__auto__))
+       {:request payload__62697__auto__, :error error__62700__auto__}))
+     (:result result__62699__auto__))))))
 
 (s/fdef
  capture-snapshot
@@ -462,7 +463,7 @@
   (s/cat
    :connection
    (s/?
-    clj-chrome-devtools.impl.connection/connection?)
+    c/connection?)
    :params
    (s/keys
     :req-un

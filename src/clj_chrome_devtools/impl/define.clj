@@ -195,9 +195,10 @@
             (map #(-> (with-out-str
                         (pprint/pprint %))
 
-                      ;; Fix spec and clojure.core refs
-                      (str/replace #"clojure.spec.alpha/" "s/")
-                      (str/replace #"clojure.core/" "")
+                      ;; Make ns references pretties
+                      (str/replace "clojure.spec.alpha/" "s/")
+                      (str/replace "clj-chrome-devtools.impl.connection/" "c/")
+                      (str/replace "clojure.core/" "")
 
                       ;; Use same ns keywords
                       (str/replace (str ":" the-ns "/")
@@ -234,6 +235,7 @@
             (str "(ns clj-chrome-devtools.commands." (str/lower-case clj-name) "\n"
                  (when description
                    (str "  " (pr-str (process-doc description)) "\n"))
-                 "  (:require [clojure.spec.alpha :as s]))\n"
+                 "  (:require [clojure.spec.alpha :as s]\n"
+                 "            [clj-chrome-devtools.impl.connection :as c]))\n"
                  (pretty-print-code ns-name (call-in-ns ns-sym #(generate-type-specs domain)))
                  (pretty-print-code ns-name (call-in-ns ns-sym #(generate-command-functions domain))))))))
