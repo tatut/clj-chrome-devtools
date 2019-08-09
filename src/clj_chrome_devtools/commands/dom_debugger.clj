@@ -1,96 +1,42 @@
-(ns clj-chrome-devtools.commands.profiler
+(ns clj-chrome-devtools.commands.dom-debugger
+  "DOM debugging allows setting breakpoints on particular DOM operations and events. JavaScript\nexecution will stop on these operations as if there was a regular breakpoint set."
   (:require [clojure.spec.alpha :as s]))
 (s/def
- ::profile-node
+ ::dom-breakpoint-type
+ #{"attribute-modified" "subtree-modified" "node-removed"})
+
+(s/def
+ ::event-listener
  (s/keys
   :req-un
-  [::id
-   ::call-frame]
+  [::type
+   ::use-capture
+   ::passive
+   ::once
+   ::script-id
+   ::line-number
+   ::column-number]
   :opt-un
-  [::hit-count
-   ::children
-   ::deopt-reason
-   ::position-ticks]))
-
-(s/def
- ::profile
- (s/keys
-  :req-un
-  [::nodes
-   ::start-time
-   ::end-time]
-  :opt-un
-  [::samples
-   ::time-deltas]))
-
-(s/def
- ::position-tick-info
- (s/keys
-  :req-un
-  [::line
-   ::ticks]))
-
-(s/def
- ::coverage-range
- (s/keys
-  :req-un
-  [::start-offset
-   ::end-offset
-   ::count]))
-
-(s/def
- ::function-coverage
- (s/keys
-  :req-un
-  [::function-name
-   ::ranges
-   ::is-block-coverage]))
-
-(s/def
- ::script-coverage
- (s/keys
-  :req-un
-  [::script-id
-   ::url
-   ::functions]))
-
-(s/def
- ::type-object
- (s/keys
-  :req-un
-  [::name]))
-
-(s/def
- ::type-profile-entry
- (s/keys
-  :req-un
-  [::offset
-   ::types]))
-
-(s/def
- ::script-type-profile
- (s/keys
-  :req-un
-  [::script-id
-   ::url
-   ::entries]))
+  [::handler
+   ::original-handler
+   ::backend-node-id]))
 (defn
- disable
- ""
+ get-event-listeners
+ "Returns event listeners of the given object.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :object-id | Identifier of the object to return listeners for.\n  :depth     | The maximum depth at which Node children should be retrieved, defaults to 1. Use -1 for the\nentire subtree or provide an integer larger than 0. (optional)\n  :pierce    | Whether or not iframes and shadow roots should be traversed when returning the subtree\n(default is false). Reports listeners for all contexts if pierce is enabled. (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :listeners | Array of relevant listeners."
  ([]
-  (disable
+  (get-event-listeners
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (disable
+ ([{:as params, :keys [object-id depth pierce]}]
+  (get-event-listeners
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [object-id depth pierce]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.disable"
+    "DOMDebugger.getEventListeners"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -98,7 +44,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:object-id "objectId", :depth "depth", :pierce "pierce"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -124,210 +70,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- disable
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys))
-
-(defn
- enable
- ""
- ([]
-  (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (enable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.enable"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- enable
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys))
-
-(defn
- get-best-effort-coverage
- "Collect coverage data for the current isolate. The coverage data may be incomplete due to\ngarbage collection.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
- ([]
-  (get-best-effort-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (get-best-effort-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.getBestEffortCoverage"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- get-best-effort-coverage
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys
-  :req-un
-  [::result]))
-
-(defn
- set-sampling-interval
- "Changes CPU profiler sampling interval. Must be called before CPU profiles recording started.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :interval | New sampling interval in microseconds."
- ([]
-  (set-sampling-interval
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys [interval]}]
-  (set-sampling-interval
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys [interval]}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.setSamplingInterval"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {:interval "interval"})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- set-sampling-interval
+ get-event-listeners
  :args
  (s/or
   :no-args
@@ -337,7 +80,10 @@
    :params
    (s/keys
     :req-un
-    [::interval]))
+    [::object-id]
+    :opt-un
+    [::depth
+     ::pierce]))
   :connection-and-params
   (s/cat
    :connection
@@ -346,27 +92,32 @@
    :params
    (s/keys
     :req-un
-    [::interval])))
+    [::object-id]
+    :opt-un
+    [::depth
+     ::pierce])))
  :ret
- (s/keys))
+ (s/keys
+  :req-un
+  [::listeners]))
 
 (defn
- start
- ""
+ remove-dom-breakpoint
+ "Removes DOM breakpoint that was set using `setDOMBreakpoint`.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | Identifier of the node to remove breakpoint from.\n  :type    | Type of the breakpoint to remove."
  ([]
-  (start
+  (remove-dom-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (start
+ ([{:as params, :keys [node-id type]}]
+  (remove-dom-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [node-id type]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.start"
+    "DOMDebugger.removeDOMBreakpoint"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -374,7 +125,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:node-id "nodeId", :type "type"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -400,74 +151,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- start
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys))
-
-(defn
- start-precise-coverage
- "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code\ncoverage may be incomplete. Enabling prevents running optimized code and resets execution\ncounters.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :call-count | Collect accurate call counts beyond simple 'covered' or 'not covered'. (optional)\n  :detailed   | Collect block-based coverage. (optional)"
- ([]
-  (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys [call-count detailed]}]
-  (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys [call-count detailed]}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.startPreciseCoverage"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {:call-count "callCount", :detailed "detailed"})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- start-precise-coverage
+ remove-dom-breakpoint
  :args
  (s/or
   :no-args
@@ -476,9 +160,9 @@
   (s/cat
    :params
    (s/keys
-    :opt-un
-    [::call-count
-     ::detailed]))
+    :req-un
+    [::node-id
+     ::type]))
   :connection-and-params
   (s/cat
    :connection
@@ -486,29 +170,106 @@
     clj-chrome-devtools.impl.connection/connection?)
    :params
    (s/keys
+    :req-un
+    [::node-id
+     ::type])))
+ :ret
+ (s/keys))
+
+(defn
+ remove-event-listener-breakpoint
+ "Removes breakpoint on particular DOM event.\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :event-name  | Event name.\n  :target-name | EventTarget interface name. (optional)"
+ ([]
+  (remove-event-listener-breakpoint
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   {}))
+ ([{:as params, :keys [event-name target-name]}]
+  (remove-event-listener-breakpoint
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   params))
+ ([connection {:as params, :keys [event-name target-name]}]
+  (let
+   [id__36878__auto__
+    (clj-chrome-devtools.impl.define/next-command-id!)
+    method__36879__auto__
+    "DOMDebugger.removeEventListenerBreakpoint"
+    ch__36880__auto__
+    (clojure.core.async/chan)
+    payload__36881__auto__
+    (clj-chrome-devtools.impl.define/command-payload
+     id__36878__auto__
+     method__36879__auto__
+     params
+     {:event-name "eventName", :target-name "targetName"})]
+   (clj-chrome-devtools.impl.connection/send-command
+    connection
+    payload__36881__auto__
+    id__36878__auto__
+    (fn*
+     [p1__36877__36882__auto__]
+     (clojure.core.async/go
+      (clojure.core.async/>!
+       ch__36880__auto__
+       p1__36877__36882__auto__))))
+   (let
+    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    (if-let
+     [error__36884__auto__ (:error result__36883__auto__)]
+     (throw
+      (ex-info
+       (str
+        "Error in command "
+        method__36879__auto__
+        ": "
+        (:message error__36884__auto__))
+       {:request payload__36881__auto__, :error error__36884__auto__}))
+     (:result result__36883__auto__))))))
+
+(s/fdef
+ remove-event-listener-breakpoint
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::event-name]
     :opt-un
-    [::call-count
-     ::detailed])))
+    [::target-name]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    clj-chrome-devtools.impl.connection/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::event-name]
+    :opt-un
+    [::target-name])))
  :ret
  (s/keys))
 
 (defn
- start-type-profile
- "Enable type profile."
+ remove-instrumentation-breakpoint
+ "Removes breakpoint on particular native event.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :event-name | Instrumentation name to stop on."
  ([]
-  (start-type-profile
+  (remove-instrumentation-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (start-type-profile
+ ([{:as params, :keys [event-name]}]
+  (remove-instrumentation-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [event-name]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.startTypeProfile"
+    "DOMDebugger.removeInstrumentationBreakpoint"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -516,7 +277,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:event-name "eventName"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -542,40 +303,46 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- start-type-profile
+ remove-instrumentation-breakpoint
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::event-name]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::event-name])))
  :ret
  (s/keys))
 
 (defn
- stop
- "\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :profile | Recorded profile."
+ remove-xhr-breakpoint
+ "Removes breakpoint from XMLHttpRequest.\n\nParameters map keys:\n\n\n  Key  | Description \n  -----|------------ \n  :url | Resource URL substring."
  ([]
-  (stop
+  (remove-xhr-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (stop
+ ([{:as params, :keys [url]}]
+  (remove-xhr-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [url]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.stop"
+    "DOMDebugger.removeXHRBreakpoint"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -583,7 +350,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:url "url"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -609,109 +376,46 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- stop
+ remove-xhr-breakpoint
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::url]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
- :ret
- (s/keys
-  :req-un
-  [::profile]))
-
-(defn
- stop-precise-coverage
- "Disable precise code coverage. Disabling releases unnecessary execution count records and allows\nexecuting optimized code."
- ([]
-  (stop-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (stop-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.stopPreciseCoverage"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- stop-precise-coverage
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::url])))
  :ret
  (s/keys))
 
 (defn
- stop-type-profile
- "Disable type profile. Disabling releases type profile data collected so far."
+ set-dom-breakpoint
+ "Sets breakpoint on particular operation with DOM.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | Identifier of the node to set breakpoint on.\n  :type    | Type of the operation to stop upon."
  ([]
-  (stop-type-profile
+  (set-dom-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (stop-type-profile
+ ([{:as params, :keys [node-id type]}]
+  (set-dom-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [node-id type]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.stopTypeProfile"
+    "DOMDebugger.setDOMBreakpoint"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -719,7 +423,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:node-id "nodeId", :type "type"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -745,40 +449,48 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- stop-type-profile
+ set-dom-breakpoint
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::node-id
+     ::type]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::node-id
+     ::type])))
  :ret
  (s/keys))
 
 (defn
- take-precise-coverage
- "Collect coverage data for the current isolate, and resets execution counters. Precise code\ncoverage needs to have started.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
+ set-event-listener-breakpoint
+ "Sets breakpoint on particular DOM event.\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :event-name  | DOM Event name to stop on (any DOM event will do).\n  :target-name | EventTarget interface name to stop on. If equal to `\"*\"` or not provided, will stop on any\nEventTarget. (optional)"
  ([]
-  (take-precise-coverage
+  (set-event-listener-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (take-precise-coverage
+ ([{:as params, :keys [event-name target-name]}]
+  (set-event-listener-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [event-name target-name]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.takePreciseCoverage"
+    "DOMDebugger.setEventListenerBreakpoint"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -786,7 +498,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:event-name "eventName", :target-name "targetName"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -812,42 +524,50 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- take-precise-coverage
+ set-event-listener-breakpoint
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::event-name]
+    :opt-un
+    [::target-name]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::event-name]
+    :opt-un
+    [::target-name])))
  :ret
- (s/keys
-  :req-un
-  [::result]))
+ (s/keys))
 
 (defn
- take-type-profile
- "Collect type profile.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Type profile for all scripts since startTypeProfile() was turned on."
+ set-instrumentation-breakpoint
+ "Sets breakpoint on particular native event.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :event-name | Instrumentation name to stop on."
  ([]
-  (take-type-profile
+  (set-instrumentation-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (take-type-profile
+ ([{:as params, :keys [event-name]}]
+  (set-instrumentation-breakpoint
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [event-name]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.takeTypeProfile"
+    "DOMDebugger.setInstrumentationBreakpoint"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -855,7 +575,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:event-name "eventName"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -881,21 +601,98 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- take-type-profile
+ set-instrumentation-breakpoint
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::event-name]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::event-name])))
  :ret
- (s/keys
-  :req-un
-  [::result]))
+ (s/keys))
+
+(defn
+ set-xhr-breakpoint
+ "Sets breakpoint on XMLHttpRequest.\n\nParameters map keys:\n\n\n  Key  | Description \n  -----|------------ \n  :url | Resource URL substring. All XHRs having this substring in the URL will get stopped upon."
+ ([]
+  (set-xhr-breakpoint
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   {}))
+ ([{:as params, :keys [url]}]
+  (set-xhr-breakpoint
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   params))
+ ([connection {:as params, :keys [url]}]
+  (let
+   [id__36878__auto__
+    (clj-chrome-devtools.impl.define/next-command-id!)
+    method__36879__auto__
+    "DOMDebugger.setXHRBreakpoint"
+    ch__36880__auto__
+    (clojure.core.async/chan)
+    payload__36881__auto__
+    (clj-chrome-devtools.impl.define/command-payload
+     id__36878__auto__
+     method__36879__auto__
+     params
+     {:url "url"})]
+   (clj-chrome-devtools.impl.connection/send-command
+    connection
+    payload__36881__auto__
+    id__36878__auto__
+    (fn*
+     [p1__36877__36882__auto__]
+     (clojure.core.async/go
+      (clojure.core.async/>!
+       ch__36880__auto__
+       p1__36877__36882__auto__))))
+   (let
+    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    (if-let
+     [error__36884__auto__ (:error result__36883__auto__)]
+     (throw
+      (ex-info
+       (str
+        "Error in command "
+        method__36879__auto__
+        ": "
+        (:message error__36884__auto__))
+       {:request payload__36881__auto__, :error error__36884__auto__}))
+     (:result result__36883__auto__))))))
+
+(s/fdef
+ set-xhr-breakpoint
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::url]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    clj-chrome-devtools.impl.connection/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::url])))
+ :ret
+ (s/keys))

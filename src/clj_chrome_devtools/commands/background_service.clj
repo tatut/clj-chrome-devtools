@@ -1,63 +1,46 @@
-(ns clj-chrome-devtools.commands.security
-  "Security"
+(ns clj-chrome-devtools.commands.background-service
+  "Defines events for background web platform features."
   (:require [clojure.spec.alpha :as s]))
 (s/def
- ::certificate-id
- integer?)
+ ::service-name
+ #{"pushMessaging" "paymentHandler" "notifications" "backgroundSync"
+   "periodicBackgroundSync" "backgroundFetch"})
 
 (s/def
- ::mixed-content-type
- #{"none" "blockable" "optionally-blockable"})
-
-(s/def
- ::security-state
- #{"neutral" "info" "secure" "unknown" "insecure"})
-
-(s/def
- ::security-state-explanation
+ ::event-metadata
  (s/keys
   :req-un
-  [::security-state
-   ::title
-   ::summary
-   ::description
-   ::mixed-content-type
-   ::certificate]
-  :opt-un
-  [::recommendations]))
+  [::key
+   ::value]))
 
 (s/def
- ::insecure-content-status
+ ::background-service-event
  (s/keys
   :req-un
-  [::ran-mixed-content
-   ::displayed-mixed-content
-   ::contained-mixed-form
-   ::ran-content-with-cert-errors
-   ::displayed-content-with-cert-errors
-   ::ran-insecure-content-style
-   ::displayed-insecure-content-style]))
-
-(s/def
- ::certificate-error-action
- #{"cancel" "continue"})
+  [::timestamp
+   ::origin
+   ::service-worker-registration-id
+   ::service
+   ::event-name
+   ::instance-id
+   ::event-metadata]))
 (defn
- disable
- "Disables tracking security state changes."
+ start-observing
+ "Enables event updates for the service.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :service | null"
  ([]
-  (disable
+  (start-observing
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (disable
+ ([{:as params, :keys [service]}]
+  (start-observing
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [service]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.disable"
+    "BackgroundService.startObserving"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -65,7 +48,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:service "service"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -91,40 +74,46 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- disable
+ start-observing
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::service]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::service])))
  :ret
  (s/keys))
 
 (defn
- enable
- "Enables tracking security state changes."
+ stop-observing
+ "Disables event updates for the service.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :service | null"
  ([]
-  (enable
+  (stop-observing
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (enable
+ ([{:as params, :keys [service]}]
+  (stop-observing
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [service]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.enable"
+    "BackgroundService.stopObserving"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -132,7 +121,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:service "service"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -158,40 +147,46 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- enable
+ stop-observing
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::service]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::service])))
  :ret
  (s/keys))
 
 (defn
- set-ignore-certificate-errors
- "Enable/disable whether all certificate errors should be ignored.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :ignore | If true, all certificate errors will be ignored."
+ set-recording
+ "Set the recording state for the service.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :should-record | null\n  :service       | null"
  ([]
-  (set-ignore-certificate-errors
+  (set-recording
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [ignore]}]
-  (set-ignore-certificate-errors
+ ([{:as params, :keys [should-record service]}]
+  (set-recording
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [ignore]}]
+ ([connection {:as params, :keys [should-record service]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.setIgnoreCertificateErrors"
+    "BackgroundService.setRecording"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -199,7 +194,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:ignore "ignore"})]
+     {:should-record "shouldRecord", :service "service"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -225,7 +220,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- set-ignore-certificate-errors
+ set-recording
  :args
  (s/or
   :no-args
@@ -235,7 +230,8 @@
    :params
    (s/keys
     :req-un
-    [::ignore]))
+    [::should-record
+     ::service]))
   :connection-and-params
   (s/cat
    :connection
@@ -244,27 +240,28 @@
    :params
    (s/keys
     :req-un
-    [::ignore])))
+    [::should-record
+     ::service])))
  :ret
  (s/keys))
 
 (defn
- handle-certificate-error
- "Handles a certificate error that fired a certificateError event.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :event-id | The ID of the event.\n  :action   | The action to take on the certificate error."
+ clear-events
+ "Clears all stored data for the service.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :service | null"
  ([]
-  (handle-certificate-error
+  (clear-events
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [event-id action]}]
-  (handle-certificate-error
+ ([{:as params, :keys [service]}]
+  (clear-events
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [event-id action]}]
+ ([connection {:as params, :keys [service]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.handleCertificateError"
+    "BackgroundService.clearEvents"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -272,7 +269,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:event-id "eventId", :action "action"})]
+     {:service "service"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -298,7 +295,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- handle-certificate-error
+ clear-events
  :args
  (s/or
   :no-args
@@ -308,8 +305,7 @@
    :params
    (s/keys
     :req-un
-    [::event-id
-     ::action]))
+    [::service]))
   :connection-and-params
   (s/cat
    :connection
@@ -318,80 +314,6 @@
    :params
    (s/keys
     :req-un
-    [::event-id
-     ::action])))
- :ret
- (s/keys))
-
-(defn
- set-override-certificate-errors
- "Enable/disable overriding certificate errors. If enabled, all certificate error events need to\nbe handled by the DevTools client and should be answered with `handleCertificateError` commands.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :override | If true, certificate errors will be overridden."
- ([]
-  (set-override-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys [override]}]
-  (set-override-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys [override]}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Security.setOverrideCertificateErrors"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {:override "override"})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- set-override-certificate-errors
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat
-   :params
-   (s/keys
-    :req-un
-    [::override]))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys
-    :req-un
-    [::override])))
+    [::service])))
  :ret
  (s/keys))

@@ -1,82 +1,50 @@
-(ns clj-chrome-devtools.commands.profiler
+(ns clj-chrome-devtools.commands.fetch
+  "A domain for letting clients substitute browser's network layer with client code."
   (:require [clojure.spec.alpha :as s]))
 (s/def
- ::profile-node
+ ::request-id
+ string?)
+
+(s/def
+ ::request-stage
+ #{"Request" "Response"})
+
+(s/def
+ ::request-pattern
  (s/keys
-  :req-un
-  [::id
-   ::call-frame]
   :opt-un
-  [::hit-count
-   ::children
-   ::deopt-reason
-   ::position-ticks]))
+  [::url-pattern
+   ::resource-type
+   ::request-stage]))
 
 (s/def
- ::profile
+ ::header-entry
  (s/keys
   :req-un
-  [::nodes
-   ::start-time
-   ::end-time]
+  [::name
+   ::value]))
+
+(s/def
+ ::auth-challenge
+ (s/keys
+  :req-un
+  [::origin
+   ::scheme
+   ::realm]
   :opt-un
-  [::samples
-   ::time-deltas]))
+  [::source]))
 
 (s/def
- ::position-tick-info
+ ::auth-challenge-response
  (s/keys
   :req-un
-  [::line
-   ::ticks]))
-
-(s/def
- ::coverage-range
- (s/keys
-  :req-un
-  [::start-offset
-   ::end-offset
-   ::count]))
-
-(s/def
- ::function-coverage
- (s/keys
-  :req-un
-  [::function-name
-   ::ranges
-   ::is-block-coverage]))
-
-(s/def
- ::script-coverage
- (s/keys
-  :req-un
-  [::script-id
-   ::url
-   ::functions]))
-
-(s/def
- ::type-object
- (s/keys
-  :req-un
-  [::name]))
-
-(s/def
- ::type-profile-entry
- (s/keys
-  :req-un
-  [::offset
-   ::types]))
-
-(s/def
- ::script-type-profile
- (s/keys
-  :req-un
-  [::script-id
-   ::url
-   ::entries]))
+  [::response]
+  :opt-un
+  [::username
+   ::password]))
 (defn
  disable
- ""
+ "Disables the fetch domain."
  ([]
   (disable
    (clj-chrome-devtools.impl.connection/get-current-connection)
@@ -90,7 +58,7 @@
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.disable"
+    "Fetch.disable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -143,21 +111,21 @@
 
 (defn
  enable
- ""
+ "Enables issuing of requestPaused events. A request will be paused until client\ncalls one of failRequest, fulfillRequest or continueRequest/continueWithAuth.\n\nParameters map keys:\n\n\n  Key                   | Description \n  ----------------------|------------ \n  :patterns             | If specified, only requests matching any of these patterns will produce\nfetchRequested event and will be paused until clients response. If not set,\nall requests will be affected. (optional)\n  :handle-auth-requests | If true, authRequired events will be issued and requests will be paused\nexpecting a call to continueWithAuth. (optional)"
  ([]
   (enable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params, :keys [patterns handle-auth-requests]}]
   (enable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [patterns handle-auth-requests]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.enable"
+    "Fetch.enable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -165,7 +133,8 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:patterns "patterns",
+      :handle-auth-requests "handleAuthRequests"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -197,34 +166,42 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::patterns
+     ::handle-auth-requests]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::patterns
+     ::handle-auth-requests])))
  :ret
  (s/keys))
 
 (defn
- get-best-effort-coverage
- "Collect coverage data for the current isolate. The coverage data may be incomplete due to\ngarbage collection.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
+ fail-request
+ "Causes the request to fail with specified reason.\n\nParameters map keys:\n\n\n  Key           | Description \n  --------------|------------ \n  :request-id   | An id the client received in requestPaused event.\n  :error-reason | Causes the request to fail with the given reason."
  ([]
-  (get-best-effort-coverage
+  (fail-request
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (get-best-effort-coverage
+ ([{:as params, :keys [request-id error-reason]}]
+  (fail-request
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [request-id error-reason]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.getBestEffortCoverage"
+    "Fetch.failRequest"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -232,7 +209,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:request-id "requestId", :error-reason "errorReason"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -258,76 +235,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- get-best-effort-coverage
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys
-  :req-un
-  [::result]))
-
-(defn
- set-sampling-interval
- "Changes CPU profiler sampling interval. Must be called before CPU profiles recording started.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :interval | New sampling interval in microseconds."
- ([]
-  (set-sampling-interval
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys [interval]}]
-  (set-sampling-interval
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys [interval]}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.setSamplingInterval"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {:interval "interval"})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- set-sampling-interval
+ fail-request
  :args
  (s/or
   :no-args
@@ -337,7 +245,8 @@
    :params
    (s/keys
     :req-un
-    [::interval]))
+    [::request-id
+     ::error-reason]))
   :connection-and-params
   (s/cat
    :connection
@@ -346,27 +255,33 @@
    :params
    (s/keys
     :req-un
-    [::interval])))
+    [::request-id
+     ::error-reason])))
  :ret
  (s/keys))
 
 (defn
- start
- ""
+ fulfill-request
+ "Provides response to the request.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :request-id       | An id the client received in requestPaused event.\n  :response-code    | An HTTP response code.\n  :response-headers | Response headers.\n  :body             | A response body. (optional)\n  :response-phrase  | A textual representation of responseCode.\nIf absent, a standard phrase mathcing responseCode is used. (optional)"
  ([]
-  (start
+  (fulfill-request
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (start
+ ([{:as params,
+    :keys
+    [request-id response-code response-headers body response-phrase]}]
+  (fulfill-request
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection
+   {:as params,
+    :keys
+    [request-id response-code response-headers body response-phrase]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.start"
+    "Fetch.fulfillRequest"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -374,7 +289,11 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:request-id "requestId",
+      :response-code "responseCode",
+      :response-headers "responseHeaders",
+      :body "body",
+      :response-phrase "responsePhrase"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -400,74 +319,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- start
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys))
-
-(defn
- start-precise-coverage
- "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code\ncoverage may be incomplete. Enabling prevents running optimized code and resets execution\ncounters.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :call-count | Collect accurate call counts beyond simple 'covered' or 'not covered'. (optional)\n  :detailed   | Collect block-based coverage. (optional)"
- ([]
-  (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys [call-count detailed]}]
-  (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys [call-count detailed]}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.startPreciseCoverage"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {:call-count "callCount", :detailed "detailed"})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- start-precise-coverage
+ fulfill-request
  :args
  (s/or
   :no-args
@@ -476,9 +328,13 @@
   (s/cat
    :params
    (s/keys
+    :req-un
+    [::request-id
+     ::response-code
+     ::response-headers]
     :opt-un
-    [::call-count
-     ::detailed]))
+    [::body
+     ::response-phrase]))
   :connection-and-params
   (s/cat
    :connection
@@ -486,29 +342,34 @@
     clj-chrome-devtools.impl.connection/connection?)
    :params
    (s/keys
+    :req-un
+    [::request-id
+     ::response-code
+     ::response-headers]
     :opt-un
-    [::call-count
-     ::detailed])))
+    [::body
+     ::response-phrase])))
  :ret
  (s/keys))
 
 (defn
- start-type-profile
- "Enable type profile."
+ continue-request
+ "Continues the request, optionally modifying some of its parameters.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :request-id | An id the client received in requestPaused event.\n  :url        | If set, the request url will be modified in a way that's not observable by page. (optional)\n  :method     | If set, the request method is overridden. (optional)\n  :post-data  | If set, overrides the post data in the request. (optional)\n  :headers    | If set, overrides the request headrts. (optional)"
  ([]
-  (start-type-profile
+  (continue-request
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (start-type-profile
+ ([{:as params, :keys [request-id url method post-data headers]}]
+  (continue-request
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection
+   {:as params, :keys [request-id url method post-data headers]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.startTypeProfile"
+    "Fetch.continueRequest"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -516,7 +377,11 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:request-id "requestId",
+      :url "url",
+      :method "method",
+      :post-data "postData",
+      :headers "headers"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -542,40 +407,56 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- start-type-profile
+ continue-request
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::request-id]
+    :opt-un
+    [::url
+     ::method
+     ::post-data
+     ::headers]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::request-id]
+    :opt-un
+    [::url
+     ::method
+     ::post-data
+     ::headers])))
  :ret
  (s/keys))
 
 (defn
- stop
- "\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :profile | Recorded profile."
+ continue-with-auth
+ "Continues a request supplying authChallengeResponse following authRequired event.\n\nParameters map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :request-id              | An id the client received in authRequired event.\n  :auth-challenge-response | Response to  with an authChallenge."
  ([]
-  (stop
+  (continue-with-auth
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (stop
+ ([{:as params, :keys [request-id auth-challenge-response]}]
+  (continue-with-auth
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [request-id auth-challenge-response]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.stop"
+    "Fetch.continueWithAuth"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -583,7 +464,8 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:request-id "requestId",
+      :auth-challenge-response "authChallengeResponse"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -609,42 +491,124 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- stop
+ continue-with-auth
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::request-id
+     ::auth-challenge-response]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::request-id
+     ::auth-challenge-response])))
+ :ret
+ (s/keys))
+
+(defn
+ get-response-body
+ "Causes the body of the response to be received from the server and\nreturned as a single string. May only be issued for a request that\nis paused in the Response stage and is mutually exclusive with\ntakeResponseBodyForInterceptionAsStream. Calling other methods that\naffect the request or disabling fetch domain before body is received\nresults in an undefined behavior.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :request-id | Identifier for the intercepted request to get body for.\n\nReturn map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :body           | Response body.\n  :base64-encoded | True, if content was sent as base64."
+ ([]
+  (get-response-body
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   {}))
+ ([{:as params, :keys [request-id]}]
+  (get-response-body
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   params))
+ ([connection {:as params, :keys [request-id]}]
+  (let
+   [id__36878__auto__
+    (clj-chrome-devtools.impl.define/next-command-id!)
+    method__36879__auto__
+    "Fetch.getResponseBody"
+    ch__36880__auto__
+    (clojure.core.async/chan)
+    payload__36881__auto__
+    (clj-chrome-devtools.impl.define/command-payload
+     id__36878__auto__
+     method__36879__auto__
+     params
+     {:request-id "requestId"})]
+   (clj-chrome-devtools.impl.connection/send-command
+    connection
+    payload__36881__auto__
+    id__36878__auto__
+    (fn*
+     [p1__36877__36882__auto__]
+     (clojure.core.async/go
+      (clojure.core.async/>!
+       ch__36880__auto__
+       p1__36877__36882__auto__))))
+   (let
+    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    (if-let
+     [error__36884__auto__ (:error result__36883__auto__)]
+     (throw
+      (ex-info
+       (str
+        "Error in command "
+        method__36879__auto__
+        ": "
+        (:message error__36884__auto__))
+       {:request payload__36881__auto__, :error error__36884__auto__}))
+     (:result result__36883__auto__))))))
+
+(s/fdef
+ get-response-body
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::request-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    clj-chrome-devtools.impl.connection/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::request-id])))
  :ret
  (s/keys
   :req-un
-  [::profile]))
+  [::body
+   ::base64-encoded]))
 
 (defn
- stop-precise-coverage
- "Disable precise code coverage. Disabling releases unnecessary execution count records and allows\nexecuting optimized code."
+ take-response-body-as-stream
+ "Returns a handle to the stream representing the response body.\nThe request must be paused in the HeadersReceived stage.\nNote that after this command the request can't be continued\nas is -- client either needs to cancel it or to provide the\nresponse body.\nThe stream only supports sequential read, IO.read will fail if the position\nis specified.\nThis method is mutually exclusive with getResponseBody.\nCalling other methods that affect the request or disabling fetch\ndomain before body is received results in an undefined behavior.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :request-id | null\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :stream | null"
  ([]
-  (stop-precise-coverage
+  (take-response-body-as-stream
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (stop-precise-coverage
+ ([{:as params, :keys [request-id]}]
+  (take-response-body-as-stream
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [request-id]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.stopPreciseCoverage"
+    "Fetch.takeResponseBodyAsStream"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -652,7 +616,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:request-id "requestId"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -678,224 +642,27 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- stop-precise-coverage
+ take-response-body-as-stream
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::request-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
- :ret
- (s/keys))
-
-(defn
- stop-type-profile
- "Disable type profile. Disabling releases type profile data collected so far."
- ([]
-  (stop-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (stop-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.stopTypeProfile"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- stop-type-profile
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys))
-
-(defn
- take-precise-coverage
- "Collect coverage data for the current isolate, and resets execution counters. Precise code\ncoverage needs to have started.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
- ([]
-  (take-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (take-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.takePreciseCoverage"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- take-precise-coverage
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::request-id])))
  :ret
  (s/keys
   :req-un
-  [::result]))
-
-(defn
- take-type-profile
- "Collect type profile.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Type profile for all scripts since startTypeProfile() was turned on."
- ([]
-  (take-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (take-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.takeTypeProfile"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- take-type-profile
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys
-  :req-un
-  [::result]))
+  [::stream]))

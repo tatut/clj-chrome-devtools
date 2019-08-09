@@ -1,26 +1,109 @@
-(ns clj-chrome-devtools.commands.io
-  "Input/Output operations for streams produced by DevTools."
+(ns clj-chrome-devtools.commands.web-audio
+  "This domain allows inspection of Web Audio API.\nhttps://webaudio.github.io/web-audio-api/"
   (:require [clojure.spec.alpha :as s]))
 (s/def
- ::stream-handle
+ ::graph-object-id
  string?)
+
+(s/def
+ ::context-type
+ #{"realtime" "offline"})
+
+(s/def
+ ::context-state
+ #{"running" "closed" "suspended"})
+
+(s/def
+ ::node-type
+ string?)
+
+(s/def
+ ::channel-count-mode
+ #{"max" "clamped-max" "explicit"})
+
+(s/def
+ ::channel-interpretation
+ #{"speakers" "discrete"})
+
+(s/def
+ ::param-type
+ string?)
+
+(s/def
+ ::automation-rate
+ #{"k-rate" "a-rate"})
+
+(s/def
+ ::context-realtime-data
+ (s/keys
+  :req-un
+  [::current-time
+   ::render-capacity
+   ::callback-interval-mean
+   ::callback-interval-variance]))
+
+(s/def
+ ::base-audio-context
+ (s/keys
+  :req-un
+  [::context-id
+   ::context-type
+   ::context-state
+   ::callback-buffer-size
+   ::max-output-channel-count
+   ::sample-rate]
+  :opt-un
+  [::realtime-data]))
+
+(s/def
+ ::audio-listener
+ (s/keys
+  :req-un
+  [::listener-id
+   ::context-id]))
+
+(s/def
+ ::audio-node
+ (s/keys
+  :req-un
+  [::node-id
+   ::context-id
+   ::node-type
+   ::number-of-inputs
+   ::number-of-outputs
+   ::channel-count
+   ::channel-count-mode
+   ::channel-interpretation]))
+
+(s/def
+ ::audio-param
+ (s/keys
+  :req-un
+  [::param-id
+   ::node-id
+   ::context-id
+   ::param-type
+   ::rate
+   ::default-value
+   ::min-value
+   ::max-value]))
 (defn
- close
- "Close the stream, discard any temporary backing storage.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :handle | Handle of the stream to close."
+ enable
+ "Enables the WebAudio domain and starts sending context lifetime events."
  ([]
-  (close
+  (enable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [handle]}]
-  (close
+ ([{:as params, :keys []}]
+  (enable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [handle]}]
+ ([connection {:as params, :keys []}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "IO.close"
+    "WebAudio.enable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -28,7 +111,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:handle "handle"})]
+     {})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -54,46 +137,40 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- close
+ enable
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat
-   :params
-   (s/keys
-    :req-un
-    [::handle]))
+  (s/cat :params (s/keys))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys
-    :req-un
-    [::handle])))
+   (s/keys)))
  :ret
  (s/keys))
 
 (defn
- read
- "Read a chunk of the stream\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :handle | Handle of the stream to read.\n  :offset | Seek to the specified offset before reading (if not specificed, proceed with offset\nfollowing the last read). Some types of streams may only support sequential reads. (optional)\n  :size   | Maximum number of bytes to read (left upon the agent discretion if not specified). (optional)\n\nReturn map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :base64-encoded | Set if the data is base64-encoded (optional)\n  :data           | Data that were read.\n  :eof            | Set if the end-of-file condition occured while reading."
+ disable
+ "Disables the WebAudio domain."
  ([]
-  (read
+  (disable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [handle offset size]}]
-  (read
+ ([{:as params, :keys []}]
+  (disable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [handle offset size]}]
+ ([connection {:as params, :keys []}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "IO.read"
+    "WebAudio.disable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -101,7 +178,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:handle "handle", :offset "offset", :size "size"})]
+     {})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -127,57 +204,40 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- read
+ disable
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat
-   :params
-   (s/keys
-    :req-un
-    [::handle]
-    :opt-un
-    [::offset
-     ::size]))
+  (s/cat :params (s/keys))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys
-    :req-un
-    [::handle]
-    :opt-un
-    [::offset
-     ::size])))
+   (s/keys)))
  :ret
- (s/keys
-  :req-un
-  [::data
-   ::eof]
-  :opt-un
-  [::base64-encoded]))
+ (s/keys))
 
 (defn
- resolve-blob
- "Return UUID of Blob object specified by a remote object id.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :object-id | Object id of a Blob object wrapper.\n\nReturn map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :uuid | UUID of the specified Blob."
+ get-realtime-data
+ "Fetch the realtime data from the registered contexts.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :context-id | null\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :realtime-data | null"
  ([]
-  (resolve-blob
+  (get-realtime-data
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [object-id]}]
-  (resolve-blob
+ ([{:as params, :keys [context-id]}]
+  (get-realtime-data
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [object-id]}]
+ ([connection {:as params, :keys [context-id]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "IO.resolveBlob"
+    "WebAudio.getRealtimeData"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -185,7 +245,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:object-id "objectId"})]
+     {:context-id "contextId"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -211,7 +271,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- resolve-blob
+ get-realtime-data
  :args
  (s/or
   :no-args
@@ -221,7 +281,7 @@
    :params
    (s/keys
     :req-un
-    [::object-id]))
+    [::context-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -230,8 +290,8 @@
    :params
    (s/keys
     :req-un
-    [::object-id])))
+    [::context-id])))
  :ret
  (s/keys
   :req-un
-  [::uuid]))
+  [::realtime-data]))

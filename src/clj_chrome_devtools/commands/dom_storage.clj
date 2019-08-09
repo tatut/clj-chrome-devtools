@@ -1,49 +1,92 @@
-(ns clj-chrome-devtools.commands.security
-  "Security"
+(ns clj-chrome-devtools.commands.dom-storage
+  "Query and modify DOM storage."
   (:require [clojure.spec.alpha :as s]))
 (s/def
- ::certificate-id
- integer?)
-
-(s/def
- ::mixed-content-type
- #{"none" "blockable" "optionally-blockable"})
-
-(s/def
- ::security-state
- #{"neutral" "info" "secure" "unknown" "insecure"})
-
-(s/def
- ::security-state-explanation
+ ::storage-id
  (s/keys
   :req-un
-  [::security-state
-   ::title
-   ::summary
-   ::description
-   ::mixed-content-type
-   ::certificate]
-  :opt-un
-  [::recommendations]))
+  [::security-origin
+   ::is-local-storage]))
 
 (s/def
- ::insecure-content-status
- (s/keys
-  :req-un
-  [::ran-mixed-content
-   ::displayed-mixed-content
-   ::contained-mixed-form
-   ::ran-content-with-cert-errors
-   ::displayed-content-with-cert-errors
-   ::ran-insecure-content-style
-   ::displayed-insecure-content-style]))
+ ::item
+ (s/coll-of string?))
+(defn
+ clear
+ "\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :storage-id | null"
+ ([]
+  (clear
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   {}))
+ ([{:as params, :keys [storage-id]}]
+  (clear
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   params))
+ ([connection {:as params, :keys [storage-id]}]
+  (let
+   [id__36878__auto__
+    (clj-chrome-devtools.impl.define/next-command-id!)
+    method__36879__auto__
+    "DOMStorage.clear"
+    ch__36880__auto__
+    (clojure.core.async/chan)
+    payload__36881__auto__
+    (clj-chrome-devtools.impl.define/command-payload
+     id__36878__auto__
+     method__36879__auto__
+     params
+     {:storage-id "storageId"})]
+   (clj-chrome-devtools.impl.connection/send-command
+    connection
+    payload__36881__auto__
+    id__36878__auto__
+    (fn*
+     [p1__36877__36882__auto__]
+     (clojure.core.async/go
+      (clojure.core.async/>!
+       ch__36880__auto__
+       p1__36877__36882__auto__))))
+   (let
+    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    (if-let
+     [error__36884__auto__ (:error result__36883__auto__)]
+     (throw
+      (ex-info
+       (str
+        "Error in command "
+        method__36879__auto__
+        ": "
+        (:message error__36884__auto__))
+       {:request payload__36881__auto__, :error error__36884__auto__}))
+     (:result result__36883__auto__))))))
 
-(s/def
- ::certificate-error-action
- #{"cancel" "continue"})
+(s/fdef
+ clear
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::storage-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    clj-chrome-devtools.impl.connection/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::storage-id])))
+ :ret
+ (s/keys))
+
 (defn
  disable
- "Disables tracking security state changes."
+ "Disables storage tracking, prevents storage events from being sent to the client."
  ([]
   (disable
    (clj-chrome-devtools.impl.connection/get-current-connection)
@@ -57,7 +100,7 @@
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.disable"
+    "DOMStorage.disable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -110,7 +153,7 @@
 
 (defn
  enable
- "Enables tracking security state changes."
+ "Enables storage tracking, storage events will now be delivered to the client."
  ([]
   (enable
    (clj-chrome-devtools.impl.connection/get-current-connection)
@@ -124,7 +167,7 @@
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.enable"
+    "DOMStorage.enable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -176,22 +219,22 @@
  (s/keys))
 
 (defn
- set-ignore-certificate-errors
- "Enable/disable whether all certificate errors should be ignored.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :ignore | If true, all certificate errors will be ignored."
+ get-dom-storage-items
+ "\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :storage-id | null\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :entries | null"
  ([]
-  (set-ignore-certificate-errors
+  (get-dom-storage-items
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [ignore]}]
-  (set-ignore-certificate-errors
+ ([{:as params, :keys [storage-id]}]
+  (get-dom-storage-items
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [ignore]}]
+ ([connection {:as params, :keys [storage-id]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.setIgnoreCertificateErrors"
+    "DOMStorage.getDOMStorageItems"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -199,7 +242,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:ignore "ignore"})]
+     {:storage-id "storageId"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -225,7 +268,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- set-ignore-certificate-errors
+ get-dom-storage-items
  :args
  (s/or
   :no-args
@@ -235,7 +278,7 @@
    :params
    (s/keys
     :req-un
-    [::ignore]))
+    [::storage-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -244,27 +287,104 @@
    :params
    (s/keys
     :req-un
-    [::ignore])))
+    [::storage-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::entries]))
+
+(defn
+ remove-dom-storage-item
+ "\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :storage-id | null\n  :key        | null"
+ ([]
+  (remove-dom-storage-item
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   {}))
+ ([{:as params, :keys [storage-id key]}]
+  (remove-dom-storage-item
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   params))
+ ([connection {:as params, :keys [storage-id key]}]
+  (let
+   [id__36878__auto__
+    (clj-chrome-devtools.impl.define/next-command-id!)
+    method__36879__auto__
+    "DOMStorage.removeDOMStorageItem"
+    ch__36880__auto__
+    (clojure.core.async/chan)
+    payload__36881__auto__
+    (clj-chrome-devtools.impl.define/command-payload
+     id__36878__auto__
+     method__36879__auto__
+     params
+     {:storage-id "storageId", :key "key"})]
+   (clj-chrome-devtools.impl.connection/send-command
+    connection
+    payload__36881__auto__
+    id__36878__auto__
+    (fn*
+     [p1__36877__36882__auto__]
+     (clojure.core.async/go
+      (clojure.core.async/>!
+       ch__36880__auto__
+       p1__36877__36882__auto__))))
+   (let
+    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    (if-let
+     [error__36884__auto__ (:error result__36883__auto__)]
+     (throw
+      (ex-info
+       (str
+        "Error in command "
+        method__36879__auto__
+        ": "
+        (:message error__36884__auto__))
+       {:request payload__36881__auto__, :error error__36884__auto__}))
+     (:result result__36883__auto__))))))
+
+(s/fdef
+ remove-dom-storage-item
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::storage-id
+     ::key]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    clj-chrome-devtools.impl.connection/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::storage-id
+     ::key])))
  :ret
  (s/keys))
 
 (defn
- handle-certificate-error
- "Handles a certificate error that fired a certificateError event.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :event-id | The ID of the event.\n  :action   | The action to take on the certificate error."
+ set-dom-storage-item
+ "\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :storage-id | null\n  :key        | null\n  :value      | null"
  ([]
-  (handle-certificate-error
+  (set-dom-storage-item
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [event-id action]}]
-  (handle-certificate-error
+ ([{:as params, :keys [storage-id key value]}]
+  (set-dom-storage-item
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [event-id action]}]
+ ([connection {:as params, :keys [storage-id key value]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Security.handleCertificateError"
+    "DOMStorage.setDOMStorageItem"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -272,7 +392,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:event-id "eventId", :action "action"})]
+     {:storage-id "storageId", :key "key", :value "value"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -298,7 +418,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- handle-certificate-error
+ set-dom-storage-item
  :args
  (s/or
   :no-args
@@ -308,8 +428,9 @@
    :params
    (s/keys
     :req-un
-    [::event-id
-     ::action]))
+    [::storage-id
+     ::key
+     ::value]))
   :connection-and-params
   (s/cat
    :connection
@@ -318,80 +439,8 @@
    :params
    (s/keys
     :req-un
-    [::event-id
-     ::action])))
- :ret
- (s/keys))
-
-(defn
- set-override-certificate-errors
- "Enable/disable overriding certificate errors. If enabled, all certificate error events need to\nbe handled by the DevTools client and should be answered with `handleCertificateError` commands.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :override | If true, certificate errors will be overridden."
- ([]
-  (set-override-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys [override]}]
-  (set-override-certificate-errors
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys [override]}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Security.setOverrideCertificateErrors"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {:override "override"})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- set-override-certificate-errors
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat
-   :params
-   (s/keys
-    :req-un
-    [::override]))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys
-    :req-un
-    [::override])))
+    [::storage-id
+     ::key
+     ::value])))
  :ret
  (s/keys))

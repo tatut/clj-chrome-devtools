@@ -1,149 +1,43 @@
-(ns clj-chrome-devtools.commands.profiler
+(ns clj-chrome-devtools.commands.web-authn
+  "This domain allows configuring virtual authenticators to test the WebAuthn\nAPI."
   (:require [clojure.spec.alpha :as s]))
 (s/def
- ::profile-node
+ ::authenticator-id
+ string?)
+
+(s/def
+ ::authenticator-protocol
+ #{"u2f" "ctap2"})
+
+(s/def
+ ::authenticator-transport
+ #{"internal" "cable" "ble" "nfc" "usb"})
+
+(s/def
+ ::virtual-authenticator-options
  (s/keys
   :req-un
-  [::id
-   ::call-frame]
+  [::protocol
+   ::transport
+   ::has-resident-key
+   ::has-user-verification]
   :opt-un
-  [::hit-count
-   ::children
-   ::deopt-reason
-   ::position-ticks]))
+  [::automatic-presence-simulation]))
 
 (s/def
- ::profile
+ ::credential
  (s/keys
   :req-un
-  [::nodes
-   ::start-time
-   ::end-time]
+  [::credential-id
+   ::is-resident-credential
+   ::private-key
+   ::sign-count]
   :opt-un
-  [::samples
-   ::time-deltas]))
-
-(s/def
- ::position-tick-info
- (s/keys
-  :req-un
-  [::line
-   ::ticks]))
-
-(s/def
- ::coverage-range
- (s/keys
-  :req-un
-  [::start-offset
-   ::end-offset
-   ::count]))
-
-(s/def
- ::function-coverage
- (s/keys
-  :req-un
-  [::function-name
-   ::ranges
-   ::is-block-coverage]))
-
-(s/def
- ::script-coverage
- (s/keys
-  :req-un
-  [::script-id
-   ::url
-   ::functions]))
-
-(s/def
- ::type-object
- (s/keys
-  :req-un
-  [::name]))
-
-(s/def
- ::type-profile-entry
- (s/keys
-  :req-un
-  [::offset
-   ::types]))
-
-(s/def
- ::script-type-profile
- (s/keys
-  :req-un
-  [::script-id
-   ::url
-   ::entries]))
-(defn
- disable
- ""
- ([]
-  (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (disable
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.disable"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- disable
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys))
-
+  [::rp-id
+   ::user-handle]))
 (defn
  enable
- ""
+ "Enable the WebAuthn domain and start intercepting credential storage and\nretrieval with a virtual authenticator."
  ([]
   (enable
    (clj-chrome-devtools.impl.connection/get-current-connection)
@@ -157,7 +51,7 @@
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.enable"
+    "WebAuthn.enable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -209,14 +103,14 @@
  (s/keys))
 
 (defn
- get-best-effort-coverage
- "Collect coverage data for the current isolate. The coverage data may be incomplete due to\ngarbage collection.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
+ disable
+ "Disable the WebAuthn domain."
  ([]
-  (get-best-effort-coverage
+  (disable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
  ([{:as params, :keys []}]
-  (get-best-effort-coverage
+  (disable
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
@@ -224,7 +118,7 @@
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.getBestEffortCoverage"
+    "WebAuthn.disable"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -258,7 +152,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- get-best-effort-coverage
+ disable
  :args
  (s/or
   :no-args
@@ -273,27 +167,25 @@
    :params
    (s/keys)))
  :ret
- (s/keys
-  :req-un
-  [::result]))
+ (s/keys))
 
 (defn
- set-sampling-interval
- "Changes CPU profiler sampling interval. Must be called before CPU profiles recording started.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :interval | New sampling interval in microseconds."
+ add-virtual-authenticator
+ "Creates and adds a virtual authenticator.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :options | null\n\nReturn map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null"
  ([]
-  (set-sampling-interval
+  (add-virtual-authenticator
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys [interval]}]
-  (set-sampling-interval
+ ([{:as params, :keys [options]}]
+  (add-virtual-authenticator
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys [interval]}]
+ ([connection {:as params, :keys [options]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.setSamplingInterval"
+    "WebAuthn.addVirtualAuthenticator"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -301,7 +193,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {:interval "interval"})]
+     {:options "options"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -327,7 +219,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- set-sampling-interval
+ add-virtual-authenticator
  :args
  (s/or
   :no-args
@@ -337,7 +229,7 @@
    :params
    (s/keys
     :req-un
-    [::interval]))
+    [::options]))
   :connection-and-params
   (s/cat
    :connection
@@ -346,27 +238,29 @@
    :params
    (s/keys
     :req-un
-    [::interval])))
+    [::options])))
  :ret
- (s/keys))
+ (s/keys
+  :req-un
+  [::authenticator-id]))
 
 (defn
- start
- ""
+ remove-virtual-authenticator
+ "Removes the given authenticator.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null"
  ([]
-  (start
+  (remove-virtual-authenticator
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (start
+ ([{:as params, :keys [authenticator-id]}]
+  (remove-virtual-authenticator
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [authenticator-id]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.start"
+    "WebAuthn.removeVirtualAuthenticator"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -374,7 +268,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:authenticator-id "authenticatorId"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -400,74 +294,7 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- start
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys))
-
-(defn
- start-precise-coverage
- "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code\ncoverage may be incomplete. Enabling prevents running optimized code and resets execution\ncounters.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :call-count | Collect accurate call counts beyond simple 'covered' or 'not covered'. (optional)\n  :detailed   | Collect block-based coverage. (optional)"
- ([]
-  (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys [call-count detailed]}]
-  (start-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys [call-count detailed]}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.startPreciseCoverage"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {:call-count "callCount", :detailed "detailed"})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- start-precise-coverage
+ remove-virtual-authenticator
  :args
  (s/or
   :no-args
@@ -476,9 +303,8 @@
   (s/cat
    :params
    (s/keys
-    :opt-un
-    [::call-count
-     ::detailed]))
+    :req-un
+    [::authenticator-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -486,29 +312,28 @@
     clj-chrome-devtools.impl.connection/connection?)
    :params
    (s/keys
-    :opt-un
-    [::call-count
-     ::detailed])))
+    :req-un
+    [::authenticator-id])))
  :ret
  (s/keys))
 
 (defn
- start-type-profile
- "Enable type profile."
+ add-credential
+ "Adds the credential to the specified authenticator.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null\n  :credential       | null"
  ([]
-  (start-type-profile
+  (add-credential
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (start-type-profile
+ ([{:as params, :keys [authenticator-id credential]}]
+  (add-credential
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [authenticator-id credential]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.startTypeProfile"
+    "WebAuthn.addCredential"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -516,7 +341,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:authenticator-id "authenticatorId", :credential "credential"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -542,40 +367,48 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- start-type-profile
+ add-credential
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::credential]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::credential])))
  :ret
  (s/keys))
 
 (defn
- stop
- "\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :profile | Recorded profile."
+ get-credential
+ "Returns a single credential stored in the given virtual authenticator that\nmatches the credential ID.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null\n  :credential-id    | null\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :credential | null"
  ([]
-  (stop
+  (get-credential
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (stop
+ ([{:as params, :keys [authenticator-id credential-id]}]
+  (get-credential
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [authenticator-id credential-id]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.stop"
+    "WebAuthn.getCredential"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -583,7 +416,8 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:authenticator-id "authenticatorId",
+      :credential-id "credentialId"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -609,42 +443,50 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- stop
+ get-credential
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::credential-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::credential-id])))
  :ret
  (s/keys
   :req-un
-  [::profile]))
+  [::credential]))
 
 (defn
- stop-precise-coverage
- "Disable precise code coverage. Disabling releases unnecessary execution count records and allows\nexecuting optimized code."
+ get-credentials
+ "Returns all the credentials stored in the given virtual authenticator.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null\n\nReturn map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :credentials | null"
  ([]
-  (stop-precise-coverage
+  (get-credentials
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (stop-precise-coverage
+ ([{:as params, :keys [authenticator-id]}]
+  (get-credentials
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [authenticator-id]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.stopPreciseCoverage"
+    "WebAuthn.getCredentials"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -652,7 +494,7 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:authenticator-id "authenticatorId"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -678,40 +520,121 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- stop-precise-coverage
+ get-credentials
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::authenticator-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::credentials]))
+
+(defn
+ clear-credentials
+ "Clears all the credentials from the specified device.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null"
+ ([]
+  (clear-credentials
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   {}))
+ ([{:as params, :keys [authenticator-id]}]
+  (clear-credentials
+   (clj-chrome-devtools.impl.connection/get-current-connection)
+   params))
+ ([connection {:as params, :keys [authenticator-id]}]
+  (let
+   [id__36878__auto__
+    (clj-chrome-devtools.impl.define/next-command-id!)
+    method__36879__auto__
+    "WebAuthn.clearCredentials"
+    ch__36880__auto__
+    (clojure.core.async/chan)
+    payload__36881__auto__
+    (clj-chrome-devtools.impl.define/command-payload
+     id__36878__auto__
+     method__36879__auto__
+     params
+     {:authenticator-id "authenticatorId"})]
+   (clj-chrome-devtools.impl.connection/send-command
+    connection
+    payload__36881__auto__
+    id__36878__auto__
+    (fn*
+     [p1__36877__36882__auto__]
+     (clojure.core.async/go
+      (clojure.core.async/>!
+       ch__36880__auto__
+       p1__36877__36882__auto__))))
+   (let
+    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
+    (if-let
+     [error__36884__auto__ (:error result__36883__auto__)]
+     (throw
+      (ex-info
+       (str
+        "Error in command "
+        method__36879__auto__
+        ": "
+        (:message error__36884__auto__))
+       {:request payload__36881__auto__, :error error__36884__auto__}))
+     (:result result__36883__auto__))))))
+
+(s/fdef
+ clear-credentials
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    clj-chrome-devtools.impl.connection/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id])))
  :ret
  (s/keys))
 
 (defn
- stop-type-profile
- "Disable type profile. Disabling releases type profile data collected so far."
+ set-user-verified
+ "Sets whether User Verification succeeds or fails for an authenticator.\nThe default is true.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null\n  :is-user-verified | null"
  ([]
-  (stop-type-profile
+  (set-user-verified
    (clj-chrome-devtools.impl.connection/get-current-connection)
    {}))
- ([{:as params, :keys []}]
-  (stop-type-profile
+ ([{:as params, :keys [authenticator-id is-user-verified]}]
+  (set-user-verified
    (clj-chrome-devtools.impl.connection/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [authenticator-id is-user-verified]}]
   (let
    [id__36878__auto__
     (clj-chrome-devtools.impl.define/next-command-id!)
     method__36879__auto__
-    "Profiler.stopTypeProfile"
+    "WebAuthn.setUserVerified"
     ch__36880__auto__
     (clojure.core.async/chan)
     payload__36881__auto__
@@ -719,7 +642,8 @@
      id__36878__auto__
      method__36879__auto__
      params
-     {})]
+     {:authenticator-id "authenticatorId",
+      :is-user-verified "isUserVerified"})]
    (clj-chrome-devtools.impl.connection/send-command
     connection
     payload__36881__auto__
@@ -745,157 +669,27 @@
      (:result result__36883__auto__))))))
 
 (s/fdef
- stop-type-profile
+ set-user-verified
  :args
  (s/or
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::is-user-verified]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     clj-chrome-devtools.impl.connection/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::is-user-verified])))
  :ret
  (s/keys))
-
-(defn
- take-precise-coverage
- "Collect coverage data for the current isolate, and resets execution counters. Precise code\ncoverage needs to have started.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
- ([]
-  (take-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (take-precise-coverage
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.takePreciseCoverage"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- take-precise-coverage
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys
-  :req-un
-  [::result]))
-
-(defn
- take-type-profile
- "Collect type profile.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Type profile for all scripts since startTypeProfile() was turned on."
- ([]
-  (take-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   {}))
- ([{:as params, :keys []}]
-  (take-type-profile
-   (clj-chrome-devtools.impl.connection/get-current-connection)
-   params))
- ([connection {:as params, :keys []}]
-  (let
-   [id__36878__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__36879__auto__
-    "Profiler.takeTypeProfile"
-    ch__36880__auto__
-    (clojure.core.async/chan)
-    payload__36881__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__36878__auto__
-     method__36879__auto__
-     params
-     {})]
-   (clj-chrome-devtools.impl.connection/send-command
-    connection
-    payload__36881__auto__
-    id__36878__auto__
-    (fn*
-     [p1__36877__36882__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__36880__auto__
-       p1__36877__36882__auto__))))
-   (let
-    [result__36883__auto__ (clojure.core.async/<!! ch__36880__auto__)]
-    (if-let
-     [error__36884__auto__ (:error result__36883__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__36879__auto__
-        ": "
-        (:message error__36884__auto__))
-       {:request payload__36881__auto__, :error error__36884__auto__}))
-     (:result result__36883__auto__))))))
-
-(s/fdef
- take-type-profile
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat :params (s/keys))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    clj-chrome-devtools.impl.connection/connection?)
-   :params
-   (s/keys)))
- :ret
- (s/keys
-  :req-un
-  [::result]))
