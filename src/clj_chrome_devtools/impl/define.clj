@@ -6,7 +6,8 @@
             [clojure.core.async :as async :refer [go <!! >!]]
             [clojure.set :as set]
             [clj-chrome-devtools.impl.util :refer [camel->clojure]]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [clojure.pprint :as pprint]))
 
 
 (def to-symbol (comp symbol camel->clojure))
@@ -61,7 +62,8 @@
       "integer" `integer?
       "number" `number?
       "boolean" `boolean?
-      "array" `(s/coll-of ~(spec-for-type (:items t))))))
+      "array" `(s/coll-of ~(spec-for-type (:items t)))
+      `any?)))
 
 (defmacro define-type-specs [domain]
   `(do
@@ -75,6 +77,19 @@
                 `(s/def ~(ns-kw name)
                    ~(spec-for-type property-type)))
             (s/def ~name-kw ~(spec-for-type t))))))
+
+(defn generate-type-specs [domain]
+  (mapcat
+   (fn [{id :id type :type :as t}]
+     (let [name-kw (ns-kw id)]
+       (concat
+        ;; If this is an object, create specs for basic type keys
+        (for [{name :name :as property-type} (:properties t)
+              :when (#{"string" "number" "integer" "boolean" "array"} type)]
+          `(s/def ~(ns-kw name)
+             ~(spec-for-type property-type)))
+        [`(s/def ~name-kw ~(spec-for-type t))])))
+   (proto/types-for-domain domain)))
 
 (defmacro define-command-functions [domain]
   `(do
@@ -122,6 +137,72 @@
                                  :params ~(keys-spec parameters)))
                     :ret ~(keys-spec returns))))))
 
+(defn generate-command-functions [domain]
+  (mapcat
+   (fn [{:keys [name description parameters returns]}]
+     (let [fn-name (to-symbol name)
+           params (mapv (comp to-symbol :name) parameters)
+           param-names (zipmap (map (comp keyword camel->clojure :name) parameters)
+                               (map :name parameters))
+           [required-params optional-params] (split-with (comp not :optional) params)]
+       [`(defn ~fn-name
+           ~(str (process-doc description)
+                 (when-not (empty? parameters)
+                   (str "\n\nParameters map keys:\n"
+                        (describe-map-keys parameters)))
+                 (when-not (empty? returns)
+                   (str "\n\nReturn map keys:\n"
+                        (describe-map-keys returns))))
+           ([] (~(to-symbol name) (connection/get-current-connection) {}))
+           ([{:keys [~@params] :as ~'params}]
+            (~(to-symbol name) (connection/get-current-connection) ~'params))
+           ([~'connection {:keys [~@params] :as ~'params}]
+            (let [id# (next-command-id!)
+                  method# ~(str domain "." name)
+                  ch# (async/chan)
+                  payload# (command-payload id# method# ~'params
+                                            ~param-names)]
+              (connection/send-command ~'connection payload# id# #(go (>! ch# %)))
+              (let [result# (<!! ch#)]
+                (if-let [error# (:error result#)]
+                  (throw (ex-info (str "Error in command " method# ": " (:message error#))
+                                  {:request payload#
+                                   :error error#}))
+                  (:result result#))))))
+        `(s/fdef ~fn-name
+           :args (s/or :no-args
+                       (s/cat)
+
+                       :just-params
+                       (s/cat :params ~(keys-spec parameters))
+
+                       :connection-and-params
+                       (s/cat
+                        :connection (s/? connection/connection?)
+                        :params ~(keys-spec parameters)))
+           :ret ~(keys-spec returns))]))
+   (proto/commands-for-domain domain)))
+
+(defn call-in-ns [ns fun]
+  (let [old-ns (ns-name *ns*)]
+    (in-ns ns)
+    (let [ret (fun)]
+      (in-ns old-ns)
+      ret)))
+
+(defn pretty-print-code [the-ns code]
+  (str/join "\n"
+            (map #(-> (with-out-str
+                        (pprint/pprint %))
+
+                      ;; Fix spec and clojure.core refs
+                      (str/replace #"clojure.spec.alpha/" "s/")
+                      (str/replace #"clojure.core/" "")
+
+                      ;; Use same ns keywords
+                      (str/replace (str ":" the-ns "/")
+                                   (str "::"))) code)))
+
 #_(defmacro define-event-handlers [domain]
   `(do
      ~@(for [{:keys [name parameters description] :as event} (proto/events-for-domain domain)
@@ -142,14 +223,17 @@
      (define-command-functions ~domain)
      #_(define-event-handlers domain)))
 
-(comment
-  ;; To regenerate the command namespaces, run this
+(defn -main [& args]
   (doseq [{:keys [domain description]} (proto/all-domains)]
     (let [clj-name (camel->clojure domain)
-          file-name (str "src/clj_chrome_devtools/commands/" (str/lower-case (str/replace clj-name "-" "_")) ".clj")]
+          file-name (str "src/clj_chrome_devtools/commands/" (str/lower-case (str/replace clj-name "-" "_")) ".clj")
+          ns-name (str "clj-chrome-devtools.commands." (str/lower-case clj-name))
+          ns-sym (symbol ns-name)]
+      (println "Generate command namespace: " file-name)
       (spit file-name
             (str "(ns clj-chrome-devtools.commands." (str/lower-case clj-name) "\n"
                  (when description
                    (str "  " (pr-str (process-doc description)) "\n"))
-                 "  (:require [clj-chrome-devtools.impl.define :refer [define-domain]]))\n"
-                 "(define-domain \"" domain "\")")))))
+                 "  (:require [clojure.spec.alpha :as s]))\n"
+                 (pretty-print-code ns-name (call-in-ns ns-sym #(generate-type-specs domain)))
+                 (pretty-print-code ns-name (call-in-ns ns-sym #(generate-command-functions domain))))))))
