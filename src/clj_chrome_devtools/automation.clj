@@ -68,6 +68,10 @@
 
 (defonce current-automation (atom nil))
 
+;; Some functions (such as evaluate) have an arity that takes a timeout-ms argument. This value is
+;; used when one of the *other* arities is used.
+(defonce default-timeout-ms (atom 60000))
+
 (def ^:dynamic *wait-ms* {:element 4000
                           :navigate 30000
                           :render 500})
@@ -201,13 +205,29 @@
       :center [(Math/round (double (+ x (/ width 2))))
                (Math/round (double (+ y (/ height 2))))]})))
 
+(defmacro with-timeout
+  "If the timeout elapses before the body has completed, an ExceptionInfo will be thrown."
+  ;; To consider: perhaps we should include part of the body in the exception message?
+  {:derived-from "https://stackoverflow.com/q/6694530/7012"}
+  [ms body]
+  `(let [fut# (future ~body)
+         ret# (deref fut# ~ms ::timed-out)]
+     (when (= ret# ::timed-out)
+       (future-cancel fut#)
+       (throw (ex-info "Timeout! Script did not return in time." {:timeout ~ms})))
+     ret#))
+
 (defn evaluate
-  ([expression] (evaluate @current-automation expression))
-  ([{c :connection :as ctx} expression]
-   (->> {:expression expression :return-by-value true}
-        (runtime/evaluate c)
-        ;; :value only works for simple values
-        :result :value)))
+  ([expression]
+    (evaluate @current-automation expression))
+  ([ctx expression]
+    (evaluate ctx expression @default-timeout-ms))
+  ([{c :connection :as _ctx} expression timeout-ms]
+   (with-timeout timeout-ms
+     (->> {:expression expression :return-by-value true}
+          (runtime/evaluate c)
+          ;; :value only works for simple values
+          :result :value))))
 
 (defn- node-object-id [{c :connection :as ctx} node]
   (->> node (dom/resolve-node c) :object :object-id))

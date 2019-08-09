@@ -20,6 +20,24 @@
     (assert c "No current Chrome Devtools connection!")
     c))
 
+(def ws-close-status-code->reason
+  ^{:source "https://tools.ietf.org/html/rfc6455#section-7.4"}
+  {1000 "Normal"
+   1001 "Going away"
+   1002 "Protocol error"
+   1003 "Unsupported"
+   1005 "No status code"
+   1006 "Abnormal"
+   1007 "Unsupported payload"
+   1008 "Policy violation"
+   1009 "Too large"
+   1010 "Mandatory extension"
+   1011 "Server error"
+   1012 "Service restart"
+   1013 "Try again later"
+   1014 "Bad gateway"
+   1015 "TLS handshake fail"})
+
 (defn- parse-json [string]
   (cheshire/parse-string string (comp keyword camel->clojure)))
 
@@ -54,6 +72,14 @@
       (log/error "Exception in devtools WebSocket receive, msg: " msg
                  ", throwable: " t))))
 
+(defn- on-close [code reason]
+  (log/log (case code 1000 :info :warn)
+           "WebSocket connection closed with status code"
+           code
+           (str "(" (ws-close-status-code->reason code "UNKNOWN") ")")
+           "and reason:"
+           reason))
+
 (defn- wait-for-remote-debugging-port [host port max-wait-time-ms]
   (let [wait-until (+ (System/currentTimeMillis) max-wait-time-ms)
         url        (str "http://" host ":" port "/json/version")]
@@ -81,7 +107,6 @@
      (some->> response
               :body
               parse-json))))
-
 
 (defn- first-inspectable-page [pages]
   (or (some->> pages
@@ -120,6 +145,9 @@
     (.start client)
     (->Connection (ws/connect web-socket-debugger-url
                               :on-receive (partial on-receive requests event-chan)
+                              :on-error #(log/error
+                                          "Error in devtools WebSocket connection; throwable:" %)
+                              :on-close on-close
                               :client client)
                   requests
                   event-chan
