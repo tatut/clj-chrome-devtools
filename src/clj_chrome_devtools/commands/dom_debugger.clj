@@ -1,7 +1,9 @@
 (ns clj-chrome-devtools.commands.dom-debugger
   "DOM debugging allows setting breakpoints on particular DOM operations and events. JavaScript\nexecution will stop on these operations as if there was a regular breakpoint set."
   (:require [clojure.spec.alpha :as s]
+            [clj-chrome-devtools.impl.command :as cmd]
             [clj-chrome-devtools.impl.connection :as c]))
+
 (s/def
  ::dom-breakpoint-type
  #{"attribute-modified" "subtree-modified" "node-removed"})
@@ -34,41 +36,41 @@
    params))
  ([connection {:as params, :keys [object-id depth pierce]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.getEventListeners"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:object-id "objectId", :depth "depth", :pierce "pierce"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  get-event-listeners
@@ -115,41 +117,41 @@
    params))
  ([connection {:as params, :keys [node-id type]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.removeDOMBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:node-id "nodeId", :type "type"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  remove-dom-breakpoint
@@ -190,41 +192,41 @@
    params))
  ([connection {:as params, :keys [event-name target-name]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.removeEventListenerBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:event-name "eventName", :target-name "targetName"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  remove-event-listener-breakpoint
@@ -267,41 +269,41 @@
    params))
  ([connection {:as params, :keys [event-name]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.removeInstrumentationBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:event-name "eventName"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  remove-instrumentation-breakpoint
@@ -340,41 +342,41 @@
    params))
  ([connection {:as params, :keys [url]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.removeXHRBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:url "url"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  remove-xhr-breakpoint
@@ -413,41 +415,41 @@
    params))
  ([connection {:as params, :keys [node-id type]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.setDOMBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:node-id "nodeId", :type "type"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  set-dom-breakpoint
@@ -488,41 +490,41 @@
    params))
  ([connection {:as params, :keys [event-name target-name]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.setEventListenerBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:event-name "eventName", :target-name "targetName"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  set-event-listener-breakpoint
@@ -565,41 +567,41 @@
    params))
  ([connection {:as params, :keys [event-name]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.setInstrumentationBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:event-name "eventName"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  set-instrumentation-breakpoint
@@ -638,41 +640,41 @@
    params))
  ([connection {:as params, :keys [url]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "DOMDebugger.setXHRBreakpoint"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:url "url"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  set-xhr-breakpoint

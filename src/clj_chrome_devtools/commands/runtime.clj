@@ -1,7 +1,9 @@
 (ns clj-chrome-devtools.commands.runtime
   "Runtime domain exposes JavaScript runtime by means of remote evaluation and mirror objects.\nEvaluation results are returned as mirror object that expose object type, string representation\nand unique identifier that can be used for further object reference. Original objects are\nmaintained in memory unless they are either explicitly released or are released along with the\nother objects in their object group."
   (:require [clojure.spec.alpha :as s]
+            [clj-chrome-devtools.impl.command :as cmd]
             [clj-chrome-devtools.impl.connection :as c]))
+
 (s/def
  ::script-id
  string?)
@@ -191,43 +193,43 @@
    {:as params,
     :keys [promise-object-id return-by-value generate-preview]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.awaitPromise"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:promise-object-id "promiseObjectId",
       :return-by-value "returnByValue",
       :generate-preview "generatePreview"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  await-promise
@@ -299,16 +301,16 @@
      execution-context-id
      object-group]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.callFunctionOn"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:object-group "objectGroup",
       :object-id "objectId",
@@ -322,27 +324,27 @@
       :user-gesture "userGesture"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  call-function-on
@@ -408,16 +410,16 @@
    {:as params,
     :keys [expression source-url persist-script execution-context-id]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.compileScript"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:expression "expression",
       :source-url "sourceURL",
@@ -425,27 +427,27 @@
       :execution-context-id "executionContextId"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  compile-script
@@ -495,41 +497,41 @@
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.disable"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  disable
@@ -562,41 +564,41 @@
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.discardConsoleEntries"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  discard-console-entries
@@ -629,41 +631,41 @@
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.enable"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  enable
@@ -721,16 +723,16 @@
      throw-on-side-effect
      timeout]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.evaluate"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:object-group "objectGroup",
       :expression "expression",
@@ -745,27 +747,27 @@
       :context-id "contextId"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  evaluate
@@ -830,41 +832,41 @@
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.getIsolateId"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  get-isolate-id
@@ -899,41 +901,41 @@
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.getHeapUsage"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  get-heap-usage
@@ -980,16 +982,16 @@
      accessor-properties-only
      generate-preview]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.getProperties"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:object-id "objectId",
       :own-properties "ownProperties",
@@ -997,27 +999,27 @@
       :generate-preview "generatePreview"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  get-properties
@@ -1070,41 +1072,41 @@
    params))
  ([connection {:as params, :keys [execution-context-id]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.globalLexicalScopeNames"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:execution-context-id "executionContextId"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  global-lexical-scope-names
@@ -1145,42 +1147,42 @@
    params))
  ([connection {:as params, :keys [prototype-object-id object-group]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.queryObjects"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:prototype-object-id "prototypeObjectId",
       :object-group "objectGroup"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  query-objects
@@ -1225,41 +1227,41 @@
    params))
  ([connection {:as params, :keys [object-id]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.releaseObject"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:object-id "objectId"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  release-object
@@ -1298,41 +1300,41 @@
    params))
  ([connection {:as params, :keys [object-group]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.releaseObjectGroup"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:object-group "objectGroup"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  release-object-group
@@ -1371,41 +1373,41 @@
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.runIfWaitingForDebugger"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  run-if-waiting-for-debugger
@@ -1457,16 +1459,16 @@
      generate-preview
      await-promise]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.runScript"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:script-id "scriptId",
       :execution-context-id "executionContextId",
@@ -1478,27 +1480,27 @@
       :await-promise "awaitPromise"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  run-script
@@ -1557,41 +1559,41 @@
    params))
  ([connection {:as params, :keys [max-depth]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.setAsyncCallStackDepth"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:max-depth "maxDepth"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  set-async-call-stack-depth
@@ -1630,41 +1632,41 @@
    params))
  ([connection {:as params, :keys [enabled]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.setCustomObjectFormatterEnabled"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:enabled "enabled"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  set-custom-object-formatter-enabled
@@ -1703,41 +1705,41 @@
    params))
  ([connection {:as params, :keys [size]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.setMaxCallStackSizeToCapture"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:size "size"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  set-max-call-stack-size-to-capture
@@ -1776,41 +1778,41 @@
    params))
  ([connection {:as params, :keys []}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.terminateExecution"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  terminate-execution
@@ -1843,41 +1845,41 @@
    params))
  ([connection {:as params, :keys [name execution-context-id]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.addBinding"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:name "name", :execution-context-id "executionContextId"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  add-binding
@@ -1920,41 +1922,41 @@
    params))
  ([connection {:as params, :keys [name]}]
   (let
-   [id__62694__auto__
-    (clj-chrome-devtools.impl.define/next-command-id!)
-    method__62695__auto__
+   [id__69750__auto__
+    (cmd/next-command-id!)
+    method__69751__auto__
     "Runtime.removeBinding"
-    ch__62696__auto__
+    ch__69752__auto__
     (clojure.core.async/chan)
-    payload__62697__auto__
-    (clj-chrome-devtools.impl.define/command-payload
-     id__62694__auto__
-     method__62695__auto__
+    payload__69753__auto__
+    (cmd/command-payload
+     id__69750__auto__
+     method__69751__auto__
      params
      {:name "name"})]
    (c/send-command
     connection
-    payload__62697__auto__
-    id__62694__auto__
+    payload__69753__auto__
+    id__69750__auto__
     (fn*
-     [p1__62693__62698__auto__]
+     [p1__69749__69754__auto__]
      (clojure.core.async/go
       (clojure.core.async/>!
-       ch__62696__auto__
-       p1__62693__62698__auto__))))
+       ch__69752__auto__
+       p1__69749__69754__auto__))))
    (let
-    [result__62699__auto__ (clojure.core.async/<!! ch__62696__auto__)]
+    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
     (if-let
-     [error__62700__auto__ (:error result__62699__auto__)]
+     [error__69756__auto__ (:error result__69755__auto__)]
      (throw
       (ex-info
        (str
         "Error in command "
-        method__62695__auto__
+        method__69751__auto__
         ": "
-        (:message error__62700__auto__))
-       {:request payload__62697__auto__, :error error__62700__auto__}))
-     (:result result__62699__auto__))))))
+        (:message error__69756__auto__))
+       {:request payload__69753__auto__, :error error__69756__auto__}))
+     (:result result__69755__auto__))))))
 
 (s/fdef
  remove-binding

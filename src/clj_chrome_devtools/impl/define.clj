@@ -12,16 +12,6 @@
 
 (def to-symbol (comp symbol camel->clojure))
 
-(defonce command-id (atom 0))
-
-(defn next-command-id! []
-  (swap! command-id inc))
-
-(defn command-payload [id name params parameter-names]
-  {:id id
-   :method name
-   :params (set/rename-keys params parameter-names)})
-
 (defn process-doc [doc]
   (some-> doc
           (str/replace #"<code>" "`")
@@ -157,11 +147,11 @@
            ([{:keys [~@params] :as ~'params}]
             (~(to-symbol name) (connection/get-current-connection) ~'params))
            ([~'connection {:keys [~@params] :as ~'params}]
-            (let [id# (next-command-id!)
+            (let [id# (clj-chrome-devtools.impl.command/next-command-id!)
                   method# ~(str domain "." name)
                   ch# (async/chan)
-                  payload# (command-payload id# method# ~'params
-                                            ~param-names)]
+                  payload# (clj-chrome-devtools.impl.command/command-payload id# method# ~'params
+                                                                             ~param-names)]
               (connection/send-command ~'connection payload# id# #(go (>! ch# %)))
               (let [result# (<!! ch#)]
                 (if-let [error# (:error result#)]
@@ -198,6 +188,7 @@
                       ;; Make ns references pretties
                       (str/replace "clojure.spec.alpha/" "s/")
                       (str/replace "clj-chrome-devtools.impl.connection/" "c/")
+                      (str/replace "clj-chrome-devtools.impl.command/" "cmd/")
                       (str/replace "clojure.core/" "")
 
                       ;; Use same ns keywords
@@ -236,6 +227,7 @@
                  (when description
                    (str "  " (pr-str (process-doc description)) "\n"))
                  "  (:require [clojure.spec.alpha :as s]\n"
-                 "            [clj-chrome-devtools.impl.connection :as c]))\n"
+                 "            [clj-chrome-devtools.impl.command :as cmd]\n"
+                 "            [clj-chrome-devtools.impl.connection :as c]))\n\n"
                  (pretty-print-code ns-name (call-in-ns ns-sym #(generate-type-specs domain)))
                  (pretty-print-code ns-name (call-in-ns ns-sym #(generate-command-functions domain))))))))
