@@ -55,7 +55,7 @@
                       output)))))
     (testing "specified limit (2MB)"
       (let [automation (make-automation {:max-msg-size-mb (* 1024 1024 2)})
-            eval-timeout-ms 1000 ; Specify a short timeout because this error case would otherwise
+            eval-timeout-ms 2000 ; Specify a short timeout because this error case would otherwise
                                  ; cause evaluate to hang until its default timeout of 60 seconds
                                  ; elapses, which would just be too slow.
             log (reset-log!)]
