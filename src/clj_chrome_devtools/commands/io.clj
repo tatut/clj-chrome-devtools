@@ -19,42 +19,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [handle]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "IO.close"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:handle "handle"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "IO"
+   "close"
+   params
+   {:handle "handle"})))
 
 (s/fdef
  close
@@ -92,42 +62,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [handle offset size]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "IO.read"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:handle "handle", :offset "offset", :size "size"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "IO"
+   "read"
+   params
+   {:handle "handle", :offset "offset", :size "size"})))
 
 (s/fdef
  read
@@ -176,42 +116,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [object-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "IO.resolveBlob"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:object-id "objectId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "IO"
+   "resolveBlob"
+   params
+   {:object-id "objectId"})))
 
 (s/fdef
  resolve-blob

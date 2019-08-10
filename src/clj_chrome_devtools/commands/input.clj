@@ -66,55 +66,25 @@
      is-keypad
      is-system-key
      location]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.dispatchKeyEvent"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:key "key",
-      :windows-virtual-key-code "windowsVirtualKeyCode",
-      :unmodified-text "unmodifiedText",
-      :type "type",
-      :auto-repeat "autoRepeat",
-      :modifiers "modifiers",
-      :is-keypad "isKeypad",
-      :code "code",
-      :key-identifier "keyIdentifier",
-      :native-virtual-key-code "nativeVirtualKeyCode",
-      :timestamp "timestamp",
-      :location "location",
-      :is-system-key "isSystemKey",
-      :text "text"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "dispatchKeyEvent"
+   params
+   {:key "key",
+    :windows-virtual-key-code "windowsVirtualKeyCode",
+    :unmodified-text "unmodifiedText",
+    :type "type",
+    :auto-repeat "autoRepeat",
+    :modifiers "modifiers",
+    :is-keypad "isKeypad",
+    :code "code",
+    :key-identifier "keyIdentifier",
+    :native-virtual-key-code "nativeVirtualKeyCode",
+    :timestamp "timestamp",
+    :location "location",
+    :is-system-key "isSystemKey",
+    :text "text"})))
 
 (s/fdef
  dispatch-key-event
@@ -180,42 +150,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [text]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.insertText"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:text "text"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "insertText"
+   params
+   {:text "text"})))
 
 (s/fdef
  insert-text
@@ -278,52 +218,22 @@
      delta-x
      delta-y
      pointer-type]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.dispatchMouseEvent"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:y "y",
-      :click-count "clickCount",
-      :buttons "buttons",
-      :delta-y "deltaY",
-      :button "button",
-      :type "type",
-      :delta-x "deltaX",
-      :modifiers "modifiers",
-      :pointer-type "pointerType",
-      :x "x",
-      :timestamp "timestamp"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "dispatchMouseEvent"
+   params
+   {:y "y",
+    :click-count "clickCount",
+    :buttons "buttons",
+    :delta-y "deltaY",
+    :button "button",
+    :type "type",
+    :delta-x "deltaX",
+    :modifiers "modifiers",
+    :pointer-type "pointerType",
+    :x "x",
+    :timestamp "timestamp"})))
 
 (s/fdef
  dispatch-mouse-event
@@ -384,45 +294,15 @@
    params))
  ([connection
    {:as params, :keys [type touch-points modifiers timestamp]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.dispatchTouchEvent"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:type "type",
-      :touch-points "touchPoints",
-      :modifiers "modifiers",
-      :timestamp "timestamp"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "dispatchTouchEvent"
+   params
+   {:type "type",
+    :touch-points "touchPoints",
+    :modifiers "modifiers",
+    :timestamp "timestamp"})))
 
 (s/fdef
  dispatch-touch-event
@@ -473,50 +353,20 @@
    {:as params,
     :keys
     [type x y button timestamp delta-x delta-y modifiers click-count]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.emulateTouchFromMouseEvent"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:y "y",
-      :click-count "clickCount",
-      :delta-y "deltaY",
-      :button "button",
-      :type "type",
-      :delta-x "deltaX",
-      :modifiers "modifiers",
-      :x "x",
-      :timestamp "timestamp"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "emulateTouchFromMouseEvent"
+   params
+   {:y "y",
+    :click-count "clickCount",
+    :delta-y "deltaY",
+    :button "button",
+    :type "type",
+    :delta-x "deltaX",
+    :modifiers "modifiers",
+    :x "x",
+    :timestamp "timestamp"})))
 
 (s/fdef
  emulate-touch-from-mouse-event
@@ -572,42 +422,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [ignore]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.setIgnoreInputEvents"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:ignore "ignore"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "setIgnoreInputEvents"
+   params
+   {:ignore "ignore"})))
 
 (s/fdef
  set-ignore-input-events
@@ -648,46 +468,16 @@
  ([connection
    {:as params,
     :keys [x y scale-factor relative-speed gesture-source-type]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.synthesizePinchGesture"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:x "x",
-      :y "y",
-      :scale-factor "scaleFactor",
-      :relative-speed "relativeSpeed",
-      :gesture-source-type "gestureSourceType"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "synthesizePinchGesture"
+   params
+   {:x "x",
+    :y "y",
+    :scale-factor "scaleFactor",
+    :relative-speed "relativeSpeed",
+    :gesture-source-type "gestureSourceType"})))
 
 (s/fdef
  synthesize-pinch-gesture
@@ -762,53 +552,23 @@
      repeat-count
      repeat-delay-ms
      interaction-marker-name]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.synthesizeScrollGesture"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:y "y",
-      :y-distance "yDistance",
-      :x-distance "xDistance",
-      :y-overscroll "yOverscroll",
-      :speed "speed",
-      :repeat-delay-ms "repeatDelayMs",
-      :x-overscroll "xOverscroll",
-      :gesture-source-type "gestureSourceType",
-      :prevent-fling "preventFling",
-      :x "x",
-      :interaction-marker-name "interactionMarkerName",
-      :repeat-count "repeatCount"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "synthesizeScrollGesture"
+   params
+   {:y "y",
+    :y-distance "yDistance",
+    :x-distance "xDistance",
+    :y-overscroll "yOverscroll",
+    :speed "speed",
+    :repeat-delay-ms "repeatDelayMs",
+    :x-overscroll "xOverscroll",
+    :gesture-source-type "gestureSourceType",
+    :prevent-fling "preventFling",
+    :x "x",
+    :interaction-marker-name "interactionMarkerName",
+    :repeat-count "repeatCount"})))
 
 (s/fdef
  synthesize-scroll-gesture
@@ -871,46 +631,16 @@
    params))
  ([connection
    {:as params, :keys [x y duration tap-count gesture-source-type]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Input.synthesizeTapGesture"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:x "x",
-      :y "y",
-      :duration "duration",
-      :tap-count "tapCount",
-      :gesture-source-type "gestureSourceType"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Input"
+   "synthesizeTapGesture"
+   params
+   {:x "x",
+    :y "y",
+    :duration "duration",
+    :tap-count "tapCount",
+    :gesture-source-type "gestureSourceType"})))
 
 (s/fdef
  synthesize-tap-gesture

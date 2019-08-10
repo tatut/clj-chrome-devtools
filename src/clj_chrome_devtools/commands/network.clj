@@ -355,42 +355,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.canClearBrowserCache"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "canClearBrowserCache"
+   params
+   {})))
 
 (s/fdef
  can-clear-browser-cache
@@ -424,42 +394,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.canClearBrowserCookies"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "canClearBrowserCookies"
+   params
+   {})))
 
 (s/fdef
  can-clear-browser-cookies
@@ -493,42 +433,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.canEmulateNetworkConditions"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "canEmulateNetworkConditions"
+   params
+   {})))
 
 (s/fdef
  can-emulate-network-conditions
@@ -562,42 +472,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.clearBrowserCache"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "clearBrowserCache"
+   params
+   {})))
 
 (s/fdef
  clear-browser-cache
@@ -629,42 +509,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.clearBrowserCookies"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "clearBrowserCookies"
+   params
+   {})))
 
 (s/fdef
  clear-browser-cookies
@@ -715,49 +565,19 @@
      post-data
      headers
      auth-challenge-response]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.continueInterceptedRequest"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:interception-id "interceptionId",
-      :error-reason "errorReason",
-      :raw-response "rawResponse",
-      :url "url",
-      :method "method",
-      :post-data "postData",
-      :headers "headers",
-      :auth-challenge-response "authChallengeResponse"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "continueInterceptedRequest"
+   params
+   {:interception-id "interceptionId",
+    :error-reason "errorReason",
+    :raw-response "rawResponse",
+    :url "url",
+    :method "method",
+    :post-data "postData",
+    :headers "headers",
+    :auth-challenge-response "authChallengeResponse"})))
 
 (s/fdef
  continue-intercepted-request
@@ -811,42 +631,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [name url domain path]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.deleteCookies"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:name "name", :url "url", :domain "domain", :path "path"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "deleteCookies"
+   params
+   {:name "name", :url "url", :domain "domain", :path "path"})))
 
 (s/fdef
  delete-cookies
@@ -892,42 +682,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.disable"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "disable"
+   params
+   {})))
 
 (s/fdef
  disable
@@ -972,46 +732,16 @@
      download-throughput
      upload-throughput
      connection-type]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.emulateNetworkConditions"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:offline "offline",
-      :latency "latency",
-      :download-throughput "downloadThroughput",
-      :upload-throughput "uploadThroughput",
-      :connection-type "connectionType"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "emulateNetworkConditions"
+   params
+   {:offline "offline",
+    :latency "latency",
+    :download-throughput "downloadThroughput",
+    :upload-throughput "uploadThroughput",
+    :connection-type "connectionType"})))
 
 (s/fdef
  emulate-network-conditions
@@ -1068,44 +798,14 @@
     [max-total-buffer-size
      max-resource-buffer-size
      max-post-data-size]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.enable"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:max-total-buffer-size "maxTotalBufferSize",
-      :max-resource-buffer-size "maxResourceBufferSize",
-      :max-post-data-size "maxPostDataSize"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "enable"
+   params
+   {:max-total-buffer-size "maxTotalBufferSize",
+    :max-resource-buffer-size "maxResourceBufferSize",
+    :max-post-data-size "maxPostDataSize"})))
 
 (s/fdef
  enable
@@ -1147,42 +847,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.getAllCookies"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "getAllCookies"
+   params
+   {})))
 
 (s/fdef
  get-all-cookies
@@ -1216,42 +886,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [origin]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.getCertificate"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:origin "origin"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "getCertificate"
+   params
+   {:origin "origin"})))
 
 (s/fdef
  get-certificate
@@ -1291,42 +931,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [urls]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.getCookies"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:urls "urls"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "getCookies"
+   params
+   {:urls "urls"})))
 
 (s/fdef
  get-cookies
@@ -1366,42 +976,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [request-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.getResponseBody"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:request-id "requestId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "getResponseBody"
+   params
+   {:request-id "requestId"})))
 
 (s/fdef
  get-response-body
@@ -1442,42 +1022,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [request-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.getRequestPostData"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:request-id "requestId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "getRequestPostData"
+   params
+   {:request-id "requestId"})))
 
 (s/fdef
  get-request-post-data
@@ -1517,42 +1067,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [interception-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.getResponseBodyForInterception"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:interception-id "interceptionId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "getResponseBodyForInterception"
+   params
+   {:interception-id "interceptionId"})))
 
 (s/fdef
  get-response-body-for-interception
@@ -1593,42 +1113,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [interception-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.takeResponseBodyForInterceptionAsStream"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:interception-id "interceptionId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "takeResponseBodyForInterceptionAsStream"
+   params
+   {:interception-id "interceptionId"})))
 
 (s/fdef
  take-response-body-for-interception-as-stream
@@ -1668,42 +1158,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [request-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.replayXHR"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:request-id "requestId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "replayXHR"
+   params
+   {:request-id "requestId"})))
 
 (s/fdef
  replay-xhr
@@ -1742,45 +1202,15 @@
    params))
  ([connection
    {:as params, :keys [request-id query case-sensitive is-regex]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.searchInResponseBody"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:request-id "requestId",
-      :query "query",
-      :case-sensitive "caseSensitive",
-      :is-regex "isRegex"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "searchInResponseBody"
+   params
+   {:request-id "requestId",
+    :query "query",
+    :case-sensitive "caseSensitive",
+    :is-regex "isRegex"})))
 
 (s/fdef
  search-in-response-body
@@ -1828,42 +1258,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [urls]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setBlockedURLs"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:urls "urls"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setBlockedURLs"
+   params
+   {:urls "urls"})))
 
 (s/fdef
  set-blocked-ur-ls
@@ -1901,42 +1301,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [bypass]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setBypassServiceWorker"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:bypass "bypass"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setBypassServiceWorker"
+   params
+   {:bypass "bypass"})))
 
 (s/fdef
  set-bypass-service-worker
@@ -1974,42 +1344,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [cache-disabled]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setCacheDisabled"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:cache-disabled "cacheDisabled"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setCacheDisabled"
+   params
+   {:cache-disabled "cacheDisabled"})))
 
 (s/fdef
  set-cache-disabled
@@ -2052,50 +1392,20 @@
    {:as params,
     :keys
     [name value url domain path secure http-only same-site expires]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setCookie"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:path "path",
-      :same-site "sameSite",
-      :name "name",
-      :value "value",
-      :expires "expires",
-      :url "url",
-      :domain "domain",
-      :secure "secure",
-      :http-only "httpOnly"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setCookie"
+   params
+   {:path "path",
+    :same-site "sameSite",
+    :name "name",
+    :value "value",
+    :expires "expires",
+    :url "url",
+    :domain "domain",
+    :secure "secure",
+    :http-only "httpOnly"})))
 
 (s/fdef
  set-cookie
@@ -2153,42 +1463,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [cookies]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setCookies"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:cookies "cookies"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setCookies"
+   params
+   {:cookies "cookies"})))
 
 (s/fdef
  set-cookies
@@ -2226,43 +1506,13 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [max-total-size max-resource-size]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setDataSizeLimitsForTest"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:max-total-size "maxTotalSize",
-      :max-resource-size "maxResourceSize"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setDataSizeLimitsForTest"
+   params
+   {:max-total-size "maxTotalSize",
+    :max-resource-size "maxResourceSize"})))
 
 (s/fdef
  set-data-size-limits-for-test
@@ -2302,42 +1552,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [headers]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setExtraHTTPHeaders"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:headers "headers"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setExtraHTTPHeaders"
+   params
+   {:headers "headers"})))
 
 (s/fdef
  set-extra-http-headers
@@ -2375,42 +1595,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [patterns]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setRequestInterception"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:patterns "patterns"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setRequestInterception"
+   params
+   {:patterns "patterns"})))
 
 (s/fdef
  set-request-interception
@@ -2449,44 +1639,14 @@
    params))
  ([connection
    {:as params, :keys [user-agent accept-language platform]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "Network.setUserAgentOverride"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:user-agent "userAgent",
-      :accept-language "acceptLanguage",
-      :platform "platform"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "Network"
+   "setUserAgentOverride"
+   params
+   {:user-agent "userAgent",
+    :accept-language "acceptLanguage",
+    :platform "platform"})))
 
 (s/fdef
  set-user-agent-override

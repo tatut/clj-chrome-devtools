@@ -60,44 +60,14 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [origin registration-id data]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.deliverPushMessage"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:origin "origin",
-      :registration-id "registrationId",
-      :data "data"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "deliverPushMessage"
+   params
+   {:origin "origin",
+    :registration-id "registrationId",
+    :data "data"})))
 
 (s/fdef
  deliver-push-message
@@ -139,42 +109,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.disable"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "disable"
+   params
+   {})))
 
 (s/fdef
  disable
@@ -207,45 +147,15 @@
    params))
  ([connection
    {:as params, :keys [origin registration-id tag last-chance]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.dispatchSyncEvent"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:origin "origin",
-      :registration-id "registrationId",
-      :tag "tag",
-      :last-chance "lastChance"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "dispatchSyncEvent"
+   params
+   {:origin "origin",
+    :registration-id "registrationId",
+    :tag "tag",
+    :last-chance "lastChance"})))
 
 (s/fdef
  dispatch-sync-event
@@ -289,44 +199,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [origin registration-id tag]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.dispatchPeriodicSyncEvent"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:origin "origin",
-      :registration-id "registrationId",
-      :tag "tag"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "dispatchPeriodicSyncEvent"
+   params
+   {:origin "origin", :registration-id "registrationId", :tag "tag"})))
 
 (s/fdef
  dispatch-periodic-sync-event
@@ -368,42 +246,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.enable"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "enable"
+   params
+   {})))
 
 (s/fdef
  enable
@@ -435,42 +283,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [version-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.inspectWorker"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:version-id "versionId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "inspectWorker"
+   params
+   {:version-id "versionId"})))
 
 (s/fdef
  inspect-worker
@@ -508,42 +326,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [force-update-on-page-load]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.setForceUpdateOnPageLoad"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:force-update-on-page-load "forceUpdateOnPageLoad"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "setForceUpdateOnPageLoad"
+   params
+   {:force-update-on-page-load "forceUpdateOnPageLoad"})))
 
 (s/fdef
  set-force-update-on-page-load
@@ -581,42 +369,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [scope-url]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.skipWaiting"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:scope-url "scopeURL"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "skipWaiting"
+   params
+   {:scope-url "scopeURL"})))
 
 (s/fdef
  skip-waiting
@@ -654,42 +412,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [scope-url]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.startWorker"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:scope-url "scopeURL"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "startWorker"
+   params
+   {:scope-url "scopeURL"})))
 
 (s/fdef
  start-worker
@@ -727,42 +455,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.stopAllWorkers"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "stopAllWorkers"
+   params
+   {})))
 
 (s/fdef
  stop-all-workers
@@ -794,42 +492,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [version-id]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.stopWorker"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:version-id "versionId"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "stopWorker"
+   params
+   {:version-id "versionId"})))
 
 (s/fdef
  stop-worker
@@ -867,42 +535,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [scope-url]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.unregister"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:scope-url "scopeURL"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "unregister"
+   params
+   {:scope-url "scopeURL"})))
 
 (s/fdef
  unregister
@@ -940,42 +578,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [scope-url]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "ServiceWorker.updateRegistration"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:scope-url "scopeURL"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "ServiceWorker"
+   "updateRegistration"
+   params
+   {:scope-url "scopeURL"})))
 
 (s/fdef
  update-registration

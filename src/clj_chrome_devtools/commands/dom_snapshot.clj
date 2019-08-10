@@ -176,42 +176,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "DOMSnapshot.disable"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "DOMSnapshot"
+   "disable"
+   params
+   {})))
 
 (s/fdef
  disable
@@ -243,42 +213,12 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "DOMSnapshot.enable"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "DOMSnapshot"
+   "enable"
+   params
+   {})))
 
 (s/fdef
  enable
@@ -321,45 +261,15 @@
      include-event-listeners
      include-paint-order
      include-user-agent-shadow-tree]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "DOMSnapshot.getSnapshot"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:computed-style-whitelist "computedStyleWhitelist",
-      :include-event-listeners "includeEventListeners",
-      :include-paint-order "includePaintOrder",
-      :include-user-agent-shadow-tree "includeUserAgentShadowTree"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "DOMSnapshot"
+   "getSnapshot"
+   params
+   {:computed-style-whitelist "computedStyleWhitelist",
+    :include-event-listeners "includeEventListeners",
+    :include-paint-order "includePaintOrder",
+    :include-user-agent-shadow-tree "includeUserAgentShadowTree"})))
 
 (s/fdef
  get-snapshot
@@ -409,43 +319,13 @@
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys [computed-styles include-dom-rects]}]
-  (let
-   [id__69750__auto__
-    (cmd/next-command-id!)
-    method__69751__auto__
-    "DOMSnapshot.captureSnapshot"
-    ch__69752__auto__
-    (clojure.core.async/chan)
-    payload__69753__auto__
-    (cmd/command-payload
-     id__69750__auto__
-     method__69751__auto__
-     params
-     {:computed-styles "computedStyles",
-      :include-dom-rects "includeDOMRects"})]
-   (c/send-command
-    connection
-    payload__69753__auto__
-    id__69750__auto__
-    (fn*
-     [p1__69749__69754__auto__]
-     (clojure.core.async/go
-      (clojure.core.async/>!
-       ch__69752__auto__
-       p1__69749__69754__auto__))))
-   (let
-    [result__69755__auto__ (clojure.core.async/<!! ch__69752__auto__)]
-    (if-let
-     [error__69756__auto__ (:error result__69755__auto__)]
-     (throw
-      (ex-info
-       (str
-        "Error in command "
-        method__69751__auto__
-        ": "
-        (:message error__69756__auto__))
-       {:request payload__69753__auto__, :error error__69756__auto__}))
-     (:result result__69755__auto__))))))
+  (cmd/command
+   connection
+   "DOMSnapshot"
+   "captureSnapshot"
+   params
+   {:computed-styles "computedStyles",
+    :include-dom-rects "includeDOMRects"})))
 
 (s/fdef
  capture-snapshot
