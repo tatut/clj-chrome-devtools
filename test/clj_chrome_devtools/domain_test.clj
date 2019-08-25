@@ -14,9 +14,9 @@
                clj-chrome-devtools.commands.debugger
                clj-chrome-devtools.commands.device-orientation
                clj-chrome-devtools.commands.dom
-               clj-chrome-devtools.commands.domdebugger
-               clj-chrome-devtools.commands.domsnapshot
-               clj-chrome-devtools.commands.domstorage
+               clj-chrome-devtools.commands.dom-debugger
+               clj-chrome-devtools.commands.dom-snapshot
+               clj-chrome-devtools.commands.dom-storage
                clj-chrome-devtools.commands.emulation
                clj-chrome-devtools.commands.heap-profiler
                clj-chrome-devtools.commands.indexed-db

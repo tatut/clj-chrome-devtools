@@ -1,29 +1,58 @@
-(ns clj-chrome-devtools.commands.inspector
+(ns clj-chrome-devtools.commands.media
+  "This domain allows detailed inspection of media elements"
   (:require [clojure.spec.alpha :as s]
             [clj-chrome-devtools.impl.command :as cmd]
             [clj-chrome-devtools.impl.connection :as c]))
 
+(s/def
+ ::player-id
+ string?)
+
+(s/def
+ ::timestamp
+ number?)
+
+(s/def
+ ::player-property
+ (s/keys
+  :req-un
+  [::name]
+  :opt-un
+  [::value]))
+
+(s/def
+ ::player-event-type
+ #{"playbackEvent" "messageEvent" "systemEvent"})
+
+(s/def
+ ::player-event
+ (s/keys
+  :req-un
+  [::type
+   ::timestamp
+   ::name
+   ::value]))
 (defn
- disable
- "Disables inspector domain notifications."
+ enable
+ "Enables the Media domain"
  ([]
-  (disable
+  (enable
    (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
-  (disable
+  (enable
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (cmd/command
    connection
-   "Inspector"
-   "disable"
+   "Media"
+   "enable"
    params
    {})))
 
 (s/fdef
- disable
+ enable
  :args
  (s/or
   :no-args
@@ -41,26 +70,26 @@
  (s/keys))
 
 (defn
- enable
- "Enables inspector domain notifications."
+ disable
+ "Disables the Media domain."
  ([]
-  (enable
+  (disable
    (c/get-current-connection)
    {}))
  ([{:as params, :keys []}]
-  (enable
+  (disable
    (c/get-current-connection)
    params))
  ([connection {:as params, :keys []}]
   (cmd/command
    connection
-   "Inspector"
-   "enable"
+   "Media"
+   "disable"
    params
    {})))
 
 (s/fdef
- enable
+ disable
  :args
  (s/or
   :no-args

@@ -1,7 +1,6 @@
 (ns clj-chrome-devtools.automation
   "Higher level automation convenience API"
   (:require [clj-chrome-devtools.commands.dom :as dom]
-            [clj-chrome-devtools.commands.domsnapshot :as dom-snapshot]
             [clj-chrome-devtools.commands.page :as page]
             [clj-chrome-devtools.commands.input :as input]
             [clj-chrome-devtools.commands.runtime :as runtime]

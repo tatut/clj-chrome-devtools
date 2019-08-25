@@ -1,12 +1,10 @@
 (ns clj-chrome-devtools.protocol-definitions
   "Loads CDP protocol definition JSON files for consumption by def macros."
-  (:require [cheshire.core :as cheshire]
-            [clojure.java.io :as io]))
+  (:require [cheshire.core :as cheshire]))
 
 (defn- load-json [json-file]
   (as-> json-file it
     (str "devtools-protocol/json/" it)
-    (io/resource it)
     (slurp it)
     (cheshire/parse-string it true)))
 

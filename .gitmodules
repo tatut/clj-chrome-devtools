@@ -1,3 +1,0 @@
-[submodule "resources/devtools-protocol"]
-	path = resources/devtools-protocol
-	url = https://github.com/ChromeDevTools/devtools-protocol
