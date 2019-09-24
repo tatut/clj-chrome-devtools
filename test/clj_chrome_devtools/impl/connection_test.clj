@@ -6,10 +6,10 @@
             [clj-chrome-devtools.impl.util :as util]
             [clojure.java.io :as io]
             [clojure.spec.test.alpha :as stest]
-            [clojure.string :refer [includes? join]]
+            [clojure.string :refer [join]]
             [clojure.test :as t :refer [deftest is testing]]
             [taoensso.timbre :as log])
-  (:import [org.eclipse.jetty.websocket.api WebSocketException]))
+  (:import [java.util.concurrent ExecutionException]))
 
 (stest/instrument)
 
@@ -84,10 +84,10 @@
   (testing "Connection objects should work with (be closed by) with-open"
     (let [conn (make-conn)
           auto (create-automation conn)]
-      (with-open [conn conn]
+      (with-open [_ conn]
         ; Simple validation that the connection works
         (to auto test-page)
         (is (= (map #(text-of auto %)
                     (sel auto "ul#thelist li"))
                '("foo" "bar" "baz"))))
-      (is (thrown-with-msg? WebSocketException #"current state \[CLOSED\]" (to auto test-page))))))
+      (is (thrown-with-msg? ExecutionException #"ClosedChannelException" (to auto test-page))))))
