@@ -14,7 +14,6 @@
     (when ws-conn 
       (ws/close ws-conn))))
 
-
 (defn connection? [c]
   (instance? Connection c))
 
@@ -59,19 +58,9 @@
       (log/error "Exception in devtools WebSocket receive, msg: " msg
                  ", throwable: " t))))
 
-(defn- on-close [code reason]
-  (log/log
-   ; The library that gniazdo wraps (the Jetty WebSocket API/Client) registers a
-   ; JVM shutdown hook to (I think) close the connection when the JVM shuts
-   ; down. This causes the on-close hook to be called during JVM shutdown. Since
-   ; this case (code 1001 and reason "Shutdown") is a normal, uninteresting
-   ; case, we want to use the :info log level. Same for when the code is 1000,
-   ; which is specifically for normal closures. Otherwise, we’ll use :warn
-   ; because the closure would appear to be abnormal.
-   (if (or (= code 1000)
-           (and (= code 1001) (re-seq #"(?i)shutdown" reason)))
-     :info :warn)
-   (format "WebSocket connection closed with status code %s: %s)" code reason)))
+(defn- on-close
+  [code reason]
+  (log/info "WebSocket connection closed with status code and reason:" code reason))
 
 (defn- wait-for-remote-debugging-port [host port max-wait-time-ms]
   (let [wait-until (+ (System/currentTimeMillis) max-wait-time-ms)
