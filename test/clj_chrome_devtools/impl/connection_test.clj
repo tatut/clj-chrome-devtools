@@ -57,7 +57,7 @@
         (let [output (join @log)]
           (is (re-seq #".+ERROR.+MessageTooLargeException.+message size.+exceeds maximum size.+"
                       output))
-          (is (re-seq #".+WARN.+WebSocket connection closed with status code 1009 \(Too large\) and reason: Text message size.+exceeds maximum size.+"
+          (is (re-seq #".+WARN.+WebSocket connection closed with status code 1009: Text message size.+exceeds maximum size.+"
                       output)))))
     (testing "specified limit (2MB)"
       (let [conn (make-conn {:max-msg-size-mb (* 1024 1024 2)})
@@ -74,7 +74,7 @@
         (let [output (join @log)]
           (is (re-seq #".+ERROR.+MessageTooLargeException.+message size.+exceeds maximum size.+"
                       output))
-          (is (re-seq #".+WARN.+WebSocket connection closed with status code 1009 \(Too large\) and reason: Text message size.+exceeds maximum size.+"
+          (is (re-seq #".+WARN.+WebSocket connection closed with status code 1009: Text message size.+exceeds maximum size.+"
                       output)))))))
 
 (def test-page
