@@ -3,4 +3,10 @@
         cheshire               {:mvn/version "5.9.0"}
         stylefruits/gniazdo    {:mvn/version "1.1.2"}
         org.clojure/core.async {:mvn/version "0.4.500"}
-        com.taoensso/timbre    {:mvn/version "4.10.0"}}}
+        com.taoensso/timbre    {:mvn/version "4.10.0"}}
+ :aliases
+ {:test {:extra-paths ["test"]
+         ; This is a simplistic test runner but it’s sufficient for now.
+         :extra-deps {test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
+                                   :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}}
+         :main-opts ["-m" "cognitect.test-runner"]}}}
