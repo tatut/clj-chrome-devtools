@@ -9,7 +9,7 @@
             [clj-chrome-devtools.events :as events]
             [clj-chrome-devtools.impl.connection :as connection]
             [taoensso.timbre :as log]
-            [clojure.core.async :as async :refer [go-loop go <!! <!]]
+            [clojure.core.async :as async :refer [go-loop go thread <!! <!]]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.spec.alpha :as s])
@@ -109,7 +109,7 @@
          ch (events/listen connection :page :frame-stopped-loading)]
      (go-loop [v (<! ch)]
        (when v
-         (let [root (:root (dom/get-document connection {}))]
+         (let [root (:root (<! (thread (dom/get-document connection {}))))]
            (log/trace "Document updated, new root: " root)
            (reset! root-atom root))
          (recur (<! ch))))
