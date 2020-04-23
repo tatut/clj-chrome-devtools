@@ -1,3 +1,6 @@
+## 20200423
+- Avoid blocking IO in go-block (#27)
+
 ## 20190601
 - Change test output video to APNG for better quality
 - Generate videos even if cljs tests fail
