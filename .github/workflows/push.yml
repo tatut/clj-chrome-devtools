@@ -1,0 +1,18 @@
+name: Push
+on: push
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Clojure
+      # So we’ll have the `clojure` command and tools.deps.
+      run: |
+        curl -O https://download.clojure.org/install/linux-install-1.10.1.469.sh
+        chmod +x linux-install-1.10.1.469.sh
+        sudo ./linux-install-1.10.1.469.sh
+    # Once GitHub adds a dependency caching feature to Actions we’ll be able to use it here to speed
+    # up this job. In the meantime, the following step will download all the deps every time it is
+    # run.
+    - name: Run tests
+      run: clojure -A:test

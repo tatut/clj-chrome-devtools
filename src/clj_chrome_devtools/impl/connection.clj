@@ -8,7 +8,11 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(defrecord Connection [ws-connection requests event-chan event-pub])
+(defrecord Connection [ws-connection requests event-chan event-pub]
+  java.lang.AutoCloseable
+  (close [{ws-conn :ws-connection}] 
+    (when ws-conn 
+      (ws/close ws-conn))))
 
 (defn connection? [c]
   (instance? Connection c))
@@ -19,24 +23,6 @@
   (let [c @current-connection]
     (assert c "No current Chrome Devtools connection!")
     c))
-
-(def ws-close-status-code->reason
-  ^{:source "https://tools.ietf.org/html/rfc6455#section-7.4"}
-  {1000 "Normal"
-   1001 "Going away"
-   1002 "Protocol error"
-   1003 "Unsupported"
-   1005 "No status code"
-   1006 "Abnormal"
-   1007 "Unsupported payload"
-   1008 "Policy violation"
-   1009 "Too large"
-   1010 "Mandatory extension"
-   1011 "Server error"
-   1012 "Service restart"
-   1013 "Try again later"
-   1014 "Bad gateway"
-   1015 "TLS handshake fail"})
 
 (defn- parse-json [string]
   (cheshire/parse-string string (comp keyword camel->clojure)))
@@ -72,13 +58,9 @@
       (log/error "Exception in devtools WebSocket receive, msg: " msg
                  ", throwable: " t))))
 
-(defn- on-close [code reason]
-  (log/log (case code 1000 :info :warn)
-           "WebSocket connection closed with status code"
-           code
-           (str "(" (ws-close-status-code->reason code "UNKNOWN") ")")
-           "and reason:"
-           reason))
+(defn- on-close
+  [code reason]
+  (log/info "WebSocket connection closed with status code and reason:" code reason))
 
 (defn- wait-for-remote-debugging-port [host port max-wait-time-ms]
   (let [wait-until (+ (System/currentTimeMillis) max-wait-time-ms)
@@ -148,7 +130,8 @@
                               :on-error #(log/error
                                           "Error in devtools WebSocket connection; throwable:" %)
                               :on-close on-close
-                              :client client)
+                              :client client
+                              :gniazdo.core/cleanup #(.stop client)) 
                   requests
                   event-chan
                   event-pub)))
