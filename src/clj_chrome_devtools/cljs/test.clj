@@ -15,7 +15,7 @@
 
 
 
-(defn no-op-log [& args]
+(defn no-op-log [& _args]
   nil)
 
 (defn println-log [& args]
@@ -81,7 +81,7 @@
         (io/delete-file runner)))))
 
 (defn build [project-clj build-id test-runner-namespaces]
-  (let [{:keys [source-paths compiler] :as build}
+  (let [{:keys [source-paths compiler] :as _build}
         (build-by-id project-clj build-id)]
     (log "Building ClojureScript, source paths: " source-paths)
     (with-test-runner-source test-runner-namespaces (last source-paths)
@@ -101,7 +101,7 @@
       (str/replace "__RUNNER__" runner)
       (str/replace "__JS__" (slurp js))))
 
-(defn- file-handler [{:keys [uri request-method] :as req}]
+(defn- file-handler [{:keys [uri request-method] :as _req}]
   (log "REQUEST: " uri)
   (let [file (io/file "." (subs uri 1))]
     (if (and (= request-method :get) (.canRead file))
@@ -200,13 +200,11 @@
      (chrome-fixture
       (fn []
         (log "Chrome launched")
-        (let [con (:connection @automation/current-automation)
-              port (random-free-port)
+        (let [port (random-free-port)
               server (http-server/run-server (fn [req]
                                                (or (and ring-handler (ring-handler req))
                                                    (file-handler req)))
                                              {:port port})
-              dir (io/file ".")
               f (File/createTempFile "test" ".html" (io/file "."))
               url (str "http://localhost:" port "/" (.getName f))]
           (try
