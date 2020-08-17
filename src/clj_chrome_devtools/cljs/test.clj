@@ -191,7 +191,7 @@
    (run-tests build-output nil))
   ([{:keys [js runner]} {:keys [headless? no-sandbox?
                                 screenshot-video? framerate loop-video?
-                                ring-handler]}]
+                                ring-handler on-test-result]}]
    (log "Run compiled js test file:" js)
    (let [chrome-fixture (create-chrome-fixture {:headless? (if (some? headless?)
                                                              headless?
@@ -217,11 +217,13 @@
             (automation/to url)
 
             (log "Wait for test output")
-            (let [{:keys [result screenshots]} (poll-test-execution)]
+            (let [{:keys [result screenshots] :as test-result} (poll-test-execution)]
               (when screenshot-video?
                 (output-screenshot-videos screenshots (or framerate 2) loop-video?))
-              (is (= result :ok)
-                  "ClojureScript tests had failures or errors, see previous output for details "))
+              (if on-test-result
+                (on-test-result test-result)
+                (is (= result :ok)
+                    "ClojureScript tests had failures or errors, see previous output for details ")))
 
             (log "Tests done, cleanup")
             (server)
