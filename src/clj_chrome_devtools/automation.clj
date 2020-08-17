@@ -58,7 +58,7 @@
 (defrecord Automation [connection root on-close]
   java.lang.AutoCloseable
   (close [this]
-    (.close connection)
+    (.close ^java.lang.AutoCloseable connection)
     (when on-close
       (on-close this))))
 
