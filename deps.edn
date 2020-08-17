@@ -4,6 +4,7 @@
         stylefruits/gniazdo    {:mvn/version "1.1.2"}
         org.clojure/core.async {:mvn/version "0.4.500"}
         com.taoensso/timbre    {:mvn/version "4.10.0"}}
+ :paths ["src" "resources"]
  :aliases
  {:test {:extra-paths ["test"]
          ; This is a simplistic test runner but it’s sufficient for now.
