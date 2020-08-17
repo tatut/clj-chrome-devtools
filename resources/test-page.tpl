@@ -1,7 +1,7 @@
 <html>
   <head>
   </head>
-  <body onload="clj_chrome_devtools_runner.run_chrome_tests();">
+  <body onload="__RUNNER__">
     <script type="text/javascript">
       window.addEventListener('error', function(event) {
         var started = window["CLJ_TESTS_STARTED"] || false;
@@ -10,7 +10,9 @@
         }
       });
     </script>
-    <script type="text/javascript" src="__JS__">
+    <script type="text/javascript">
+      __JS__
+    </script>
     </script>
   </body>
 </html>

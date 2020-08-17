@@ -95,9 +95,11 @@
     {:js (:output-to compiler)
      :js-directory (:output-dir compiler)}))
 
-(defn- test-page [js]
+(defn- test-page [{:keys [js runner]
+                   :or {runner "clj_chrome_devtools_runner.run_chrome_tests();"}}]
   (-> "test-page.tpl" io/resource slurp
-      (str/replace "__JS__" js)))
+      (str/replace "__RUNNER__" runner)
+      (str/replace "__JS__" (slurp js))))
 
 (defn- file-handler [{:keys [uri request-method] :as req}]
   (log "REQUEST: " uri)
@@ -187,9 +189,9 @@
 (defn run-tests
   ([build-output]
    (run-tests build-output nil))
-  ([{:keys [js js-directory]} {:keys [headless? no-sandbox?
-                                      screenshot-video? framerate loop-video?
-                                      ring-handler]}]
+  ([{:keys [js runner]} {:keys [headless? no-sandbox?
+                                screenshot-video? framerate loop-video?
+                                ring-handler]}]
    (log "Run compiled js test file:" js)
    (let [chrome-fixture (create-chrome-fixture {:headless? (if (some? headless?)
                                                              headless?
@@ -208,7 +210,10 @@
               f (File/createTempFile "test" ".html" (io/file "."))
               url (str "http://localhost:" port "/" (.getName f))]
           (try
-            (spit f (test-page js))
+            (spit f (test-page (merge
+                                {:js js}
+                                (when runner
+                                  {:runner runner}))))
 
             (log "Navigate to:" url)
             (automation/to url)
