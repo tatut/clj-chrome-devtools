@@ -101,9 +101,14 @@
       (str/replace "__RUNNER__" runner)
       (str/replace "__JS__" (slurp js))))
 
-(defn- file-handler [{:keys [uri request-method] :as _req}]
+(defn- file-handler [root-paths {:keys [uri request-method] :as _req}]
   (log "REQUEST: " uri)
-  (let [file (io/file "." (subs uri 1))]
+  (let [path (subs uri 1)
+        file (some (fn [root-path]
+                     (let [f (io/file root-path path)]
+                       (when (.exists f)
+                         f)))
+                   root-paths)]
     (if (and (= request-method :get) (.canRead file))
       {:status 200
        :headers {"Content-Type" (cond
@@ -191,7 +196,9 @@
    (run-tests build-output nil))
   ([{:keys [js runner]} {:keys [headless? no-sandbox?
                                 screenshot-video? framerate loop-video?
-                                ring-handler on-test-result]}]
+                                ring-handler on-test-result
+                                root-paths]
+                         :or {root-paths #{"."}}}]
    (log "Run compiled js test file:" js)
    (let [chrome-fixture (create-chrome-fixture {:headless? (if (some? headless?)
                                                              headless?
@@ -201,6 +208,7 @@
       (fn []
         (log "Chrome launched")
         (let [port (random-free-port)
+              file-handler (partial file-handler root-paths)
               server (http-server/run-server (fn [req]
                                                (or (and ring-handler (ring-handler req))
                                                    (file-handler req)))
