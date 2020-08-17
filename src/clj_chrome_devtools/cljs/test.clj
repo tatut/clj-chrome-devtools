@@ -158,7 +158,7 @@
           (automation/evaluate "window.CLJ_SCREENSHOT_NAME = null")
           (automation/evaluate "window.CLJ_SCREENSHOT_RESOLVE(true)")
           (recur started? (conj screenshots screenshot-file-name)))
-        (let [msgs (automation/evaluate "clj_chrome_devtools_runner.get_printed()")]
+        (let [msgs (automation/evaluate "CLJ_TEST_GET_PRINTED()")]
           (doseq [m (mapcat #(str/split % #"\n") msgs)]
             (println "[CLJS]" m))
 

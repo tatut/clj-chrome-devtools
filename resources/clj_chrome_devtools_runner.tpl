@@ -31,6 +31,7 @@
        (aset js/window "CLJ_SCREENSHOT_RESOLVE" resolve)))))
 
 (aset js/window "screenshot" screenshot)
+(aset js/window "CLJ_TEST_GET_PRINTED" get-printed)
 
 (defn run-chrome-tests []
   (aset js/window "CLJ_TESTS_STARTED" true)
