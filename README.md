@@ -1,6 +1,6 @@
 # clj-chrome-devtools
 
-[![Clojars Project](https://img.shields.io/clojars/v/clj-chrome-devtools.svg)](https://clojars.org/clj-chrome-devtools) [![CircleCI](https://circleci.com/gh/tatut/clj-chrome-devtools.svg?style=svg)](https://circleci.com/gh/tatut/clj-chrome-devtools)
+[![Clojars Project](https://img.shields.io/clojars/v/clj-chrome-devtools.svg)](https://clojars.org/clj-chrome-devtools) ![Tests](https://github.com/tatut/clj-chrome-devtools/workflows/Push/badge.svg)
 
 clj-chrome-devtools is a simple library for controlling a headless Chrome with the
 Chrome DevTools Protocol. The protocol is based on a websocket connection between
