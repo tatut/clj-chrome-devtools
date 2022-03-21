@@ -354,18 +354,34 @@
   ;; when file-download can actually read the file contents, refactor this
   (file-download url-pattern interaction-fn))
 
+(defn- decode-base64 [^String s]
+  (.decode (java.util.Base64/getDecoder) s))
+
+(defn- export-to-file [cmd-output filename]
+  (-> cmd-output :data decode-base64
+      (java.io.ByteArrayInputStream.)
+      (io/copy (io/file filename))))
+
 (defn screenshot
   ([]
    (screenshot @current-automation))
   ([automation]
    (screenshot automation "screenshot.png"))
   ([{c :connection} filename]
-   (let [decode (fn [^String s]
-                  (.decode (java.util.Base64/getDecoder) s))]
-     (-> (page/capture-screenshot c {})
-         :data decode
-         (java.io.ByteArrayInputStream.)
-         (io/copy (io/file filename))))))
+   (-> (page/capture-screenshot c {})
+       (export-to-file filename))))
+
+(defn print-pdf
+  "Print current page to PDF."
+  ([]
+   (print-pdf @current-automation))
+  ([automation]
+   (print-pdf automation "print.pdf"))
+  ([automation filename]
+   (print-pdf automation filename {}))
+  ([{c :connection} filename options]
+   (-> (page/print-to-pdf c options)
+       (export-to-file filename))))
 
 (defn set-attribute
   ([node attribute-name attribute-value]
