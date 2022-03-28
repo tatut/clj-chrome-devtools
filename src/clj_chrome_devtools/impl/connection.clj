@@ -65,7 +65,7 @@
 (defn- wait-for-remote-debugging-port [host port max-wait-time-ms]
   (let [wait-until (+ (System/currentTimeMillis) max-wait-time-ms)
         url        (str "http://" host ":" port "/json/version")]
-    (loop [response @(http/head url)]
+    (loop [response @(http/get url)]
       (cond
         (= (:status response) 200)
         :ok
@@ -77,7 +77,7 @@
 
         :default
         (do (Thread/sleep 100)
-            (recur @(http/head url)))))))
+            (recur @(http/get url)))))))
 
 (defn inspectable-pages
   "Collect the list of inspectable pages returned by the DevTools protocol."
