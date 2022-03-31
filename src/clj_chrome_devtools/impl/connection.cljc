@@ -6,9 +6,18 @@
             [clj-chrome-devtools.impl.util :refer [camel->clojure]]
             [clojure.core.async :as async]
             [clojure.string :as str]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:import (java.util.concurrent Executors ExecutorService)))
 
-(defrecord Connection [ws-connection requests event-chan event-pub]
+(set! *warn-on-reflection* true)
+
+(def ^:private executor (Executors/newCachedThreadPool))
+
+
+(defn- submit! [^Runnable func]
+  (.submit ^ExecutorService executor func))
+
+(defrecord Connection [ws-connection requests event-listeners]
   #?@(:bb [] ;; babashka doesn't support implementing interfaces at this time
       :clj [java.lang.AutoCloseable
             (close [{ws-conn :ws-connection}]
@@ -28,24 +37,35 @@
 (defn- parse-json [string]
   (cheshire/parse-string string (comp keyword camel->clojure)))
 
-(defn- publish-event [event-chan msg]
-  (let [[domain event] (map (comp keyword camel->clojure)
-                            (str/split (:method msg) #"\."))
-        event {:domain domain
-               :event  event
-               :params (:params msg)}]
-    (async/go
-      (async/>! event-chan event))))
+(defn- publish-event [event-listeners msg]
+  (let [[domain event :as event-key]
+        (map (comp keyword camel->clojure)
+             (str/split (:method msg) #"\."))
+        listeners (get event-listeners event-key)]
+    (when (seq listeners)
+      (let [event {:domain domain
+                   :event  event
+                   :params (:params msg)}]
+        (submit! #(doseq [listener listeners]
+                    (listener event)))))))
 
-(defn listen [{event-pub :event-pub} domain event]
-  (let [ch (async/chan)]
-    (async/sub event-pub [domain event] ch)
-    ch))
+(defn unlisten [connection domain event callback]
+  (swap! (:event-listeners connection) update [domain event]
+         #(disj (or % #{}) callback)))
 
-(defn unlisten [{event-pub :event-pub} domain event listening-ch]
-  (async/unsub event-pub [domain event] listening-ch))
+(defn listen
+  "Listen to an event in the specific domain. Invokes callback when an event is
+  received.
 
-(defn- on-receive-text [requests event-chan]
+  Returns a 0-arity function that will remove the listener when invoked."
+  [connection domain event callback]
+
+  (swap! (:event-listeners connection) update [domain event]
+         #(conj (or % #{}) callback))
+  #(unlisten connection domain event callback))
+
+
+(defn- on-receive-text [requests event-listeners-atom]
   (let [builder (StringBuilder.)]
     (fn [_ws msg last?]
       (.append builder msg)
@@ -56,9 +76,9 @@
               ;; Has id: this is a response to our previously sent command
               (let [callback (@requests id)]
                 (swap! requests dissoc id)
-                (async/thread (callback json-msg)))
+                (submit! #(callback json-msg)))
               ;; This is an event
-              (publish-event event-chan json-msg)))
+              (publish-event @event-listeners-atom json-msg)))
           (catch Throwable t
             (log/error "Exception in devtools WebSocket receive, msg: " msg
                        ", throwable: " t))
@@ -125,21 +145,19 @@
   (let [;; Request id to callback
         requests   (atom {})
 
-        ;; Event pub/sub channel
-        event-chan (async/chan)
-        event-pub  (async/pub event-chan (juxt :domain :event))]
+        ;; Event listeners by event domain and type
+        event-listeners (atom {})]
 
     (->Connection
      (ws/build-websocket web-socket-debugger-url
-                         {:on-text (on-receive-text requests event-chan)
+                         {:on-text (on-receive-text requests event-listeners)
                           :on-binary (fn [& args] (println "should not receive binary messages, args: " args))
                           :on-error #(log/error
                                       "Error in devtools WebSocket connection; throwable:" %)
                           :on-close on-close}
                          (or ws-builder-opts {}))
      requests
-     event-chan
-     event-pub)))
+     event-listeners)))
 
 (defn connect
   "Establish a websocket connection to the DevTools protocol at host:port.
@@ -159,6 +177,15 @@
                   (first-inspectable-page))]
       (connect-url url ws-builder-options))))
 
-(defn send-command [{requests :requests con :ws-connection} payload id callback]
-  (swap! requests assoc id callback)
-  (ws/send con (cheshire/encode payload)))
+(defn send-command-async
+  "Send command and return a promise for its result."
+  [{requests :requests con :ws-connection} payload id]
+  (let [p (promise)]
+    (swap! requests assoc id #(deliver p %))
+    (ws/send con (cheshire/encode payload))
+    p))
+
+(defn send-command
+  "Send command synchronously. Blocks until result is done and returns it."
+  [connection payload id]
+  @(send-command-async connection payload id))

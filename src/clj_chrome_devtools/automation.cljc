@@ -8,7 +8,6 @@
             [clj-chrome-devtools.events :as events]
             [clj-chrome-devtools.impl.connection :as connection]
             [clojure.tools.logging :as log]
-            [clojure.core.async :as async :refer [go-loop thread <!! <!]]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.spec.alpha :as s])
@@ -107,14 +106,14 @@
   ([connection] (create-automation connection :ignore))
   ([connection on-close]
    (let [root-atom (atom nil)
-         ch (events/listen connection :page :frame-stopped-loading)]
-     (go-loop [v (<! ch)]
-       (when v
-         (let [root (:root (<! (thread (dom/get-document connection {}))))]
-           (log/trace "Document updated, new root: " root)
-           (reset! root-atom root))
-         (recur (<! ch))))
-     (->Automation connection root-atom on-close))))
+         unlisten (events/listen connection :page :frame-stopped-loading
+                                 (fn [_]
+                                   (let [root (:root (dom/get-document connection {}))]
+                                     (log/trace "Document updated, new root: " root)
+                                     (reset! root-atom root))))]
+     (->Automation connection root-atom
+                   #(do (unlisten)
+                        (on-close %))))))
 
 (defn start!
   "Start a new CDP connection and an automation context for it.
