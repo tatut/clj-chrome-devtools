@@ -1,18 +1,19 @@
 (ns clj-chrome-devtools.impl.connection
   "The remote debugging WebSocket connection"
-  (:require [gniazdo.core :as ws]
-            [org.httpkit.client :as http]
-            [cheshire.core :as cheshire]
+  (:require [cheshire.core :as cheshire]
+            [java-http-clj.core :as http]
+            [java-http-clj.websocket :as ws]
             [clj-chrome-devtools.impl.util :refer [camel->clojure]]
             [clojure.core.async :as async]
             [clojure.string :as str]
-            [taoensso.timbre :as log]))
+            [clojure.tools.logging :as log]))
 
 (defrecord Connection [ws-connection requests event-chan event-pub]
-  java.lang.AutoCloseable
-  (close [{ws-conn :ws-connection}] 
-    (when ws-conn 
-      (ws/close ws-conn))))
+  #?@(:bb [] ;; babashka doesn't support implementing interfaces at this time
+      :clj [java.lang.AutoCloseable
+            (close [{ws-conn :ws-connection}]
+                   (when ws-conn
+                     (ws/close ws-conn)))]))
 
 (defn connection? [c]
   (instance? Connection c))
@@ -44,28 +45,34 @@
 (defn unlisten [{event-pub :event-pub} domain event listening-ch]
   (async/unsub event-pub [domain event] listening-ch))
 
-(defn- on-receive [requests event-chan msg]
-  (try
-    (let [{id :id :as json-msg} (parse-json msg)]
-      (if id
-        ;; Has id: this is a response to our previously sent command
-        (let [callback (@requests id)]
-          (swap! requests dissoc id)
-          (async/thread (callback json-msg)))
-        ;; This is an event
-        (publish-event event-chan json-msg)))
-    (catch Throwable t
-      (log/error "Exception in devtools WebSocket receive, msg: " msg
-                 ", throwable: " t))))
+(defn- on-receive-text [requests event-chan]
+  (let [builder (StringBuilder.)]
+    (fn [_ws msg last?]
+      (.append builder msg)
+      (when last?
+        (try
+          (let [{id :id :as json-msg} (parse-json (str builder))]
+            (if id
+              ;; Has id: this is a response to our previously sent command
+              (let [callback (@requests id)]
+                (swap! requests dissoc id)
+                (async/thread (callback json-msg)))
+              ;; This is an event
+              (publish-event event-chan json-msg)))
+          (catch Throwable t
+            (log/error "Exception in devtools WebSocket receive, msg: " msg
+                       ", throwable: " t))
+          (finally
+            (.setLength builder 0)))))))
 
 (defn- on-close
-  [code reason]
+  [_ws code reason]
   (log/info "WebSocket connection closed with status code and reason:" code reason))
 
 (defn- wait-for-remote-debugging-port [host port max-wait-time-ms]
   (let [wait-until (+ (System/currentTimeMillis) max-wait-time-ms)
         url        (str "http://" host ":" port "/json/version")]
-    (loop [response @(http/get url)]
+    (loop [response (http/get url)]
       (cond
         (= (:status response) 200)
         :ok
@@ -75,9 +82,9 @@
                         {:host             host :port port
                          :max-wait-time-ms max-wait-time-ms}))
 
-        :default
+        :else
         (do (Thread/sleep 100)
-            (recur @(http/get url)))))))
+            (recur (http/get url)))))))
 
 (defn inspectable-pages
   "Collect the list of inspectable pages returned by the DevTools protocol."
@@ -85,7 +92,7 @@
     (inspectable-pages host port 1000))
   ([host port max-wait-time-ms]
    (wait-for-remote-debugging-port host port max-wait-time-ms)
-   (let [response @(http/get (str "http://" host ":" port "/json/list"))]
+   (let [response (http/get (str "http://" host ":" port "/json/list"))]
      (some->> response
               :body
               parse-json))))
@@ -98,7 +105,7 @@
       (throw (ex-info "No debuggable pages found"
                       {:pages pages}))))
 
-(defn make-ws-client
+#_(defn make-ws-client
   "Constructs ws client. Idle timeout defaults to 0, which means keep it
   alive for the session. The `max-msg-size-mb` defaults to 1MB."
   [ & [{:keys [idle-timeout max-msg-size-mb]
@@ -113,28 +120,26 @@
 (defn connect-url
   "Establish a websocket connection to web-socket-debugger-url, as given by
    inspectable-pages."
-  [web-socket-debugger-url & [ws-client]]
+  [web-socket-debugger-url & [ws-builder-opts]]
   (assert web-socket-debugger-url)
-  (let [client     (or ws-client
-                       (make-ws-client))
-        ;; Request id to callback
+  (let [;; Request id to callback
         requests   (atom {})
 
         ;; Event pub/sub channel
         event-chan (async/chan)
         event-pub  (async/pub event-chan (juxt :domain :event))]
 
-    (.start client)
-    (->Connection (ws/connect web-socket-debugger-url
-                              :on-receive (partial on-receive requests event-chan)
-                              :on-error #(log/error
-                                          "Error in devtools WebSocket connection; throwable:" %)
-                              :on-close on-close
-                              :client client
-                              :gniazdo.core/cleanup #(.stop client)) 
-                  requests
-                  event-chan
-                  event-pub)))
+    (->Connection
+     (ws/build-websocket web-socket-debugger-url
+                         {:on-text (on-receive-text requests event-chan)
+                          :on-binary (fn [& args] (println "should not receive binary messages, args: " args))
+                          :on-error #(log/error
+                                      "Error in devtools WebSocket connection; throwable:" %)
+                          :on-close on-close}
+                         (or ws-builder-opts {}))
+     requests
+     event-chan
+     event-pub)))
 
 (defn connect
   "Establish a websocket connection to the DevTools protocol at host:port.
@@ -146,14 +151,14 @@
   ([host port]
    (connect host port 1000))
   ([host port max-wait-time-ms]
-   (connect host port max-wait-time-ms (make-ws-client)))
-  ([host port max-wait-time-ms ws-client]
+   (connect host port max-wait-time-ms {}))
+  ([host port max-wait-time-ms ws-builder-options]
    (when max-wait-time-ms
      (wait-for-remote-debugging-port host port max-wait-time-ms))
     (let [url (-> (inspectable-pages host port)
                   (first-inspectable-page))]
-      (connect-url url ws-client))))
+      (connect-url url ws-builder-options))))
 
 (defn send-command [{requests :requests con :ws-connection} payload id callback]
   (swap! requests assoc id callback)
-  (ws/send-msg con (cheshire/encode payload)))
+  (ws/send con (cheshire/encode payload)))

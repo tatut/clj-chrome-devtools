@@ -7,8 +7,8 @@
             [clj-chrome-devtools.commands.network :as network]
             [clj-chrome-devtools.events :as events]
             [clj-chrome-devtools.impl.connection :as connection]
-            [taoensso.timbre :as log]
-            [clojure.core.async :as async :refer [go-loop go thread <!! <!]]
+            [clojure.tools.logging :as log]
+            [clojure.core.async :as async :refer [go-loop thread <!! <!]]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.spec.alpha :as s])
@@ -56,11 +56,12 @@
 
 ;; Automation context wraps a low-level CDP connection with state handling
 (defrecord Automation [connection root on-close]
-  java.lang.AutoCloseable
-  (close [this]
-    (.close ^java.lang.AutoCloseable connection)
-    (when on-close
-      (on-close this))))
+  #?@(:bb []
+      :clj [java.lang.AutoCloseable
+            (close [this]
+                   (.close ^java.lang.AutoCloseable connection)
+                   (when on-close
+                     (on-close this)))]))
 
 (defn automation?
   [a]
@@ -126,7 +127,8 @@
   "Dispose the current automation and set it to nil."
   []
   (swap! current-automation
-         (fn [^java.lang.AutoCloseable automation]
+         (fn [#?(:bb automation
+                 :clj ^java.lang.AutoCloseable automation)]
            (when automation
              (.close automation))
            nil)))

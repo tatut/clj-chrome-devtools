@@ -2,7 +2,7 @@
   "Launch a headless Chrome for automation purposes."
   (:require [clojure.java.shell :as sh]
             [clojure.string :as str]
-            [taoensso.timbre :as log]
+            [clojure.tools.logging :as log]
             [clj-chrome-devtools.automation :as automation]
             [clj-chrome-devtools.impl.util :as util]
             [clj-chrome-devtools.impl.connection :as connection]))
