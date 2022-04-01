@@ -4,7 +4,6 @@
             [java-http-clj.core :as http]
             [java-http-clj.websocket :as ws]
             [clj-chrome-devtools.impl.util :refer [camel->clojure]]
-            [clojure.core.async :as async]
             [clojure.string :as str]
             [clojure.tools.logging :as log])
   (:import (java.util.concurrent Executors ExecutorService)))

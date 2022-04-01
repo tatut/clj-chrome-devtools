@@ -165,8 +165,9 @@
   ([{c :connection r :root} url]
    (reset! r nil)
    (page/enable c {})
-   (events/with-event-wait c :page :frame-stopped-loading
-     (page/navigate c {:url (as-string url)}))
+   (events/wait-for-event c :page :frame-stopped-loading
+                          {} *wait-ms*
+                          #(page/navigate c {:url (as-string url)}))
 
    ;; Wait for root element to have been updated
    (wait :navigate nil @r)))
@@ -326,25 +327,18 @@
   ([{c :connection :as ctx} url-pattern interaction-fn]
    (network/enable c {})
    (page/enable c {})
-   (let [response-ch (events/listen c :network :response-received)
-         timeout-ch (async/timeout (:navigate *wait-ms*))
-         file-request
-         (go-loop [[v ch] (async/alts! [response-ch timeout-ch])]
-           (cond
-             (= ch timeout-ch)
-             nil
-
-             (->> v :params :response :url (re-find url-pattern))
-             (:params v)
-
-             :else
-             (recur (async/alts! [response-ch timeout-ch]))))]
+   (let [p (promise)
+         unlisten (events/listen c :network :response-received
+                                 (fn [v]
+                                   (when (->> v :params :response :url (re-find url-pattern))
+                                     (deliver p (:response (:params v))))))]
      (interaction-fn)
-     (let [file (<!! file-request)]
-       (events/unlisten c :network :response-received response-ch)
-       (when file
-         ;; PENDING: get-response-body does not work for downloaded files
-         (:response file))))))
+     (let [file (deref p *wait-ms* ::timeout)]
+       (unlisten)
+       (if (= file ::timeout)
+         (throw (ex-info "Timeout waiting for response"
+                         {}))
+         file)))))
 
 (defn wait-request
   "Run the given interaction-fn that causes the page to fetch some resource.

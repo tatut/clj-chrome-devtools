@@ -1,6 +1,5 @@
 {:deps {org.clojure/clojure    {:mvn/version "1.9.0"}
         cheshire/cheshire      {:mvn/version "5.10.2"}
-        org.clojure/core.async {:mvn/version "1.5.648"}
         org.clojure/tools.logging {:mvn/version "1.2.4"}
         java-http-clj/java-http-clj {:mvn/version "0.4.3"}
         }
