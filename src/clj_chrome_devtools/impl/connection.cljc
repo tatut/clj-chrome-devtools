@@ -6,7 +6,10 @@
             [clj-chrome-devtools.impl.util :refer [camel->clojure]]
             [clojure.string :as str]
             [clojure.tools.logging :as log])
-  (:import (java.util.concurrent Executors ExecutorService)))
+  (:import (java.util.concurrent
+            #?@(:bb [Executors]
+                :clj [Executors ExecutorService]))
+           (java.net.http WebSocket)))
 
 (set! *warn-on-reflection* true)
 
@@ -14,7 +17,8 @@
 
 
 (defn- submit! [^Runnable func]
-  (.submit ^ExecutorService executor func))
+  (.submit #?(:bb executor
+              :clj ^ExecutorService executor) func))
 
 (defrecord Connection [ws-connection requests event-listeners]
   #?@(:bb [] ;; babashka doesn't support implementing interfaces at this time
@@ -90,8 +94,13 @@
 
 (defn- wait-for-remote-debugging-port [host port max-wait-time-ms]
   (let [wait-until (+ (System/currentTimeMillis) max-wait-time-ms)
-        url        (str "http://" host ":" port "/json/version")]
-    (loop [response (http/get url)]
+        url        (str "http://" host ":" port "/json/version")
+        get! #(try
+                (http/get url)
+                (catch Exception e
+                  (log/trace "Exception while waiting for remote debugging port request" e)
+                  nil))]
+    (loop [response (get!)]
       (cond
         (= (:status response) 200)
         :ok
@@ -103,7 +112,7 @@
 
         :else
         (do (Thread/sleep 100)
-            (recur (http/get url)))))))
+            (recur (get!)))))))
 
 (defn inspectable-pages
   "Collect the list of inspectable pages returned by the DevTools protocol."
@@ -136,6 +145,23 @@
       (.setMaxTextMessageSize max-msg-size-mb))
     client))
 
+(def ^:private
+  default-ws-handlers
+  {:on-binary (fn [& args] (log/error "Should not receive binary messages, args: " args))
+   :on-error (fn [& args]
+               (log/error
+                "Error in devtools WebSocket connection; throwable:" args))
+   :on-close on-close
+   :on-open (fn [^WebSocket ws]
+              (log/info "Inspector WebSocket connected: " ws)
+              (.request ws 1))
+   :on-ping (fn [^WebSocket ws _msg]
+              (.request ws 1)
+              nil)
+   :on-pong (fn [^WebSocket ws _msg]
+              (.request ws 1)
+              nil)})
+
 (defn connect-url
   "Establish a websocket connection to web-socket-debugger-url, as given by
    inspectable-pages."
@@ -149,11 +175,9 @@
 
     (->Connection
      (ws/build-websocket web-socket-debugger-url
-                         {:on-text (on-receive-text requests event-listeners)
-                          :on-binary (fn [& args] (println "should not receive binary messages, args: " args))
-                          :on-error #(log/error
-                                      "Error in devtools WebSocket connection; throwable:" %)
-                          :on-close on-close}
+                         (merge
+                          default-ws-handlers
+                          {:on-text (on-receive-text requests event-listeners)})
                          (or ws-builder-opts {}))
      requests
      event-listeners)))

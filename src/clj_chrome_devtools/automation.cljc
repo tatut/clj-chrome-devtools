@@ -165,10 +165,7 @@
   ([{c :connection r :root} url]
    (reset! r nil)
    (page/enable c {})
-   (events/wait-for-event c :page :frame-stopped-loading
-                          {} *wait-ms*
-                          #(page/navigate c {:url (as-string url)}))
-
+   (page/navigate c {:url (as-string url)})
    ;; Wait for root element to have been updated
    (wait :navigate nil @r)))
 
@@ -333,7 +330,7 @@
                                    (when (->> v :params :response :url (re-find url-pattern))
                                      (deliver p (:response (:params v))))))]
      (interaction-fn)
-     (let [file (deref p *wait-ms* ::timeout)]
+     (let [file (deref p (:element *wait-ms*) ::timeout)]
        (unlisten)
        (if (= file ::timeout)
          (throw (ex-info "Timeout waiting for response"
