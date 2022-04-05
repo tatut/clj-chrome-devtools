@@ -32,4 +32,4 @@
   (a/print-pdf @a/current-automation "example.pdf")
   (let [pdf (slurp "example.pdf")]
     (is (str/starts-with? pdf "%PDF-1.4")) ; file exists and starts with proper PDF header
-    (is (> (count pdf) 50000)))) ; file should be little over 50k
+    (is (> (count pdf) 30000)))) ; file should be little over 30k
