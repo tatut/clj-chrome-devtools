@@ -2,7 +2,7 @@
   :description "Clojure API for Chrome DevTools remote"
   :license {:name "MIT License"}
   :url "https://github.com/tatut/clj-chrome-devtools"
-  :plugins [[lein-codox "0.10.7"]
+  :plugins [[lein-codox "0.10.8"]
             [lein-tools-deps "0.4.5"]]
   :codox {:output-path "docs/api"
           :metadata {:doc/format :markdown}}
