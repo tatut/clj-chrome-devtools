@@ -48,22 +48,22 @@
 
 (defn
  enable
- "Enable collecting and reporting metrics."
+ "Enable collecting and reporting metrics.\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :time-domain | Time domain to use for collecting and reporting duration metrics. (optional)"
  ([]
   (enable
    (c/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params, :keys [time-domain]}]
   (enable
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [time-domain]}]
   (cmd/command
    connection
    "Performance"
    "enable"
    params
-   {})))
+   {:time-domain "timeDomain"})))
 
 (s/fdef
  enable
@@ -72,14 +72,20 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::time-domain]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::time-domain])))
  :ret
  (s/keys))
 

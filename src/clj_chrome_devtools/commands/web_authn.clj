@@ -13,6 +13,10 @@
  #{"u2f" "ctap2"})
 
 (s/def
+ ::ctap2-version
+ #{"ctap2_1" "ctap2_0"})
+
+(s/def
  ::authenticator-transport
  #{"internal" "cable" "ble" "nfc" "usb"})
 
@@ -21,11 +25,16 @@
  (s/keys
   :req-un
   [::protocol
-   ::transport
-   ::has-resident-key
-   ::has-user-verification]
+   ::transport]
   :opt-un
-  [::automatic-presence-simulation]))
+  [::ctap2-version
+   ::has-resident-key
+   ::has-user-verification
+   ::has-large-blob
+   ::has-cred-blob
+   ::has-min-pin-length
+   ::automatic-presence-simulation
+   ::is-user-verified]))
 
 (s/def
  ::credential
@@ -37,7 +46,8 @@
    ::sign-count]
   :opt-un
   [::rp-id
-   ::user-handle]))
+   ::user-handle
+   ::large-blob]))
 (defn
  enable
  "Enable the WebAuthn domain and start intercepting credential storage and\nretrieval with a virtual authenticator."
@@ -339,6 +349,52 @@
   [::credentials]))
 
 (defn
+ remove-credential
+ "Removes a credential from the authenticator.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null\n  :credential-id    | null"
+ ([]
+  (remove-credential
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [authenticator-id credential-id]}]
+  (remove-credential
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [authenticator-id credential-id]}]
+  (cmd/command
+   connection
+   "WebAuthn"
+   "removeCredential"
+   params
+   {:authenticator-id "authenticatorId",
+    :credential-id "credentialId"})))
+
+(s/fdef
+ remove-credential
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::credential-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::credential-id])))
+ :ret
+ (s/keys))
+
+(defn
  clear-credentials
  "Clears all the credentials from the specified device.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null"
  ([]
@@ -424,5 +480,50 @@
     :req-un
     [::authenticator-id
      ::is-user-verified])))
+ :ret
+ (s/keys))
+
+(defn
+ set-automatic-presence-simulation
+ "Sets whether tests of user presence will succeed immediately (if true) or fail to resolve (if false) for an authenticator.\nThe default is true.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :authenticator-id | null\n  :enabled          | null"
+ ([]
+  (set-automatic-presence-simulation
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [authenticator-id enabled]}]
+  (set-automatic-presence-simulation
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [authenticator-id enabled]}]
+  (cmd/command
+   connection
+   "WebAuthn"
+   "setAutomaticPresenceSimulation"
+   params
+   {:authenticator-id "authenticatorId", :enabled "enabled"})))
+
+(s/fdef
+ set-automatic-presence-simulation
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::enabled]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::authenticator-id
+     ::enabled])))
  :ret
  (s/keys))

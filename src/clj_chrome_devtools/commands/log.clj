@@ -13,7 +13,8 @@
    ::text
    ::timestamp]
   :opt-un
-  [::url
+  [::category
+   ::url
    ::line-number
    ::stack-trace
    ::network-request-id

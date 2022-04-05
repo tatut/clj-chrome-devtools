@@ -272,22 +272,25 @@
 
 (defn
  start-precise-coverage
- "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code\ncoverage may be incomplete. Enabling prevents running optimized code and resets execution\ncounters.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :call-count | Collect accurate call counts beyond simple 'covered' or 'not covered'. (optional)\n  :detailed   | Collect block-based coverage. (optional)"
+ "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code\ncoverage may be incomplete. Enabling prevents running optimized code and resets execution\ncounters.\n\nParameters map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :call-count              | Collect accurate call counts beyond simple 'covered' or 'not covered'. (optional)\n  :detailed                | Collect block-based coverage. (optional)\n  :allow-triggered-updates | Allow the backend to send updates on its own initiative (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :timestamp | Monotonically increasing time (in seconds) when the coverage update was taken in the backend."
  ([]
   (start-precise-coverage
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [call-count detailed]}]
+ ([{:as params, :keys [call-count detailed allow-triggered-updates]}]
   (start-precise-coverage
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [call-count detailed]}]
+ ([connection
+   {:as params, :keys [call-count detailed allow-triggered-updates]}]
   (cmd/command
    connection
    "Profiler"
    "startPreciseCoverage"
    params
-   {:call-count "callCount", :detailed "detailed"})))
+   {:call-count "callCount",
+    :detailed "detailed",
+    :allow-triggered-updates "allowTriggeredUpdates"})))
 
 (s/fdef
  start-precise-coverage
@@ -301,7 +304,8 @@
    (s/keys
     :opt-un
     [::call-count
-     ::detailed]))
+     ::detailed
+     ::allow-triggered-updates]))
   :connection-and-params
   (s/cat
    :connection
@@ -311,9 +315,12 @@
    (s/keys
     :opt-un
     [::call-count
-     ::detailed])))
+     ::detailed
+     ::allow-triggered-updates])))
  :ret
- (s/keys))
+ (s/keys
+  :req-un
+  [::timestamp]))
 
 (defn
  start-type-profile
@@ -467,7 +474,7 @@
 
 (defn
  take-precise-coverage
- "Collect coverage data for the current isolate, and resets execution counters. Precise code\ncoverage needs to have started.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | Coverage data for the current isolate."
+ "Collect coverage data for the current isolate, and resets execution counters. Precise code\ncoverage needs to have started.\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :result    | Coverage data for the current isolate.\n  :timestamp | Monotonically increasing time (in seconds) when the coverage update was taken in the backend."
  ([]
   (take-precise-coverage
    (c/get-current-connection)
@@ -502,7 +509,8 @@
  :ret
  (s/keys
   :req-un
-  [::result]))
+  [::result
+   ::timestamp]))
 
 (defn
  take-type-profile

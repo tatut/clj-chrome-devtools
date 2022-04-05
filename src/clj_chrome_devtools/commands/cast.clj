@@ -136,6 +136,49 @@
  (s/keys))
 
 (defn
+ start-desktop-mirroring
+ "Starts mirroring the desktop to the sink.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :sink-name | null"
+ ([]
+  (start-desktop-mirroring
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [sink-name]}]
+  (start-desktop-mirroring
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [sink-name]}]
+  (cmd/command
+   connection
+   "Cast"
+   "startDesktopMirroring"
+   params
+   {:sink-name "sinkName"})))
+
+(s/fdef
+ start-desktop-mirroring
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::sink-name]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::sink-name])))
+ :ret
+ (s/keys))
+
+(defn
  start-tab-mirroring
  "Starts mirroring the tab to the sink.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :sink-name | null"
  ([]

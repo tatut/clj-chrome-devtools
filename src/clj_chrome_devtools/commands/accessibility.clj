@@ -21,8 +21,8 @@
 
 (s/def
  ::ax-value-native-source-type
- #{"label" "legend" "labelwrapped" "figcaption" "title" "tablecaption"
-   "other" "labelfor"})
+ #{"label" "legend" "labelwrapped" "figcaption" "rubyannotation"
+   "title" "tablecaption" "other" "labelfor" "description"})
 
 (s/def
  ::ax-value-source
@@ -88,8 +88,10 @@
    ::description
    ::value
    ::properties
+   ::parent-id
    ::child-ids
-   ::backend-dom-node-id]))
+   ::backend-dom-node-id
+   ::frame-id]))
 (defn
  disable
  "Disables the accessibility domain."
@@ -223,22 +225,22 @@
 
 (defn
  get-full-ax-tree
- "Fetches the entire accessibility tree\n\nReturn map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :nodes | null"
+ "Fetches the entire accessibility tree for the root Document\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :depth    | The maximum depth at which descendants of the root node should be retrieved.\nIf omitted, the full tree is returned. (optional)\n  :frame-id | The frame for whose document the AX tree should be retrieved.\nIf omited, the root frame is used. (optional)\n\nReturn map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :nodes | null"
  ([]
   (get-full-ax-tree
    (c/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params, :keys [depth frame-id]}]
   (get-full-ax-tree
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [depth frame-id]}]
   (cmd/command
    connection
    "Accessibility"
    "getFullAXTree"
    params
-   {})))
+   {:depth "depth", :frame-id "frameId"})))
 
 (s/fdef
  get-full-ax-tree
@@ -247,14 +249,227 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::depth
+     ::frame-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::depth
+     ::frame-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::nodes]))
+
+(defn
+ get-root-ax-node
+ "Fetches the root node.\nRequires `enable()` to have been called previously.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :frame-id | The frame in whose document the node resides.\nIf omitted, the root frame is used. (optional)\n\nReturn map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :node | null"
+ ([]
+  (get-root-ax-node
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [frame-id]}]
+  (get-root-ax-node
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [frame-id]}]
+  (cmd/command
+   connection
+   "Accessibility"
+   "getRootAXNode"
+   params
+   {:frame-id "frameId"})))
+
+(s/fdef
+ get-root-ax-node
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::frame-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::frame-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::node]))
+
+(defn
+ get-ax-node-and-ancestors
+ "Fetches a node and all ancestors up to and including the root.\nRequires `enable()` to have been called previously.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :node-id         | Identifier of the node to get. (optional)\n  :backend-node-id | Identifier of the backend node to get. (optional)\n  :object-id       | JavaScript object id of the node wrapper to get. (optional)\n\nReturn map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :nodes | null"
+ ([]
+  (get-ax-node-and-ancestors
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [node-id backend-node-id object-id]}]
+  (get-ax-node-and-ancestors
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [node-id backend-node-id object-id]}]
+  (cmd/command
+   connection
+   "Accessibility"
+   "getAXNodeAndAncestors"
+   params
+   {:node-id "nodeId",
+    :backend-node-id "backendNodeId",
+    :object-id "objectId"})))
+
+(s/fdef
+ get-ax-node-and-ancestors
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::node-id
+     ::backend-node-id
+     ::object-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::node-id
+     ::backend-node-id
+     ::object-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::nodes]))
+
+(defn
+ get-child-ax-nodes
+ "Fetches a particular accessibility node by AXNodeId.\nRequires `enable()` to have been called previously.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :id       | null\n  :frame-id | The frame in whose document the node resides.\nIf omitted, the root frame is used. (optional)\n\nReturn map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :nodes | null"
+ ([]
+  (get-child-ax-nodes
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [id frame-id]}]
+  (get-child-ax-nodes
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [id frame-id]}]
+  (cmd/command
+   connection
+   "Accessibility"
+   "getChildAXNodes"
+   params
+   {:id "id", :frame-id "frameId"})))
+
+(s/fdef
+ get-child-ax-nodes
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::id]
+    :opt-un
+    [::frame-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::id]
+    :opt-un
+    [::frame-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::nodes]))
+
+(defn
+ query-ax-tree
+ "Query a DOM node's accessibility subtree for accessible name and role.\nThis command computes the name and role for all nodes in the subtree, including those that are\nignored for accessibility, and returns those that mactch the specified name and role. If no DOM\nnode is specified, or the DOM node does not exist, the command returns an error. If neither\n`accessibleName` or `role` is specified, it returns all the accessibility nodes in the subtree.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :node-id         | Identifier of the node for the root to query. (optional)\n  :backend-node-id | Identifier of the backend node for the root to query. (optional)\n  :object-id       | JavaScript object id of the node wrapper for the root to query. (optional)\n  :accessible-name | Find nodes with this computed name. (optional)\n  :role            | Find nodes with this computed role. (optional)\n\nReturn map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :nodes | A list of `Accessibility.AXNode` matching the specified attributes,\nincluding nodes that are ignored for accessibility."
+ ([]
+  (query-ax-tree
+   (c/get-current-connection)
+   {}))
+ ([{:as params,
+    :keys [node-id backend-node-id object-id accessible-name role]}]
+  (query-ax-tree
+   (c/get-current-connection)
+   params))
+ ([connection
+   {:as params,
+    :keys [node-id backend-node-id object-id accessible-name role]}]
+  (cmd/command
+   connection
+   "Accessibility"
+   "queryAXTree"
+   params
+   {:node-id "nodeId",
+    :backend-node-id "backendNodeId",
+    :object-id "objectId",
+    :accessible-name "accessibleName",
+    :role "role"})))
+
+(s/fdef
+ query-ax-tree
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::node-id
+     ::backend-node-id
+     ::object-id
+     ::accessible-name
+     ::role]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::node-id
+     ::backend-node-id
+     ::object-id
+     ::accessible-name
+     ::role])))
  :ret
  (s/keys
   :req-un

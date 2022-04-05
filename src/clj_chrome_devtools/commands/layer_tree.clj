@@ -63,7 +63,7 @@
  (s/coll-of number?))
 (defn
  compositing-reasons
- "Provides the reasons why the given layer was composited.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :layer-id | The id of the layer for which we want to get the reasons it was composited.\n\nReturn map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :compositing-reasons | A list of strings specifying reasons for the given layer to become composited."
+ "Provides the reasons why the given layer was composited.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :layer-id | The id of the layer for which we want to get the reasons it was composited.\n\nReturn map keys:\n\n\n  Key                     | Description \n  ------------------------|------------ \n  :compositing-reasons    | A list of strings specifying reasons for the given layer to become composited.\n  :compositing-reason-ids | A list of strings specifying reason IDs for the given layer to become composited."
  ([]
   (compositing-reasons
    (c/get-current-connection)
@@ -104,7 +104,8 @@
  :ret
  (s/keys
   :req-un
-  [::compositing-reasons]))
+  [::compositing-reasons
+   ::compositing-reason-ids]))
 
 (defn
  disable

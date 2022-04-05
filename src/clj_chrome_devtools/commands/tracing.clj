@@ -27,6 +27,14 @@
 (s/def
  ::stream-compression
  #{"none" "gzip"})
+
+(s/def
+ ::memory-dump-level-of-detail
+ #{"detailed" "light" "background"})
+
+(s/def
+ ::tracing-backend
+ #{"auto" "chrome" "system"})
 (defn
  end
  "Stop trace events collection."
@@ -148,22 +156,22 @@
 
 (defn
  request-memory-dump
- "Request a global memory dump.\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :dump-guid | GUID of the resulting global memory dump.\n  :success   | True iff the global memory dump succeeded."
+ "Request a global memory dump.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :deterministic   | Enables more deterministic results by forcing garbage collection (optional)\n  :level-of-detail | Specifies level of details in memory dump. Defaults to \"detailed\". (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :dump-guid | GUID of the resulting global memory dump.\n  :success   | True iff the global memory dump succeeded."
  ([]
   (request-memory-dump
    (c/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params, :keys [deterministic level-of-detail]}]
   (request-memory-dump
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [deterministic level-of-detail]}]
   (cmd/command
    connection
    "Tracing"
    "requestMemoryDump"
    params
-   {})))
+   {:deterministic "deterministic", :level-of-detail "levelOfDetail"})))
 
 (s/fdef
  request-memory-dump
@@ -172,14 +180,22 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::deterministic
+     ::level-of-detail]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::deterministic
+     ::level-of-detail])))
  :ret
  (s/keys
   :req-un
@@ -188,7 +204,7 @@
 
 (defn
  start
- "Start trace events collection.\n\nParameters map keys:\n\n\n  Key                              | Description \n  ---------------------------------|------------ \n  :categories                      | Category/tag filter (optional)\n  :options                         | Tracing options (optional)\n  :buffer-usage-reporting-interval | If set, the agent will issue bufferUsage events at this interval, specified in milliseconds (optional)\n  :transfer-mode                   | Whether to report trace events as series of dataCollected events or to save trace to a\nstream (defaults to `ReportEvents`). (optional)\n  :stream-format                   | Trace data format to use. This only applies when using `ReturnAsStream`\ntransfer mode (defaults to `json`). (optional)\n  :stream-compression              | Compression format to use. This only applies when using `ReturnAsStream`\ntransfer mode (defaults to `none`) (optional)\n  :trace-config                    | null (optional)"
+ "Start trace events collection.\n\nParameters map keys:\n\n\n  Key                              | Description \n  ---------------------------------|------------ \n  :categories                      | Category/tag filter (optional)\n  :options                         | Tracing options (optional)\n  :buffer-usage-reporting-interval | If set, the agent will issue bufferUsage events at this interval, specified in milliseconds (optional)\n  :transfer-mode                   | Whether to report trace events as series of dataCollected events or to save trace to a\nstream (defaults to `ReportEvents`). (optional)\n  :stream-format                   | Trace data format to use. This only applies when using `ReturnAsStream`\ntransfer mode (defaults to `json`). (optional)\n  :stream-compression              | Compression format to use. This only applies when using `ReturnAsStream`\ntransfer mode (defaults to `none`) (optional)\n  :trace-config                    | null (optional)\n  :perfetto-config                 | Base64-encoded serialized perfetto.protos.TraceConfig protobuf message\nWhen specified, the parameters `categories`, `options`, `traceConfig`\nare ignored. (Encoded as a base64 string when passed over JSON) (optional)\n  :tracing-backend                 | Backend type (defaults to `auto`) (optional)"
  ([]
   (start
    (c/get-current-connection)
@@ -201,7 +217,9 @@
      transfer-mode
      stream-format
      stream-compression
-     trace-config]}]
+     trace-config
+     perfetto-config
+     tracing-backend]}]
   (start
    (c/get-current-connection)
    params))
@@ -214,7 +232,9 @@
      transfer-mode
      stream-format
      stream-compression
-     trace-config]}]
+     trace-config
+     perfetto-config
+     tracing-backend]}]
   (cmd/command
    connection
    "Tracing"
@@ -226,7 +246,9 @@
     :transfer-mode "transferMode",
     :stream-format "streamFormat",
     :stream-compression "streamCompression",
-    :trace-config "traceConfig"})))
+    :trace-config "traceConfig",
+    :perfetto-config "perfettoConfig",
+    :tracing-backend "tracingBackend"})))
 
 (s/fdef
  start
@@ -245,7 +267,9 @@
      ::transfer-mode
      ::stream-format
      ::stream-compression
-     ::trace-config]))
+     ::trace-config
+     ::perfetto-config
+     ::tracing-backend]))
   :connection-and-params
   (s/cat
    :connection
@@ -260,6 +284,8 @@
      ::transfer-mode
      ::stream-format
      ::stream-compression
-     ::trace-config])))
+     ::trace-config
+     ::perfetto-config
+     ::tracing-backend])))
  :ret
  (s/keys))

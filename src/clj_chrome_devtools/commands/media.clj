@@ -13,25 +13,32 @@
  number?)
 
 (s/def
+ ::player-message
+ (s/keys
+  :req-un
+  [::level
+   ::message]))
+
+(s/def
  ::player-property
  (s/keys
   :req-un
-  [::name]
-  :opt-un
-  [::value]))
-
-(s/def
- ::player-event-type
- #{"playbackEvent" "messageEvent" "systemEvent"})
+  [::name
+   ::value]))
 
 (s/def
  ::player-event
  (s/keys
   :req-un
-  [::type
-   ::timestamp
-   ::name
+  [::timestamp
    ::value]))
+
+(s/def
+ ::player-error
+ (s/keys
+  :req-un
+  [::type
+   ::error-code]))
 (defn
  enable
  "Enables the Media domain"

@@ -231,7 +231,7 @@
 
 (defn
  request-entries
- "Requests data from cache.\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :cache-id    | ID of cache to get entries from.\n  :skip-count  | Number of records to skip.\n  :page-size   | Number of records to fetch.\n  :path-filter | If present, only return the entries containing this substring in the path (optional)\n\nReturn map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :cache-data-entries | Array of object store data entries.\n  :return-count       | Count of returned entries from this storage. If pathFilter is empty, it\nis the count of all entries from this storage."
+ "Requests data from cache.\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :cache-id    | ID of cache to get entries from.\n  :skip-count  | Number of records to skip. (optional)\n  :page-size   | Number of records to fetch. (optional)\n  :path-filter | If present, only return the entries containing this substring in the path (optional)\n\nReturn map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :cache-data-entries | Array of object store data entries.\n  :return-count       | Count of returned entries from this storage. If pathFilter is empty, it\nis the count of all entries from this storage."
  ([]
   (request-entries
    (c/get-current-connection)
@@ -263,11 +263,11 @@
    :params
    (s/keys
     :req-un
-    [::cache-id
-     ::skip-count
-     ::page-size]
+    [::cache-id]
     :opt-un
-    [::path-filter]))
+    [::skip-count
+     ::page-size
+     ::path-filter]))
   :connection-and-params
   (s/cat
    :connection
@@ -276,11 +276,11 @@
    :params
    (s/keys
     :req-un
-    [::cache-id
-     ::skip-count
-     ::page-size]
+    [::cache-id]
     :opt-un
-    [::path-filter])))
+    [::skip-count
+     ::page-size
+     ::path-filter])))
  :ret
  (s/keys
   :req-un

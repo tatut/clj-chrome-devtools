@@ -3,8 +3,6 @@
   (:require [clj-chrome-devtools.protocol-definitions :as proto]
             [clj-chrome-devtools.impl.connection :as connection]
             [clojure.string :as str]
-            [clojure.core.async :as async :refer [go <!! >!]]
-            [clojure.set :as set]
             [clj-chrome-devtools.impl.util :refer [camel->clojure]]
             [clojure.spec.alpha :as s]
             [clojure.pprint :as pprint]))

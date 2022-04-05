@@ -29,6 +29,14 @@
    ::column-number]))
 
 (s/def
+ ::location-range
+ (s/keys
+  :req-un
+  [::script-id
+   ::start
+   ::end]))
+
+(s/def
  ::call-frame
  (s/keys
   :req-un
@@ -69,6 +77,18 @@
   :opt-un
   [::column-number
    ::type]))
+
+(s/def
+ ::script-language
+ #{"WebAssembly" "JavaScript"})
+
+(s/def
+ ::debug-symbols
+ (s/keys
+  :req-un
+  [::type]
+  :opt-un
+  [::external-url]))
 (defn
  continue-to-location
  "Continues execution until specific location is reached.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :location           | Location to continue to.\n  :target-call-frames | null (optional)"
@@ -155,7 +175,7 @@
 
 (defn
  enable
- "Enables debugger for the given page. Clients should not assume that the debugging has been\nenabled until the result for this command is received.\n\nParameters map keys:\n\n\n  Key                     | Description \n  ------------------------|------------ \n  :max-scripts-cache-size | The maximum size in bytes of collected scripts (not referenced by other heap objects)\nthe debugger can hold. Puts no limit if paramter is omitted. (optional)\n\nReturn map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :debugger-id | Unique identifier of the debugger."
+ "Enables debugger for the given page. Clients should not assume that the debugging has been\nenabled until the result for this command is received.\n\nParameters map keys:\n\n\n  Key                     | Description \n  ------------------------|------------ \n  :max-scripts-cache-size | The maximum size in bytes of collected scripts (not referenced by other heap objects)\nthe debugger can hold. Puts no limit if parameter is omitted. (optional)\n\nReturn map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :debugger-id | Unique identifier of the debugger."
  ([]
   (enable
    (c/get-current-connection)
@@ -236,15 +256,15 @@
    "Debugger"
    "evaluateOnCallFrame"
    params
-   {:object-group "objectGroup",
+   {:call-frame-id "callFrameId",
     :expression "expression",
+    :object-group "objectGroup",
+    :include-command-line-api "includeCommandLineAPI",
     :silent "silent",
-    :throw-on-side-effect "throwOnSideEffect",
-    :call-frame-id "callFrameId",
     :return-by-value "returnByValue",
-    :timeout "timeout",
     :generate-preview "generatePreview",
-    :include-command-line-api "includeCommandLineAPI"})))
+    :throw-on-side-effect "throwOnSideEffect",
+    :timeout "timeout"})))
 
 (s/fdef
  evaluate-on-call-frame
@@ -347,7 +367,7 @@
 
 (defn
  get-script-source
- "Returns source for the script with given id.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :script-id | Id of the script to get source for.\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :script-source | Script source."
+ "Returns source for the script with given id.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :script-id | Id of the script to get source for.\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :script-source | Script source (empty in case of Wasm bytecode).\n  :bytecode      | Wasm bytecode. (Encoded as a base64 string when passed over JSON) (optional)"
  ([]
   (get-script-source
    (c/get-current-connection)
@@ -388,7 +408,54 @@
  :ret
  (s/keys
   :req-un
-  [::script-source]))
+  [::script-source]
+  :opt-un
+  [::bytecode]))
+
+(defn
+ get-wasm-bytecode
+ "This command is deprecated. Use getScriptSource instead.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :script-id | Id of the Wasm script to get source for.\n\nReturn map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :bytecode | Script source. (Encoded as a base64 string when passed over JSON)"
+ ([]
+  (get-wasm-bytecode
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [script-id]}]
+  (get-wasm-bytecode
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [script-id]}]
+  (cmd/command
+   connection
+   "Debugger"
+   "getWasmBytecode"
+   params
+   {:script-id "scriptId"})))
+
+(s/fdef
+ get-wasm-bytecode
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::script-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::script-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::bytecode]))
 
 (defn
  get-stack-trace
@@ -608,22 +675,22 @@
 
 (defn
  resume
- "Resumes JavaScript execution."
+ "Resumes JavaScript execution.\n\nParameters map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :terminate-on-resume | Set to true to terminate execution upon resuming execution. In contrast\nto Runtime.terminateExecution, this will allows to execute further\nJavaScript (i.e. via evaluation) until execution of the paused code\nis actually resumed, at which point termination is triggered.\nIf execution is currently not paused, this parameter has no effect. (optional)"
  ([]
   (resume
    (c/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params, :keys [terminate-on-resume]}]
   (resume
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [terminate-on-resume]}]
   (cmd/command
    connection
    "Debugger"
    "resume"
    params
-   {})))
+   {:terminate-on-resume "terminateOnResume"})))
 
 (s/fdef
  resume
@@ -632,14 +699,20 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::terminate-on-resume]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::terminate-on-resume])))
  :ret
  (s/keys))
 
@@ -1329,22 +1402,22 @@
 
 (defn
  step-into
- "Steps into the function call.\n\nParameters map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :break-on-async-call | Debugger will issue additional Debugger.paused notification if any async task is scheduled\nbefore next pause. (optional)"
+ "Steps into the function call.\n\nParameters map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :break-on-async-call | Debugger will pause on the execution of the first async task which was scheduled\nbefore next pause. (optional)\n  :skip-list           | The skipList specifies location ranges that should be skipped on step into. (optional)"
  ([]
   (step-into
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [break-on-async-call]}]
+ ([{:as params, :keys [break-on-async-call skip-list]}]
   (step-into
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [break-on-async-call]}]
+ ([connection {:as params, :keys [break-on-async-call skip-list]}]
   (cmd/command
    connection
    "Debugger"
    "stepInto"
    params
-   {:break-on-async-call "breakOnAsyncCall"})))
+   {:break-on-async-call "breakOnAsyncCall", :skip-list "skipList"})))
 
 (s/fdef
  step-into
@@ -1357,7 +1430,8 @@
    :params
    (s/keys
     :opt-un
-    [::break-on-async-call]))
+    [::break-on-async-call
+     ::skip-list]))
   :connection-and-params
   (s/cat
    :connection
@@ -1366,7 +1440,8 @@
    :params
    (s/keys
     :opt-un
-    [::break-on-async-call])))
+    [::break-on-async-call
+     ::skip-list])))
  :ret
  (s/keys))
 
@@ -1409,22 +1484,22 @@
 
 (defn
  step-over
- "Steps over the statement."
+ "Steps over the statement.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :skip-list | The skipList specifies location ranges that should be skipped on step over. (optional)"
  ([]
   (step-over
    (c/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params, :keys [skip-list]}]
   (step-over
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [skip-list]}]
   (cmd/command
    connection
    "Debugger"
    "stepOver"
    params
-   {})))
+   {:skip-list "skipList"})))
 
 (s/fdef
  step-over
@@ -1433,13 +1508,19 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::skip-list]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::skip-list])))
  :ret
  (s/keys))

@@ -174,21 +174,31 @@
 
 (defn
  fulfill-request
- "Provides response to the request.\n\nParameters map keys:\n\n\n  Key               | Description \n  ------------------|------------ \n  :request-id       | An id the client received in requestPaused event.\n  :response-code    | An HTTP response code.\n  :response-headers | Response headers.\n  :body             | A response body. (optional)\n  :response-phrase  | A textual representation of responseCode.\nIf absent, a standard phrase mathcing responseCode is used. (optional)"
+ "Provides response to the request.\n\nParameters map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :request-id              | An id the client received in requestPaused event.\n  :response-code           | An HTTP response code.\n  :response-headers        | Response headers. (optional)\n  :binary-response-headers | Alternative way of specifying response headers as a \\0-separated\nseries of name: value pairs. Prefer the above method unless you\nneed to represent some non-UTF8 values that can't be transmitted\nover the protocol as text. (Encoded as a base64 string when passed over JSON) (optional)\n  :body                    | A response body. If absent, original response body will be used if\nthe request is intercepted at the response stage and empty body\nwill be used if the request is intercepted at the request stage. (Encoded as a base64 string when passed over JSON) (optional)\n  :response-phrase         | A textual representation of responseCode.\nIf absent, a standard phrase matching responseCode is used. (optional)"
  ([]
   (fulfill-request
    (c/get-current-connection)
    {}))
  ([{:as params,
     :keys
-    [request-id response-code response-headers body response-phrase]}]
+    [request-id
+     response-code
+     response-headers
+     binary-response-headers
+     body
+     response-phrase]}]
   (fulfill-request
    (c/get-current-connection)
    params))
  ([connection
    {:as params,
     :keys
-    [request-id response-code response-headers body response-phrase]}]
+    [request-id
+     response-code
+     response-headers
+     binary-response-headers
+     body
+     response-phrase]}]
   (cmd/command
    connection
    "Fetch"
@@ -197,6 +207,7 @@
    {:request-id "requestId",
     :response-code "responseCode",
     :response-headers "responseHeaders",
+    :binary-response-headers "binaryResponseHeaders",
     :body "body",
     :response-phrase "responsePhrase"})))
 
@@ -212,10 +223,11 @@
    (s/keys
     :req-un
     [::request-id
-     ::response-code
-     ::response-headers]
+     ::response-code]
     :opt-un
-    [::body
+    [::response-headers
+     ::binary-response-headers
+     ::body
      ::response-phrase]))
   :connection-and-params
   (s/cat
@@ -226,27 +238,32 @@
    (s/keys
     :req-un
     [::request-id
-     ::response-code
-     ::response-headers]
+     ::response-code]
     :opt-un
-    [::body
+    [::response-headers
+     ::binary-response-headers
+     ::body
      ::response-phrase])))
  :ret
  (s/keys))
 
 (defn
  continue-request
- "Continues the request, optionally modifying some of its parameters.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :request-id | An id the client received in requestPaused event.\n  :url        | If set, the request url will be modified in a way that's not observable by page. (optional)\n  :method     | If set, the request method is overridden. (optional)\n  :post-data  | If set, overrides the post data in the request. (optional)\n  :headers    | If set, overrides the request headrts. (optional)"
+ "Continues the request, optionally modifying some of its parameters.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :request-id         | An id the client received in requestPaused event.\n  :url                | If set, the request url will be modified in a way that's not observable by page. (optional)\n  :method             | If set, the request method is overridden. (optional)\n  :post-data          | If set, overrides the post data in the request. (Encoded as a base64 string when passed over JSON) (optional)\n  :headers            | If set, overrides the request headers. (optional)\n  :intercept-response | If set, overrides response interception behavior for this request. (optional)"
  ([]
   (continue-request
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [request-id url method post-data headers]}]
+ ([{:as params,
+    :keys
+    [request-id url method post-data headers intercept-response]}]
   (continue-request
    (c/get-current-connection)
    params))
  ([connection
-   {:as params, :keys [request-id url method post-data headers]}]
+   {:as params,
+    :keys
+    [request-id url method post-data headers intercept-response]}]
   (cmd/command
    connection
    "Fetch"
@@ -256,7 +273,8 @@
     :url "url",
     :method "method",
     :post-data "postData",
-    :headers "headers"})))
+    :headers "headers",
+    :intercept-response "interceptResponse"})))
 
 (s/fdef
  continue-request
@@ -274,7 +292,8 @@
     [::url
      ::method
      ::post-data
-     ::headers]))
+     ::headers
+     ::intercept-response]))
   :connection-and-params
   (s/cat
    :connection
@@ -288,7 +307,8 @@
     [::url
      ::method
      ::post-data
-     ::headers])))
+     ::headers
+     ::intercept-response])))
  :ret
  (s/keys))
 
@@ -335,6 +355,76 @@
     :req-un
     [::request-id
      ::auth-challenge-response])))
+ :ret
+ (s/keys))
+
+(defn
+ continue-response
+ "Continues loading of the paused response, optionally modifying the\nresponse headers. If either responseCode or headers are modified, all of them\nmust be present.\n\nParameters map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :request-id              | An id the client received in requestPaused event.\n  :response-code           | An HTTP response code. If absent, original response code will be used. (optional)\n  :response-phrase         | A textual representation of responseCode.\nIf absent, a standard phrase matching responseCode is used. (optional)\n  :response-headers        | Response headers. If absent, original response headers will be used. (optional)\n  :binary-response-headers | Alternative way of specifying response headers as a \\0-separated\nseries of name: value pairs. Prefer the above method unless you\nneed to represent some non-UTF8 values that can't be transmitted\nover the protocol as text. (Encoded as a base64 string when passed over JSON) (optional)"
+ ([]
+  (continue-response
+   (c/get-current-connection)
+   {}))
+ ([{:as params,
+    :keys
+    [request-id
+     response-code
+     response-phrase
+     response-headers
+     binary-response-headers]}]
+  (continue-response
+   (c/get-current-connection)
+   params))
+ ([connection
+   {:as params,
+    :keys
+    [request-id
+     response-code
+     response-phrase
+     response-headers
+     binary-response-headers]}]
+  (cmd/command
+   connection
+   "Fetch"
+   "continueResponse"
+   params
+   {:request-id "requestId",
+    :response-code "responseCode",
+    :response-phrase "responsePhrase",
+    :response-headers "responseHeaders",
+    :binary-response-headers "binaryResponseHeaders"})))
+
+(s/fdef
+ continue-response
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::request-id]
+    :opt-un
+    [::response-code
+     ::response-phrase
+     ::response-headers
+     ::binary-response-headers]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::request-id]
+    :opt-un
+    [::response-code
+     ::response-phrase
+     ::response-headers
+     ::binary-response-headers])))
  :ret
  (s/keys))
 

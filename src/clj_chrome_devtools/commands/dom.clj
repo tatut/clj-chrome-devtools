@@ -23,13 +23,20 @@
 (s/def
  ::pseudo-type
  #{"input-list-button" "first-line" "after" "scrollbar-track-piece"
-   "backdrop" "first-line-inherited" "resizer" "scrollbar-corner"
-   "first-letter" "scrollbar-button" "scrollbar" "scrollbar-track"
-   "selection" "before" "scrollbar-thumb"})
+   "page-transition-container" "backdrop" "page-transition"
+   "first-line-inherited" "resizer" "scrollbar-corner" "first-letter"
+   "page-transition-incoming-image" "target-text" "scrollbar-button"
+   "page-transition-outgoing-image" "scrollbar" "scrollbar-track"
+   "grammar-error" "selection" "highlight" "marker" "before"
+   "scrollbar-thumb" "spelling-error" "page-transition-image-wrapper"})
 
 (s/def
  ::shadow-root-type
  #{"user-agent" "closed" "open"})
+
+(s/def
+ ::compatibility-mode
+ #{"LimitedQuirksMode" "NoQuirksMode" "QuirksMode"})
 
 (s/def
  ::node
@@ -63,7 +70,8 @@
    ::pseudo-elements
    ::imported-document
    ::distributed-nodes
-   ::is-svg]))
+   ::is-svg
+   ::compatibility-mode]))
 
 (s/def
  ::rgba
@@ -108,6 +116,13 @@
    ::y
    ::width
    ::height]))
+
+(s/def
+ ::css-computed-style-property
+ (s/keys
+  :req-un
+  [::name
+   ::value]))
 (defn
  collect-class-names-from-subtree
  "Collects class names for the node with given id and all of it's child nodes.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | Id of the node to collect class names.\n\nReturn map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :class-names | Class name list."
@@ -268,6 +283,59 @@
   [::node]))
 
 (defn
+ scroll-into-view-if-needed
+ "Scrolls the specified rect of the given node into view if not already visible.\nNote: exactly one between nodeId, backendNodeId and objectId should be passed\nto identify the node.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :node-id         | Identifier of the node. (optional)\n  :backend-node-id | Identifier of the backend node. (optional)\n  :object-id       | JavaScript object id of the node wrapper. (optional)\n  :rect            | The rect to be scrolled into view, relative to the node's border box, in CSS pixels.\nWhen omitted, center of the node will be used, similar to Element.scrollIntoView. (optional)"
+ ([]
+  (scroll-into-view-if-needed
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [node-id backend-node-id object-id rect]}]
+  (scroll-into-view-if-needed
+   (c/get-current-connection)
+   params))
+ ([connection
+   {:as params, :keys [node-id backend-node-id object-id rect]}]
+  (cmd/command
+   connection
+   "DOM"
+   "scrollIntoViewIfNeeded"
+   params
+   {:node-id "nodeId",
+    :backend-node-id "backendNodeId",
+    :object-id "objectId",
+    :rect "rect"})))
+
+(s/fdef
+ scroll-into-view-if-needed
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::node-id
+     ::backend-node-id
+     ::object-id
+     ::rect]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::node-id
+     ::backend-node-id
+     ::object-id
+     ::rect])))
+ :ret
+ (s/keys))
+
+(defn
  disable
  "Disables DOM agent for the given page."
  ([]
@@ -349,22 +417,22 @@
 
 (defn
  enable
- "Enables DOM agent for the given page."
+ "Enables DOM agent for the given page.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :include-whitespace | Whether to include whitespaces in the children array of returned Nodes. (optional)"
  ([]
   (enable
    (c/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params, :keys [include-whitespace]}]
   (enable
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection {:as params, :keys [include-whitespace]}]
   (cmd/command
    connection
    "DOM"
    "enable"
    params
-   {})))
+   {:include-whitespace "includeWhitespace"})))
 
 (s/fdef
  enable
@@ -373,14 +441,20 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::include-whitespace]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::include-whitespace])))
  :ret
  (s/keys))
 
@@ -629,7 +703,7 @@
 
 (defn
  get-flattened-document
- "Returns the root DOM node (and optionally the subtree) to the caller.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :depth  | The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the\nentire subtree or provide an integer larger than 0. (optional)\n  :pierce | Whether or not iframes and shadow roots should be traversed when returning the subtree\n(default is false). (optional)\n\nReturn map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :nodes | Resulting node."
+ "Returns the root DOM node (and optionally the subtree) to the caller.\nDeprecated, as it is not designed to work well with the rest of the DOM agent.\nUse DOMSnapshot.captureSnapshot instead.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :depth  | The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the\nentire subtree or provide an integer larger than 0. (optional)\n  :pierce | Whether or not iframes and shadow roots should be traversed when returning the subtree\n(default is false). (optional)\n\nReturn map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :nodes | Resulting node."
  ([]
   (get-flattened-document
    (c/get-current-connection)
@@ -675,17 +749,75 @@
   [::nodes]))
 
 (defn
+ get-nodes-for-subtree-by-style
+ "Finds nodes with a given computed style in a subtree.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :node-id         | Node ID pointing to the root of a subtree.\n  :computed-styles | The style to filter nodes by (includes nodes if any of properties matches).\n  :pierce          | Whether or not iframes and shadow roots in the same target should be traversed when returning the\nresults (default is false). (optional)\n\nReturn map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :node-ids | Resulting nodes."
+ ([]
+  (get-nodes-for-subtree-by-style
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [node-id computed-styles pierce]}]
+  (get-nodes-for-subtree-by-style
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [node-id computed-styles pierce]}]
+  (cmd/command
+   connection
+   "DOM"
+   "getNodesForSubtreeByStyle"
+   params
+   {:node-id "nodeId",
+    :computed-styles "computedStyles",
+    :pierce "pierce"})))
+
+(s/fdef
+ get-nodes-for-subtree-by-style
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::node-id
+     ::computed-styles]
+    :opt-un
+    [::pierce]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::node-id
+     ::computed-styles]
+    :opt-un
+    [::pierce])))
+ :ret
+ (s/keys
+  :req-un
+  [::node-ids]))
+
+(defn
  get-node-for-location
- "Returns node id at given location. Depending on whether DOM domain is enabled, nodeId is\neither returned or not.\n\nParameters map keys:\n\n\n  Key                            | Description \n  -------------------------------|------------ \n  :x                             | X coordinate.\n  :y                             | Y coordinate.\n  :include-user-agent-shadow-dom | False to skip to the nearest non-UA shadow root ancestor (default: false). (optional)\n\nReturn map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :backend-node-id | Resulting node.\n  :node-id         | Id of the node at given coordinates, only when enabled and requested document. (optional)"
+ "Returns node id at given location. Depending on whether DOM domain is enabled, nodeId is\neither returned or not.\n\nParameters map keys:\n\n\n  Key                            | Description \n  -------------------------------|------------ \n  :x                             | X coordinate.\n  :y                             | Y coordinate.\n  :include-user-agent-shadow-dom | False to skip to the nearest non-UA shadow root ancestor (default: false). (optional)\n  :ignore-pointer-events-none    | Whether to ignore pointer-events: none on elements and hit test them. (optional)\n\nReturn map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :backend-node-id | Resulting node.\n  :frame-id        | Frame this node belongs to.\n  :node-id         | Id of the node at given coordinates, only when enabled and requested document. (optional)"
  ([]
   (get-node-for-location
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [x y include-user-agent-shadow-dom]}]
+ ([{:as params,
+    :keys
+    [x y include-user-agent-shadow-dom ignore-pointer-events-none]}]
   (get-node-for-location
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [x y include-user-agent-shadow-dom]}]
+ ([connection
+   {:as params,
+    :keys
+    [x y include-user-agent-shadow-dom ignore-pointer-events-none]}]
   (cmd/command
    connection
    "DOM"
@@ -693,7 +825,8 @@
    params
    {:x "x",
     :y "y",
-    :include-user-agent-shadow-dom "includeUserAgentShadowDOM"})))
+    :include-user-agent-shadow-dom "includeUserAgentShadowDOM",
+    :ignore-pointer-events-none "ignorePointerEventsNone"})))
 
 (s/fdef
  get-node-for-location
@@ -709,7 +842,8 @@
     [::x
      ::y]
     :opt-un
-    [::include-user-agent-shadow-dom]))
+    [::include-user-agent-shadow-dom
+     ::ignore-pointer-events-none]))
   :connection-and-params
   (s/cat
    :connection
@@ -721,11 +855,13 @@
     [::x
      ::y]
     :opt-un
-    [::include-user-agent-shadow-dom])))
+    [::include-user-agent-shadow-dom
+     ::ignore-pointer-events-none])))
  :ret
  (s/keys
   :req-un
-  [::backend-node-id]
+  [::backend-node-id
+   ::frame-id]
   :opt-un
   [::node-id]))
 
@@ -1516,22 +1652,16 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [::object-id]))
+   (s/keys :req-un [:user/object-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [::object-id])))
+   (s/keys :req-un [:user/object-id])))
  :ret
- (s/keys
-  :req-un
-  [::node-id]))
+ (s/keys :req-un [:user/node-id]))
 
 (defn
  resolve-node
@@ -1569,10 +1699,10 @@
    :params
    (s/keys
     :opt-un
-    [::node-id
-     ::backend-node-id
-     ::object-group
-     ::execution-context-id]))
+    [:user/node-id
+     :user/backend-node-id
+     :user/object-group
+     :user/execution-context-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -1581,14 +1711,12 @@
    :params
    (s/keys
     :opt-un
-    [::node-id
-     ::backend-node-id
-     ::object-group
-     ::execution-context-id])))
+    [:user/node-id
+     :user/backend-node-id
+     :user/object-group
+     :user/execution-context-id])))
  :ret
- (s/keys
-  :req-un
-  [::object]))
+ (s/keys :req-un [:user/object]))
 
 (defn
  set-attribute-value
@@ -1620,9 +1748,7 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/name
-     :clj-chrome-devtools.impl.define/value]))
+    [:user/node-id :user/name :user/value]))
   :connection-and-params
   (s/cat
    :connection
@@ -1631,9 +1757,7 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/name
-     :clj-chrome-devtools.impl.define/value])))
+    [:user/node-id :user/name :user/value])))
  :ret
  (s/keys))
 
@@ -1667,10 +1791,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/text]
+    [:user/node-id :user/text]
     :opt-un
-    [:clj-chrome-devtools.impl.define/name]))
+    [:user/name]))
   :connection-and-params
   (s/cat
    :connection
@@ -1679,10 +1802,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/text]
+    [:user/node-id :user/text]
     :opt-un
-    [:clj-chrome-devtools.impl.define/name])))
+    [:user/name])))
  :ret
  (s/keys))
 
@@ -1720,11 +1842,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/files]
+    [:user/files]
     :opt-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/backend-node-id
-     :clj-chrome-devtools.impl.define/object-id]))
+    [:user/node-id :user/backend-node-id :user/object-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -1733,11 +1853,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/files]
+    [:user/files]
     :opt-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/backend-node-id
-     :clj-chrome-devtools.impl.define/object-id])))
+    [:user/node-id :user/backend-node-id :user/object-id])))
  :ret
  (s/keys))
 
@@ -1769,18 +1887,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enable]))
+   (s/keys :req-un [:user/enable]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enable])))
+   (s/keys :req-un [:user/enable])))
  :ret
  (s/keys))
 
@@ -1812,22 +1926,16 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id]))
+   (s/keys :req-un [:user/node-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id])))
+   (s/keys :req-un [:user/node-id])))
  :ret
- (s/keys
-  :opt-un
-  [:clj-chrome-devtools.impl.define/creation]))
+ (s/keys :opt-un [:user/creation]))
 
 (defn
  get-file-info
@@ -1857,22 +1965,16 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/object-id]))
+   (s/keys :req-un [:user/object-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/object-id])))
+   (s/keys :req-un [:user/object-id])))
  :ret
- (s/keys
-  :req-un
-  [:clj-chrome-devtools.impl.define/path]))
+ (s/keys :req-un [:user/path]))
 
 (defn
  set-inspected-node
@@ -1902,18 +2004,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id]))
+   (s/keys :req-un [:user/node-id]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id])))
+   (s/keys :req-un [:user/node-id])))
  :ret
  (s/keys))
 
@@ -1945,24 +2043,16 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/name]))
+   (s/keys :req-un [:user/node-id :user/name]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/name])))
+   (s/keys :req-un [:user/node-id :user/name])))
  :ret
- (s/keys
-  :req-un
-  [:clj-chrome-devtools.impl.define/node-id]))
+ (s/keys :req-un [:user/node-id]))
 
 (defn
  set-node-value
@@ -1992,20 +2082,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/value]))
+   (s/keys :req-un [:user/node-id :user/value]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/value])))
+   (s/keys :req-un [:user/node-id :user/value])))
  :ret
  (s/keys))
 
@@ -2037,20 +2121,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/outer-html]))
+   (s/keys :req-un [:user/node-id :user/outer-html]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/node-id
-     :clj-chrome-devtools.impl.define/outer-html])))
+   (s/keys :req-un [:user/node-id :user/outer-html])))
  :ret
  (s/keys))
 
@@ -2119,9 +2197,54 @@
   :just-params
   (s/cat
    :params
+   (s/keys :req-un [:user/frame-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys :req-un [:user/frame-id])))
+ :ret
+ (s/keys
+  :req-un
+  [:user/backend-node-id]
+  :opt-un
+  [:user/node-id]))
+
+(defn
+ get-container-for-node
+ "Returns the container of the given node based on container query conditions.\nIf containerName is given, it will find the nearest container with a matching name;\notherwise it will find the nearest container regardless of its container name.\n\nParameters map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :node-id        | null\n  :container-name | null (optional)\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | The container node for the given node, or null if not found. (optional)"
+ ([]
+  (get-container-for-node
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [node-id container-name]}]
+  (get-container-for-node
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [node-id container-name]}]
+  (cmd/command
+   connection
+   "DOM"
+   "getContainerForNode"
+   params
+   {:node-id "nodeId", :container-name "containerName"})))
+
+(s/fdef
+ get-container-for-node
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/frame-id]))
+    [:user/node-id]
+    :opt-un
+    [:user/container-name]))
   :connection-and-params
   (s/cat
    :connection
@@ -2130,10 +2253,47 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/frame-id])))
+    [:user/node-id]
+    :opt-un
+    [:user/container-name])))
  :ret
- (s/keys
-  :req-un
-  [:clj-chrome-devtools.impl.define/backend-node-id]
-  :opt-un
-  [:clj-chrome-devtools.impl.define/node-id]))
+ (s/keys :opt-un [:user/node-id]))
+
+(defn
+ get-querying-descendants-for-container
+ "Returns the descendants of a container query container that have\ncontainer queries against this container.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | Id of the container node to find querying descendants from.\n\nReturn map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :node-ids | Descendant nodes with container queries against the given container."
+ ([]
+  (get-querying-descendants-for-container
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [node-id]}]
+  (get-querying-descendants-for-container
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [node-id]}]
+  (cmd/command
+   connection
+   "DOM"
+   "getQueryingDescendantsForContainer"
+   params
+   {:node-id "nodeId"})))
+
+(s/fdef
+ get-querying-descendants-for-container
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys :req-un [:user/node-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys :req-un [:user/node-id])))
+ :ret
+ (s/keys :req-un [:user/node-ids]))

@@ -9,19 +9,138 @@
  string?)
 
 (s/def
+ ::ad-frame-type
+ #{"none" "child" "root"})
+
+(s/def
+ ::ad-frame-explanation
+ #{"MatchedBlockingRule" "CreatedByAdScript" "ParentIsAd"})
+
+(s/def
+ ::ad-frame-status
+ (s/keys
+  :req-un
+  [::ad-frame-type]
+  :opt-un
+  [::explanations]))
+
+(s/def
+ ::secure-context-type
+ #{"Secure" "SecureLocalhost" "InsecureScheme" "InsecureAncestor"})
+
+(s/def
+ ::cross-origin-isolated-context-type
+ #{"Isolated" "NotIsolatedFeatureDisabled" "NotIsolated"})
+
+(s/def
+ ::gated-api-features
+ #{"SharedArrayBuffersTransferAllowed" "PerformanceProfile"
+   "PerformanceMeasureMemory" "SharedArrayBuffers"})
+
+(s/def
+ ::permissions-policy-feature
+ #{"ch-ua-full-version-list" "ch-ua-wow64" "ch-viewport-height"
+   "gamepad" "sync-xhr" "ch-ua-full" "run-ad-auction"
+   "screen-wake-lock" "ch-prefers-color-scheme" "xr-spatial-tracking"
+   "serial" "trust-token-redemption" "cross-origin-isolated"
+   "frobulate" "shared-autofill" "display-capture" "autoplay"
+   "document-domain" "direct-sockets" "clipboard-read"
+   "execution-while-not-rendered" "vertical-scroll" "camera"
+   "magnetometer" "web-share" "ch-ua-model" "geolocation" "gyroscope"
+   "keyboard-map" "clipboard-write" "ch-ua-reduced"
+   "ch-ua-full-version" "ch-partitioned-cookies" "ch-downlink" "usb"
+   "ch-ua-platform-version" "ch-ua-mobile" "attribution-reporting"
+   "ch-ua-platform" "interest-cohort" "ch-viewport-width" "hid"
+   "ambient-light-sensor" "ch-ua-bitness" "window-placement"
+   "join-ad-interest-group" "microphone" "fullscreen" "browsing-topics"
+   "midi" "ch-ect" "execution-while-out-of-viewport" "otp-credentials"
+   "storage-access-api" "ch-device-memory" "ch-ua-arch" "ch-rtt"
+   "picture-in-picture" "idle-detection" "publickey-credentials-get"
+   "ch-ua" "encrypted-media" "focus-without-user-activation" "ch-dpr"
+   "accelerometer" "payment" "ch-width"})
+
+(s/def
+ ::permissions-policy-block-reason
+ #{"Header" "InFencedFrameTree" "IframeAttribute"})
+
+(s/def
+ ::permissions-policy-block-locator
+ (s/keys
+  :req-un
+  [::frame-id
+   ::block-reason]))
+
+(s/def
+ ::permissions-policy-feature-state
+ (s/keys
+  :req-un
+  [::feature
+   ::allowed]
+  :opt-un
+  [::locator]))
+
+(s/def
+ ::origin-trial-token-status
+ #{"WrongOrigin" "NotSupported" "FeatureDisabled" "WrongVersion"
+   "FeatureDisabledForUser" "Expired" "Success" "Malformed"
+   "UnknownTrial" "InvalidSignature" "Insecure" "TokenDisabled"})
+
+(s/def
+ ::origin-trial-status
+ #{"ValidTokenNotProvided" "Enabled" "TrialNotAllowed"
+   "OSNotSupported"})
+
+(s/def
+ ::origin-trial-usage-restriction
+ #{"None" "Subset"})
+
+(s/def
+ ::origin-trial-token
+ (s/keys
+  :req-un
+  [::origin
+   ::match-sub-domains
+   ::trial-name
+   ::expiry-time
+   ::is-third-party
+   ::usage-restriction]))
+
+(s/def
+ ::origin-trial-token-with-status
+ (s/keys
+  :req-un
+  [::raw-token-text
+   ::status]
+  :opt-un
+  [::parsed-token]))
+
+(s/def
+ ::origin-trial
+ (s/keys
+  :req-un
+  [::trial-name
+   ::status
+   ::tokens-with-status]))
+
+(s/def
  ::frame
  (s/keys
   :req-un
   [::id
    ::loader-id
    ::url
+   ::domain-and-registry
    ::security-origin
-   ::mime-type]
+   ::mime-type
+   ::secure-context-type
+   ::cross-origin-isolated-context-type
+   ::gated-api-features]
   :opt-un
   [::parent-id
    ::name
    ::url-fragment
-   ::unreachable-url]))
+   ::unreachable-url
+   ::ad-frame-status]))
 
 (s/def
  ::frame-resource
@@ -100,6 +219,12 @@
    ::column]))
 
 (s/def
+ ::app-manifest-parsed-properties
+ (s/keys
+  :req-un
+  [::scope]))
+
+(s/def
  ::layout-viewport
  (s/keys
   :req-un
@@ -145,16 +270,126 @@
    ::pictograph]))
 
 (s/def
- ::font-sizes
- (s/keys
-  :opt-un
-  [::standard
-   ::fixed]))
+ :user/script-font-families
+ (s/keys :req-un [:user/script :user/font-families]))
 
 (s/def
- ::client-navigation-reason
- #{"scriptInitiated" "metaTagRefresh" "reload" "formSubmissionPost"
-   "pageBlockInterstitial" "formSubmissionGet" "httpHeaderRefresh"})
+ :user/font-sizes
+ (s/keys :opt-un [:user/standard :user/fixed]))
+
+(s/def
+ :user/client-navigation-reason
+ #{"scriptInitiated" "metaTagRefresh" "anchorClick" "reload"
+   "formSubmissionPost" "pageBlockInterstitial" "formSubmissionGet"
+   "httpHeaderRefresh"})
+
+(s/def
+ :user/client-navigation-disposition
+ #{"download" "newTab" "currentTab" "newWindow"})
+
+(s/def
+ :user/installability-error-argument
+ (s/keys :req-un [:user/name :user/value]))
+
+(s/def
+ :user/installability-error
+ (s/keys
+  :req-un
+  [:user/error-id :user/error-arguments]))
+
+(s/def
+ :user/referrer-policy
+ #{"origin" "noReferrerWhenDowngrade" "sameOrigin" "strictOrigin"
+   "unsafeUrl" "originWhenCrossOrigin" "noReferrer"
+   "strictOriginWhenCrossOrigin"})
+
+(s/def
+ :user/compilation-cache-params
+ (s/keys :req-un [:user/url] :opt-un [:user/eager]))
+
+(s/def
+ :user/navigation-type
+ #{"Navigation" "BackForwardCacheRestore"})
+
+(s/def
+ :user/back-forward-cache-not-restored-reason
+ #{"UnloadHandlerExistsInMainFrame" "OutstandingNetworkRequestXHR"
+   "WebNfc" "HTTPStatusNotOK" "PictureInPicture"
+   "RequestedNotificationsPermission" "TimeoutPuttingInCache"
+   "JavaScriptExecution" "InjectedStyleSheet"
+   "EmbedderPermissionRequestManager"
+   "EmbedderSafeBrowsingThreatDetails" "IgnoreEventAndEvict" "Timeout"
+   "RequestedMIDIPermission" "NoResponseHead" "CacheControlNoStore"
+   "BroadcastChannel" "SchemeNotHTTPOrHTTPS" "SubframeIsNavigating"
+   "WasGrantedMediaAccess" "WebSocket" "ContentFileSystemAccess"
+   "IndexedDBConnection" "KeyboardLock" "CacheLimit" "ContainsPlugins"
+   "ContentSerial" "WebLocks" "EmbedderExtensionMessagingForOpenPort"
+   "ContentSecurityHandler" "AppBanner" "ContentFileChooser"
+   "OutstandingNetworkRequestOthers" "BrowsingInstanceNotSwapped"
+   "EmbedderExtensionMessaging" "UserAgentOverrideDiffers"
+   "EmbedderSafeBrowsingTriggeredPopupBlocker"
+   "RequestedStorageAccessGrant" "SchedulerTrackedFeatureUsed"
+   "ContentMediaSessionService" "RequestedBackgroundWorkPermission"
+   "ContentMediaDevicesDispatcherHost" "NotPrimaryMainFrame"
+   "BackForwardCacheDisabled" "PaymentManager"
+   "MainResourceHasCacheControlNoStore" "WebShare"
+   "NetworkRequestTimeout" "EmbedderAppBannerManager" "ErrorDocument"
+   "NetworkExceedsBufferLimit" "BackForwardCacheDisabledByCommandLine"
+   "Unknown" "OutstandingNetworkRequestFetch"
+   "EmbedderDomDistillerSelfDeletingRequestDelegate"
+   "EmbedderOomInterventionTabHelper" "ContentMediaSession"
+   "OutstandingNetworkRequestDirectSocket" "ServiceWorkerClaim"
+   "RequestedAudioCapturePermission" "ConflictingBrowsingInstance"
+   "SubresourceHasCacheControlNoCache"
+   "EmbedderDomDistillerViewerSource" "UnloadHandlerExistsInSubFrame"
+   "WebDatabase" "RenderFrameHostReused_SameSite"
+   "OptInUnloadHeaderNotPresent"
+   "RequestedBackForwardCacheBlockedSensors" "SharedWorker"
+   "BackForwardCacheDisabledByLowMemory" "ContentWebBluetooth"
+   "RelatedActiveContentsExist" "CacheControlNoStoreCookieModified"
+   "ContentWebUSB" "Printing" "Loading" "Dummy" "IdleManager" "WebXR"
+   "ContentScreenReader" "DisableForRenderFrameHostCalled"
+   "ServiceWorkerPostMessage" "GrantedMediaStreamAccess"
+   "EmbedderOfflinePage" "ServiceWorkerUnregistration" "Portal"
+   "WebHID" "SpeechSynthesis" "WebTransport"
+   "ServiceWorkerVersionActivation"
+   "EmbedderExtensionSentMessageToCachedFrame"
+   "NetworkRequestRedirected" "CacheFlushed" "RendererProcessCrashed"
+   "DomainNotAllowed" "RenderFrameHostReused_CrossSite"
+   "EmbedderPopupBlockerTabHelper" "OutstandingIndexedDBTransaction"
+   "ActivationNavigationsDisallowedForBug1234857"
+   "EmbedderChromePasswordManagerClientBindCredentialManager"
+   "MainResourceHasCacheControlNoCache" "HaveInnerContents"
+   "NotMostRecentNavigationEntry" "WebRTC" "RendererProcessKilled"
+   "NavigationCancelledWhileRestoring" "SessionRestored"
+   "BackForwardCacheDisabledForPrerender"
+   "EnteredBackForwardCacheBeforeServiceWorkerHostAdded"
+   "NetworkRequestDatapipeDrainedAsBytesConsumer" "EmbedderModalDialog"
+   "RequestedVideoCapturePermission" "WebOTPService"
+   "CacheControlNoStoreHTTPOnlyCookieModified"
+   "BackForwardCacheDisabledForDelegate" "HTTPMethodNotGET"
+   "ForegroundCacheLimit" "ContentWebAuthenticationAPI"
+   "InjectedJavascript" "EmbedderExtensions" "DocumentLoaded"
+   "SpeechRecognizer" "DedicatedWorkerOrWorklet"
+   "SubresourceHasCacheControlNoStore"})
+
+(s/def
+ :user/back-forward-cache-not-restored-reason-type
+ #{"SupportPending" "PageSupportNeeded" "Circumstantial"})
+
+(s/def
+ :user/back-forward-cache-not-restored-explanation
+ (s/keys
+  :req-un
+  [:user/type :user/reason]
+  :opt-un
+  [:user/context]))
+
+(s/def
+ :user/back-forward-cache-not-restored-explanation-tree
+ (s/keys
+  :req-un
+  [:user/url :user/explanations :user/children]))
 (defn
  add-script-to-evaluate-on-load
  "Deprecated, please use addScriptToEvaluateOnNewDocument instead.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :script-source | null\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :identifier | Identifier of the added script."
@@ -202,22 +437,25 @@
 
 (defn
  add-script-to-evaluate-on-new-document
- "Evaluates given script in every frame upon creation (before loading frame's scripts).\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :source     | null\n  :world-name | If specified, creates an isolated world with the given name and evaluates given script in it.\nThis world name will be used as the ExecutionContextDescription::name when the corresponding\nevent is emitted. (optional)\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :identifier | Identifier of the added script."
+ "Evaluates given script in every frame upon creation (before loading frame's scripts).\n\nParameters map keys:\n\n\n  Key                       | Description \n  --------------------------|------------ \n  :source                   | null\n  :world-name               | If specified, creates an isolated world with the given name and evaluates given script in it.\nThis world name will be used as the ExecutionContextDescription::name when the corresponding\nevent is emitted. (optional)\n  :include-command-line-api | Specifies whether command line API should be available to the script, defaults\nto false. (optional)\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :identifier | Identifier of the added script."
  ([]
   (add-script-to-evaluate-on-new-document
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [source world-name]}]
+ ([{:as params, :keys [source world-name include-command-line-api]}]
   (add-script-to-evaluate-on-new-document
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [source world-name]}]
+ ([connection
+   {:as params, :keys [source world-name include-command-line-api]}]
   (cmd/command
    connection
    "Page"
    "addScriptToEvaluateOnNewDocument"
    params
-   {:source "source", :world-name "worldName"})))
+   {:source "source",
+    :world-name "worldName",
+    :include-command-line-api "includeCommandLineAPI"})))
 
 (s/fdef
  add-script-to-evaluate-on-new-document
@@ -232,7 +470,8 @@
     :req-un
     [::source]
     :opt-un
-    [::world-name]))
+    [::world-name
+     ::include-command-line-api]))
   :connection-and-params
   (s/cat
    :connection
@@ -243,7 +482,8 @@
     :req-un
     [::source]
     :opt-un
-    [::world-name])))
+    [::world-name
+     ::include-command-line-api])))
  :ret
  (s/keys
   :req-un
@@ -288,16 +528,19 @@
 
 (defn
  capture-screenshot
- "Capture page screenshot.\n\nParameters map keys:\n\n\n  Key           | Description \n  --------------|------------ \n  :format       | Image compression format (defaults to png). (optional)\n  :quality      | Compression quality from range [0..100] (jpeg only). (optional)\n  :clip         | Capture the screenshot of a given region only. (optional)\n  :from-surface | Capture the screenshot from the surface, rather than the view. Defaults to true. (optional)\n\nReturn map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :data | Base64-encoded image data."
+ "Capture page screenshot.\n\nParameters map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :format                  | Image compression format (defaults to png). (optional)\n  :quality                 | Compression quality from range [0..100] (jpeg only). (optional)\n  :clip                    | Capture the screenshot of a given region only. (optional)\n  :from-surface            | Capture the screenshot from the surface, rather than the view. Defaults to true. (optional)\n  :capture-beyond-viewport | Capture the screenshot beyond the viewport. Defaults to false. (optional)\n\nReturn map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :data | Base64-encoded image data. (Encoded as a base64 string when passed over JSON)"
  ([]
   (capture-screenshot
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [format quality clip from-surface]}]
+ ([{:as params,
+    :keys [format quality clip from-surface capture-beyond-viewport]}]
   (capture-screenshot
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [format quality clip from-surface]}]
+ ([connection
+   {:as params,
+    :keys [format quality clip from-surface capture-beyond-viewport]}]
   (cmd/command
    connection
    "Page"
@@ -306,7 +549,8 @@
    {:format "format",
     :quality "quality",
     :clip "clip",
-    :from-surface "fromSurface"})))
+    :from-surface "fromSurface",
+    :capture-beyond-viewport "captureBeyondViewport"})))
 
 (s/fdef
  capture-screenshot
@@ -322,7 +566,8 @@
     [::format
      ::quality
      ::clip
-     ::from-surface]))
+     ::from-surface
+     ::capture-beyond-viewport]))
   :connection-and-params
   (s/cat
    :connection
@@ -334,7 +579,8 @@
     [::format
      ::quality
      ::clip
-     ::from-surface])))
+     ::from-surface
+     ::capture-beyond-viewport])))
  :ret
  (s/keys
   :req-un
@@ -387,7 +633,7 @@
 
 (defn
  clear-device-metrics-override
- "Clears the overriden device metrics."
+ "Clears the overridden device metrics."
  ([]
   (clear-device-metrics-override
    (c/get-current-connection)
@@ -461,7 +707,7 @@
 
 (defn
  clear-geolocation-override
- "Clears the overriden Geolocation Position and Error."
+ "Clears the overridden Geolocation Position and Error."
  ([]
   (clear-geolocation-override
    (c/get-current-connection)
@@ -671,7 +917,7 @@
 
 (defn
  get-app-manifest
- "\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :url    | Manifest location.\n  :errors | null\n  :data   | Manifest content. (optional)"
+ "\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :url    | Manifest location.\n  :errors | null\n  :data   | Manifest content. (optional)\n  :parsed | Parsed manifest properties (optional)"
  ([]
   (get-app-manifest
    (c/get-current-connection)
@@ -709,11 +955,12 @@
   [::url
    ::errors]
   :opt-un
-  [::data]))
+  [::data
+   ::parsed]))
 
 (defn
  get-installability-errors
- "\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :errors | null"
+ "\n\nReturn map keys:\n\n\n  Key                    | Description \n  -----------------------|------------ \n  :installability-errors | null"
  ([]
   (get-installability-errors
    (c/get-current-connection)
@@ -748,7 +995,86 @@
  :ret
  (s/keys
   :req-un
-  [::errors]))
+  [::installability-errors]))
+
+(defn
+ get-manifest-icons
+ "\n\nReturn map keys:\n\n\n  Key           | Description \n  --------------|------------ \n  :primary-icon | null (optional)"
+ ([]
+  (get-manifest-icons
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys []}]
+  (get-manifest-icons
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys []}]
+  (cmd/command
+   connection
+   "Page"
+   "getManifestIcons"
+   params
+   {})))
+
+(s/fdef
+ get-manifest-icons
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat :params (s/keys))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys)))
+ :ret
+ (s/keys
+  :opt-un
+  [::primary-icon]))
+
+(defn
+ get-app-id
+ "Returns the unique (PWA) app id.\nOnly returns values if the feature flag 'WebAppEnableManifestId' is enabled\n\nReturn map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :app-id         | App id, either from manifest's id attribute or computed from start_url (optional)\n  :recommended-id | Recommendation for manifest's id attribute to match current id computed from start_url (optional)"
+ ([]
+  (get-app-id
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys []}]
+  (get-app-id
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys []}]
+  (cmd/command
+   connection
+   "Page"
+   "getAppId"
+   params
+   {})))
+
+(s/fdef
+ get-app-id
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat :params (s/keys))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys)))
+ :ret
+ (s/keys
+  :opt-un
+  [::app-id
+   ::recommended-id]))
 
 (defn
  get-cookies
@@ -830,7 +1156,7 @@
 
 (defn
  get-layout-metrics
- "Returns metrics relating to the layouting of the page, such as viewport bounds/scale.\n\nReturn map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :layout-viewport | Metrics relating to the layout viewport.\n  :visual-viewport | Metrics relating to the visual viewport.\n  :content-size    | Size of scrollable area."
+ "Returns metrics relating to the layouting of the page, such as viewport bounds/scale.\n\nReturn map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :layout-viewport     | Deprecated metrics relating to the layout viewport. Can be in DP or in CSS pixels depending on the `enable-use-zoom-for-dsf` flag. Use `cssLayoutViewport` instead.\n  :visual-viewport     | Deprecated metrics relating to the visual viewport. Can be in DP or in CSS pixels depending on the `enable-use-zoom-for-dsf` flag. Use `cssVisualViewport` instead.\n  :content-size        | Deprecated size of scrollable area. Can be in DP or in CSS pixels depending on the `enable-use-zoom-for-dsf` flag. Use `cssContentSize` instead.\n  :css-layout-viewport | Metrics relating to the layout viewport in CSS pixels.\n  :css-visual-viewport | Metrics relating to the visual viewport in CSS pixels.\n  :css-content-size    | Size of scrollable area in CSS pixels."
  ([]
   (get-layout-metrics
    (c/get-current-connection)
@@ -867,7 +1193,10 @@
   :req-un
   [::layout-viewport
    ::visual-viewport
-   ::content-size]))
+   ::content-size
+   ::css-layout-viewport
+   ::css-visual-viewport
+   ::css-content-size]))
 
 (defn
  get-navigation-history
@@ -1082,17 +1411,19 @@
 
 (defn
  navigate
- "Navigates current page to the given URL.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :url             | URL to navigate the page to.\n  :referrer        | Referrer URL. (optional)\n  :transition-type | Intended transition type. (optional)\n  :frame-id        | Frame id to navigate, if not specified navigates the top frame. (optional)\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :frame-id   | Frame id that has navigated (or failed to navigate)\n  :loader-id  | Loader identifier. (optional)\n  :error-text | User friendly error message, present if and only if navigation has failed. (optional)"
+ "Navigates current page to the given URL.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :url             | URL to navigate the page to.\n  :referrer        | Referrer URL. (optional)\n  :transition-type | Intended transition type. (optional)\n  :frame-id        | Frame id to navigate, if not specified navigates the top frame. (optional)\n  :referrer-policy | Referrer-policy used for the navigation. (optional)\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :frame-id   | Frame id that has navigated (or failed to navigate)\n  :loader-id  | Loader identifier. (optional)\n  :error-text | User friendly error message, present if and only if navigation has failed. (optional)"
  ([]
   (navigate
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [url referrer transition-type frame-id]}]
+ ([{:as params,
+    :keys [url referrer transition-type frame-id referrer-policy]}]
   (navigate
    (c/get-current-connection)
    params))
  ([connection
-   {:as params, :keys [url referrer transition-type frame-id]}]
+   {:as params,
+    :keys [url referrer transition-type frame-id referrer-policy]}]
   (cmd/command
    connection
    "Page"
@@ -1101,7 +1432,8 @@
    {:url "url",
     :referrer "referrer",
     :transition-type "transitionType",
-    :frame-id "frameId"})))
+    :frame-id "frameId",
+    :referrer-policy "referrerPolicy"})))
 
 (s/fdef
  navigate
@@ -1118,7 +1450,8 @@
     :opt-un
     [::referrer
      ::transition-type
-     ::frame-id]))
+     ::frame-id
+     ::referrer-policy]))
   :connection-and-params
   (s/cat
    :connection
@@ -1131,7 +1464,8 @@
     :opt-un
     [::referrer
      ::transition-type
-     ::frame-id])))
+     ::frame-id
+     ::referrer-policy])))
  :ret
  (s/keys
   :req-un
@@ -1185,7 +1519,7 @@
 
 (defn
  print-to-pdf
- "Print page as PDF.\n\nParameters map keys:\n\n\n  Key                         | Description \n  ----------------------------|------------ \n  :landscape                  | Paper orientation. Defaults to false. (optional)\n  :display-header-footer      | Display header and footer. Defaults to false. (optional)\n  :print-background           | Print background graphics. Defaults to false. (optional)\n  :scale                      | Scale of the webpage rendering. Defaults to 1. (optional)\n  :paper-width                | Paper width in inches. Defaults to 8.5 inches. (optional)\n  :paper-height               | Paper height in inches. Defaults to 11 inches. (optional)\n  :margin-top                 | Top margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :margin-bottom              | Bottom margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :margin-left                | Left margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :margin-right               | Right margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :page-ranges                | Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which means\nprint all pages. (optional)\n  :ignore-invalid-page-ranges | Whether to silently ignore invalid but successfully parsed page ranges, such as '3-2'.\nDefaults to false. (optional)\n  :header-template            | HTML template for the print header. Should be valid HTML markup with following\nclasses used to inject printing values into them:\n- `date`: formatted print date\n- `title`: document title\n- `url`: document location\n- `pageNumber`: current page number\n- `totalPages`: total pages in the document\n\nFor example, `<span class=title></span>` would generate span containing the title. (optional)\n  :footer-template            | HTML template for the print footer. Should use the same format as the `headerTemplate`. (optional)\n  :prefer-css-page-size       | Whether or not to prefer page size as defined by css. Defaults to false,\nin which case the content will be scaled to fit the paper size. (optional)\n  :transfer-mode              | return as stream (optional)\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :data   | Base64-encoded pdf data. Empty if |returnAsStream| is specified.\n  :stream | A handle of the stream that holds resulting PDF data. (optional)"
+ "Print page as PDF.\n\nParameters map keys:\n\n\n  Key                         | Description \n  ----------------------------|------------ \n  :landscape                  | Paper orientation. Defaults to false. (optional)\n  :display-header-footer      | Display header and footer. Defaults to false. (optional)\n  :print-background           | Print background graphics. Defaults to false. (optional)\n  :scale                      | Scale of the webpage rendering. Defaults to 1. (optional)\n  :paper-width                | Paper width in inches. Defaults to 8.5 inches. (optional)\n  :paper-height               | Paper height in inches. Defaults to 11 inches. (optional)\n  :margin-top                 | Top margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :margin-bottom              | Bottom margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :margin-left                | Left margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :margin-right               | Right margin in inches. Defaults to 1cm (~0.4 inches). (optional)\n  :page-ranges                | Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which means\nprint all pages. (optional)\n  :ignore-invalid-page-ranges | Whether to silently ignore invalid but successfully parsed page ranges, such as '3-2'.\nDefaults to false. (optional)\n  :header-template            | HTML template for the print header. Should be valid HTML markup with following\nclasses used to inject printing values into them:\n- `date`: formatted print date\n- `title`: document title\n- `url`: document location\n- `pageNumber`: current page number\n- `totalPages`: total pages in the document\n\nFor example, `<span class=title></span>` would generate span containing the title. (optional)\n  :footer-template            | HTML template for the print footer. Should use the same format as the `headerTemplate`. (optional)\n  :prefer-css-page-size       | Whether or not to prefer page size as defined by css. Defaults to false,\nin which case the content will be scaled to fit the paper size. (optional)\n  :transfer-mode              | return as stream (optional)\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :data   | Base64-encoded pdf data. Empty if |returnAsStream| is specified. (Encoded as a base64 string when passed over JSON)\n  :stream | A handle of the stream that holds resulting PDF data. (optional)"
  ([]
   (print-to-pdf
    (c/get-current-connection)
@@ -1574,18 +1908,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [::enabled]))
+   (s/keys :req-un [:user/enabled]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [::enabled])))
+   (s/keys :req-un [:user/enabled])))
  :ret
  (s/keys))
 
@@ -1617,20 +1947,94 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [::enabled]))
+   (s/keys :req-un [:user/enabled]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [::enabled])))
+   (s/keys :req-un [:user/enabled])))
  :ret
  (s/keys))
+
+(defn
+ get-permissions-policy-state
+ "Get Permissions Policy state on given frame.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :frame-id | null\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :states | null"
+ ([]
+  (get-permissions-policy-state
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [frame-id]}]
+  (get-permissions-policy-state
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [frame-id]}]
+  (cmd/command
+   connection
+   "Page"
+   "getPermissionsPolicyState"
+   params
+   {:frame-id "frameId"})))
+
+(s/fdef
+ get-permissions-policy-state
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys :req-un [:user/frame-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys :req-un [:user/frame-id])))
+ :ret
+ (s/keys :req-un [:user/states]))
+
+(defn
+ get-origin-trials
+ "Get Origin Trials on given frame.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :frame-id | null\n\nReturn map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :origin-trials | null"
+ ([]
+  (get-origin-trials
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [frame-id]}]
+  (get-origin-trials
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [frame-id]}]
+  (cmd/command
+   connection
+   "Page"
+   "getOriginTrials"
+   params
+   {:frame-id "frameId"})))
+
+(s/fdef
+ get-origin-trials
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys :req-un [:user/frame-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys :req-un [:user/frame-id])))
+ :ret
+ (s/keys :req-un [:user/origin-trials]))
 
 (defn
  set-device-metrics-override
@@ -1700,19 +2104,16 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/width
-     :clj-chrome-devtools.impl.define/height
-     :clj-chrome-devtools.impl.define/device-scale-factor
-     :clj-chrome-devtools.impl.define/mobile]
+    [:user/width :user/height :user/device-scale-factor :user/mobile]
     :opt-un
-    [:clj-chrome-devtools.impl.define/scale
-     :clj-chrome-devtools.impl.define/screen-width
-     :clj-chrome-devtools.impl.define/screen-height
-     :clj-chrome-devtools.impl.define/position-x
-     :clj-chrome-devtools.impl.define/position-y
-     :clj-chrome-devtools.impl.define/dont-set-visible-size
-     :clj-chrome-devtools.impl.define/screen-orientation
-     :clj-chrome-devtools.impl.define/viewport]))
+    [:user/scale
+     :user/screen-width
+     :user/screen-height
+     :user/position-x
+     :user/position-y
+     :user/dont-set-visible-size
+     :user/screen-orientation
+     :user/viewport]))
   :connection-and-params
   (s/cat
    :connection
@@ -1721,19 +2122,16 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/width
-     :clj-chrome-devtools.impl.define/height
-     :clj-chrome-devtools.impl.define/device-scale-factor
-     :clj-chrome-devtools.impl.define/mobile]
+    [:user/width :user/height :user/device-scale-factor :user/mobile]
     :opt-un
-    [:clj-chrome-devtools.impl.define/scale
-     :clj-chrome-devtools.impl.define/screen-width
-     :clj-chrome-devtools.impl.define/screen-height
-     :clj-chrome-devtools.impl.define/position-x
-     :clj-chrome-devtools.impl.define/position-y
-     :clj-chrome-devtools.impl.define/dont-set-visible-size
-     :clj-chrome-devtools.impl.define/screen-orientation
-     :clj-chrome-devtools.impl.define/viewport])))
+    [:user/scale
+     :user/screen-width
+     :user/screen-height
+     :user/position-x
+     :user/position-y
+     :user/dont-set-visible-size
+     :user/screen-orientation
+     :user/viewport])))
  :ret
  (s/keys))
 
@@ -1767,9 +2165,7 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/alpha
-     :clj-chrome-devtools.impl.define/beta
-     :clj-chrome-devtools.impl.define/gamma]))
+    [:user/alpha :user/beta :user/gamma]))
   :connection-and-params
   (s/cat
    :connection
@@ -1778,30 +2174,28 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/alpha
-     :clj-chrome-devtools.impl.define/beta
-     :clj-chrome-devtools.impl.define/gamma])))
+    [:user/alpha :user/beta :user/gamma])))
  :ret
  (s/keys))
 
 (defn
  set-font-families
- "Set generic font families.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :font-families | Specifies font families to set. If a font family is not specified, it won't be changed."
+ "Set generic font families.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :font-families | Specifies font families to set. If a font family is not specified, it won't be changed.\n  :for-scripts   | Specifies font families to set for individual scripts. (optional)"
  ([]
   (set-font-families
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [font-families]}]
+ ([{:as params, :keys [font-families for-scripts]}]
   (set-font-families
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [font-families]}]
+ ([connection {:as params, :keys [font-families for-scripts]}]
   (cmd/command
    connection
    "Page"
    "setFontFamilies"
    params
-   {:font-families "fontFamilies"})))
+   {:font-families "fontFamilies", :for-scripts "forScripts"})))
 
 (s/fdef
  set-font-families
@@ -1814,7 +2208,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/font-families]))
+    [:user/font-families]
+    :opt-un
+    [:user/for-scripts]))
   :connection-and-params
   (s/cat
    :connection
@@ -1823,7 +2219,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/font-families])))
+    [:user/font-families]
+    :opt-un
+    [:user/for-scripts])))
  :ret
  (s/keys))
 
@@ -1855,18 +2253,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/font-sizes]))
+   (s/keys :req-un [:user/font-sizes]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/font-sizes])))
+   (s/keys :req-un [:user/font-sizes])))
  :ret
  (s/keys))
 
@@ -1898,26 +2292,20 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/frame-id
-     :clj-chrome-devtools.impl.define/html]))
+   (s/keys :req-un [:user/frame-id :user/html]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/frame-id
-     :clj-chrome-devtools.impl.define/html])))
+   (s/keys :req-un [:user/frame-id :user/html])))
  :ret
  (s/keys))
 
 (defn
  set-download-behavior
- "Set the behavior when downloading a file.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :behavior      | Whether to allow all or deny all download requests, or use default Chrome behavior if\navailable (otherwise deny).\n  :download-path | The default path to save downloaded files to. This is requred if behavior is set to 'allow' (optional)"
+ "Set the behavior when downloading a file.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :behavior      | Whether to allow all or deny all download requests, or use default Chrome behavior if\navailable (otherwise deny).\n  :download-path | The default path to save downloaded files to. This is required if behavior is set to 'allow' (optional)"
  ([]
   (set-download-behavior
    (c/get-current-connection)
@@ -1945,9 +2333,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/behavior]
+    [:user/behavior]
     :opt-un
-    [:clj-chrome-devtools.impl.define/download-path]))
+    [:user/download-path]))
   :connection-and-params
   (s/cat
    :connection
@@ -1956,9 +2344,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/behavior]
+    [:user/behavior]
     :opt-un
-    [:clj-chrome-devtools.impl.define/download-path])))
+    [:user/download-path])))
  :ret
  (s/keys))
 
@@ -1994,9 +2382,7 @@
    :params
    (s/keys
     :opt-un
-    [:clj-chrome-devtools.impl.define/latitude
-     :clj-chrome-devtools.impl.define/longitude
-     :clj-chrome-devtools.impl.define/accuracy]))
+    [:user/latitude :user/longitude :user/accuracy]))
   :connection-and-params
   (s/cat
    :connection
@@ -2005,9 +2391,7 @@
    :params
    (s/keys
     :opt-un
-    [:clj-chrome-devtools.impl.define/latitude
-     :clj-chrome-devtools.impl.define/longitude
-     :clj-chrome-devtools.impl.define/accuracy])))
+    [:user/latitude :user/longitude :user/accuracy])))
  :ret
  (s/keys))
 
@@ -2039,18 +2423,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enabled]))
+   (s/keys :req-un [:user/enabled]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enabled])))
+   (s/keys :req-un [:user/enabled])))
  :ret
  (s/keys))
 
@@ -2084,9 +2464,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/enabled]
+    [:user/enabled]
     :opt-un
-    [:clj-chrome-devtools.impl.define/configuration]))
+    [:user/configuration]))
   :connection-and-params
   (s/cat
    :connection
@@ -2095,9 +2475,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/enabled]
+    [:user/enabled]
     :opt-un
-    [:clj-chrome-devtools.impl.define/configuration])))
+    [:user/configuration])))
  :ret
  (s/keys))
 
@@ -2138,11 +2518,11 @@
    :params
    (s/keys
     :opt-un
-    [:clj-chrome-devtools.impl.define/format
-     :clj-chrome-devtools.impl.define/quality
-     :clj-chrome-devtools.impl.define/max-width
-     :clj-chrome-devtools.impl.define/max-height
-     :clj-chrome-devtools.impl.define/every-nth-frame]))
+    [:user/format
+     :user/quality
+     :user/max-width
+     :user/max-height
+     :user/every-nth-frame]))
   :connection-and-params
   (s/cat
    :connection
@@ -2151,11 +2531,11 @@
    :params
    (s/keys
     :opt-un
-    [:clj-chrome-devtools.impl.define/format
-     :clj-chrome-devtools.impl.define/quality
-     :clj-chrome-devtools.impl.define/max-width
-     :clj-chrome-devtools.impl.define/max-height
-     :clj-chrome-devtools.impl.define/every-nth-frame])))
+    [:user/format
+     :user/quality
+     :user/max-width
+     :user/max-height
+     :user/every-nth-frame])))
  :ret
  (s/keys))
 
@@ -2298,18 +2678,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/state]))
+   (s/keys :req-un [:user/state]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/state])))
+   (s/keys :req-un [:user/state])))
  :ret
  (s/keys))
 
@@ -2351,26 +2727,26 @@
  (s/keys))
 
 (defn
- set-produce-compilation-cache
- "Forces compilation cache to be generated for every subresource script.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :enabled | null"
+ produce-compilation-cache
+ "Requests backend to produce compilation cache for the specified scripts.\n`scripts` are appeneded to the list of scripts for which the cache\nwould be produced. The list may be reset during page navigation.\nWhen script with a matching URL is encountered, the cache is optionally\nproduced upon backend discretion, based on internal heuristics.\nSee also: `Page.compilationCacheProduced`.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :scripts | null"
  ([]
-  (set-produce-compilation-cache
+  (produce-compilation-cache
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [enabled]}]
-  (set-produce-compilation-cache
+ ([{:as params, :keys [scripts]}]
+  (produce-compilation-cache
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [enabled]}]
+ ([connection {:as params, :keys [scripts]}]
   (cmd/command
    connection
    "Page"
-   "setProduceCompilationCache"
+   "produceCompilationCache"
    params
-   {:enabled "enabled"})))
+   {:scripts "scripts"})))
 
 (s/fdef
- set-produce-compilation-cache
+ produce-compilation-cache
  :args
  (s/or
   :no-args
@@ -2378,24 +2754,20 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enabled]))
+   (s/keys :req-un [:user/scripts]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enabled])))
+   (s/keys :req-un [:user/scripts])))
  :ret
  (s/keys))
 
 (defn
  add-compilation-cache
- "Seeds compilation cache for given url. Compilation cache does not survive\ncross-process navigation.\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :url  | null\n  :data | Base64-encoded data"
+ "Seeds compilation cache for given url. Compilation cache does not survive\ncross-process navigation.\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :url  | null\n  :data | Base64-encoded data (Encoded as a base64 string when passed over JSON)"
  ([]
   (add-compilation-cache
    (c/get-current-connection)
@@ -2421,20 +2793,14 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/url
-     :clj-chrome-devtools.impl.define/data]))
+   (s/keys :req-un [:user/url :user/data]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/url
-     :clj-chrome-devtools.impl.define/data])))
+   (s/keys :req-un [:user/url :user/data])))
  :ret
  (s/keys))
 
@@ -2476,6 +2842,45 @@
  (s/keys))
 
 (defn
+ set-spc-transaction-mode
+ "Sets the Secure Payment Confirmation transaction mode.\nhttps://w3c.github.io/secure-payment-confirmation/#sctn-automation-set-spc-transaction-mode\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :mode | null"
+ ([]
+  (set-spc-transaction-mode
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [mode]}]
+  (set-spc-transaction-mode
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [mode]}]
+  (cmd/command
+   connection
+   "Page"
+   "setSPCTransactionMode"
+   params
+   {:mode "mode"})))
+
+(s/fdef
+ set-spc-transaction-mode
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys :req-un [:user/mode]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys :req-un [:user/mode])))
+ :ret
+ (s/keys))
+
+(defn
  generate-test-report
  "Generates a report for testing.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :message | Message to be displayed in the report.\n  :group   | Specifies the endpoint group to deliver the report to. (optional)"
  ([]
@@ -2505,9 +2910,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/message]
+    [:user/message]
     :opt-un
-    [:clj-chrome-devtools.impl.define/group]))
+    [:user/group]))
   :connection-and-params
   (s/cat
    :connection
@@ -2516,9 +2921,9 @@
    :params
    (s/keys
     :req-un
-    [:clj-chrome-devtools.impl.define/message]
+    [:user/message]
     :opt-un
-    [:clj-chrome-devtools.impl.define/group])))
+    [:user/group])))
  :ret
  (s/keys))
 
@@ -2561,7 +2966,7 @@
 
 (defn
  set-intercept-file-chooser-dialog
- "Intercept file chooser requests and transfer control to protocol clients.\nWhen file chooser interception is enabled, native file chooser dialog is not shown.\nInstead, a protocol event `Page.fileChooserOpened` is emitted.\nFile chooser can be handled with `page.handleFileChooser` command.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :enabled | null"
+ "Intercept file chooser requests and transfer control to protocol clients.\nWhen file chooser interception is enabled, native file chooser dialog is not shown.\nInstead, a protocol event `Page.fileChooserOpened` is emitted.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :enabled | null"
  ([]
   (set-intercept-file-chooser-dialog
    (c/get-current-connection)
@@ -2587,64 +2992,13 @@
   :just-params
   (s/cat
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enabled]))
+   (s/keys :req-un [:user/enabled]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/enabled])))
- :ret
- (s/keys))
-
-(defn
- handle-file-chooser
- "Accepts or cancels an intercepted file chooser dialog.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :action | null\n  :files  | Array of absolute file paths to set, only respected with `accept` action. (optional)"
- ([]
-  (handle-file-chooser
-   (c/get-current-connection)
-   {}))
- ([{:as params, :keys [action files]}]
-  (handle-file-chooser
-   (c/get-current-connection)
-   params))
- ([connection {:as params, :keys [action files]}]
-  (cmd/command
-   connection
-   "Page"
-   "handleFileChooser"
-   params
-   {:action "action", :files "files"})))
-
-(s/fdef
- handle-file-chooser
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat
-   :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/action]
-    :opt-un
-    [:clj-chrome-devtools.impl.define/files]))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    c/connection?)
-   :params
-   (s/keys
-    :req-un
-    [:clj-chrome-devtools.impl.define/action]
-    :opt-un
-    [:clj-chrome-devtools.impl.define/files])))
+   (s/keys :req-un [:user/enabled])))
  :ret
  (s/keys))

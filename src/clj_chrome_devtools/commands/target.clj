@@ -13,10 +13,6 @@
  string?)
 
 (s/def
- ::browser-context-id
- string?)
-
-(s/def
  ::target-info
  (s/keys
   :req-un
@@ -24,9 +20,11 @@
    ::type
    ::title
    ::url
-   ::attached]
+   ::attached
+   ::can-access-opener]
   :opt-un
   [::opener-id
+   ::opener-frame-id
    ::browser-context-id]))
 
 (s/def
@@ -80,7 +78,7 @@
 
 (defn
  attach-to-target
- "Attaches to the target with given id.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :target-id | null\n  :flatten   | Enables \"flat\" access to the session via specifying sessionId attribute in the commands. (optional)\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :session-id | Id assigned to the session."
+ "Attaches to the target with given id.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :target-id | null\n  :flatten   | Enables \"flat\" access to the session via specifying sessionId attribute in the commands.\nWe plan to make this the default, deprecate non-flattened mode,\nand eventually retire it. See crbug.com/991325. (optional)\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :session-id | Id assigned to the session."
  ([]
   (attach-to-target
    (c/get-current-connection)
@@ -168,7 +166,7 @@
 
 (defn
  close-target
- "Closes the target. If the target is a page that gets closed too.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :target-id | null\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :success | null"
+ "Closes the target. If the target is a page that gets closed too.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :target-id | null\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :success | Always set to true. If an error occurs, the response indicates protocol error."
  ([]
   (close-target
    (c/get-current-connection)
@@ -260,22 +258,37 @@
 
 (defn
  create-browser-context
- "Creates a new empty BrowserContext. Similar to an incognito profile but you can have more than\none.\n\nReturn map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :browser-context-id | The id of the context created."
+ "Creates a new empty BrowserContext. Similar to an incognito profile but you can have more than\none.\n\nParameters map keys:\n\n\n  Key                                    | Description \n  ---------------------------------------|------------ \n  :dispose-on-detach                     | If specified, disposes this context when debugging session disconnects. (optional)\n  :proxy-server                          | Proxy server, similar to the one passed to --proxy-server (optional)\n  :proxy-bypass-list                     | Proxy bypass list, similar to the one passed to --proxy-bypass-list (optional)\n  :origins-with-universal-network-access | An optional list of origins to grant unlimited cross-origin access to.\nParts of the URL other than those constituting origin are ignored. (optional)\n\nReturn map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :browser-context-id | The id of the context created."
  ([]
   (create-browser-context
    (c/get-current-connection)
    {}))
- ([{:as params, :keys []}]
+ ([{:as params,
+    :keys
+    [dispose-on-detach
+     proxy-server
+     proxy-bypass-list
+     origins-with-universal-network-access]}]
   (create-browser-context
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys []}]
+ ([connection
+   {:as params,
+    :keys
+    [dispose-on-detach
+     proxy-server
+     proxy-bypass-list
+     origins-with-universal-network-access]}]
   (cmd/command
    connection
    "Target"
    "createBrowserContext"
    params
-   {})))
+   {:dispose-on-detach "disposeOnDetach",
+    :proxy-server "proxyServer",
+    :proxy-bypass-list "proxyBypassList",
+    :origins-with-universal-network-access
+    "originsWithUniversalNetworkAccess"})))
 
 (s/fdef
  create-browser-context
@@ -284,14 +297,26 @@
   :no-args
   (s/cat)
   :just-params
-  (s/cat :params (s/keys))
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::dispose-on-detach
+     ::proxy-server
+     ::proxy-bypass-list
+     ::origins-with-universal-network-access]))
   :connection-and-params
   (s/cat
    :connection
    (s/?
     c/connection?)
    :params
-   (s/keys)))
+   (s/keys
+    :opt-un
+    [::dispose-on-detach
+     ::proxy-server
+     ::proxy-bypass-list
+     ::origins-with-universal-network-access])))
  :ret
  (s/keys
   :req-un
@@ -338,7 +363,7 @@
 
 (defn
  create-target
- "Creates a new page.\n\nParameters map keys:\n\n\n  Key                         | Description \n  ----------------------------|------------ \n  :url                        | The initial URL the page will be navigated to.\n  :width                      | Frame width in DIP (headless chrome only). (optional)\n  :height                     | Frame height in DIP (headless chrome only). (optional)\n  :browser-context-id         | The browser context to create the page in. (optional)\n  :enable-begin-frame-control | Whether BeginFrames for this target will be controlled via DevTools (headless chrome only,\nnot supported on MacOS yet, false by default). (optional)\n  :new-window                 | Whether to create a new Window or Tab (chrome-only, false by default). (optional)\n  :background                 | Whether to create the target in background or foreground (chrome-only,\nfalse by default). (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :target-id | The id of the page opened."
+ "Creates a new page.\n\nParameters map keys:\n\n\n  Key                         | Description \n  ----------------------------|------------ \n  :url                        | The initial URL the page will be navigated to. An empty string indicates about:blank.\n  :width                      | Frame width in DIP (headless chrome only). (optional)\n  :height                     | Frame height in DIP (headless chrome only). (optional)\n  :browser-context-id         | The browser context to create the page in. (optional)\n  :enable-begin-frame-control | Whether BeginFrames for this target will be controlled via DevTools (headless chrome only,\nnot supported on MacOS yet, false by default). (optional)\n  :new-window                 | Whether to create a new Window or Tab (chrome-only, false by default). (optional)\n  :background                 | Whether to create the target in background or foreground (chrome-only,\nfalse by default). (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :target-id | The id of the page opened."
  ([]
   (create-target
    (c/get-current-connection)
@@ -592,7 +617,7 @@
 
 (defn
  send-message-to-target
- "Sends protocol message over session with given id.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :message    | null\n  :session-id | Identifier of the session. (optional)\n  :target-id  | Deprecated. (optional)"
+ "Sends protocol message over session with given id.\nConsider using flat mode instead; see commands attachToTarget, setAutoAttach,\nand crbug.com/991325.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :message    | null\n  :session-id | Identifier of the session. (optional)\n  :target-id  | Deprecated. (optional)"
  ([]
   (send-message-to-target
    (c/get-current-connection)
@@ -643,7 +668,7 @@
 
 (defn
  set-auto-attach
- "Controls whether to automatically attach to new targets which are considered to be related to\nthis one. When turned on, attaches to all existing related targets as well. When turned off,\nautomatically detaches from all currently attached targets.\n\nParameters map keys:\n\n\n  Key                         | Description \n  ----------------------------|------------ \n  :auto-attach                | Whether to auto-attach to related targets.\n  :wait-for-debugger-on-start | Whether to pause new targets when attaching to them. Use `Runtime.runIfWaitingForDebugger`\nto run paused targets.\n  :flatten                    | Enables \"flat\" access to the session via specifying sessionId attribute in the commands. (optional)"
+ "Controls whether to automatically attach to new targets which are considered to be related to\nthis one. When turned on, attaches to all existing related targets as well. When turned off,\nautomatically detaches from all currently attached targets.\nThis also clears all targets added by `autoAttachRelated` from the list of targets to watch\nfor creation of related targets.\n\nParameters map keys:\n\n\n  Key                         | Description \n  ----------------------------|------------ \n  :auto-attach                | Whether to auto-attach to related targets.\n  :wait-for-debugger-on-start | Whether to pause new targets when attaching to them. Use `Runtime.runIfWaitingForDebugger`\nto run paused targets.\n  :flatten                    | Enables \"flat\" access to the session via specifying sessionId attribute in the commands.\nWe plan to make this the default, deprecate non-flattened mode,\nand eventually retire it. See crbug.com/991325. (optional)"
  ([]
   (set-auto-attach
    (c/get-current-connection)
@@ -692,6 +717,53 @@
      ::wait-for-debugger-on-start]
     :opt-un
     [::flatten])))
+ :ret
+ (s/keys))
+
+(defn
+ auto-attach-related
+ "Adds the specified target to the list of targets that will be monitored for any related target\ncreation (such as child frames, child workers and new versions of service worker) and reported\nthrough `attachedToTarget`. The specified target is also auto-attached.\nThis cancels the effect of any previous `setAutoAttach` and is also cancelled by subsequent\n`setAutoAttach`. Only available at the Browser target.\n\nParameters map keys:\n\n\n  Key                         | Description \n  ----------------------------|------------ \n  :target-id                  | null\n  :wait-for-debugger-on-start | Whether to pause new targets when attaching to them. Use `Runtime.runIfWaitingForDebugger`\nto run paused targets."
+ ([]
+  (auto-attach-related
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [target-id wait-for-debugger-on-start]}]
+  (auto-attach-related
+   (c/get-current-connection)
+   params))
+ ([connection
+   {:as params, :keys [target-id wait-for-debugger-on-start]}]
+  (cmd/command
+   connection
+   "Target"
+   "autoAttachRelated"
+   params
+   {:target-id "targetId",
+    :wait-for-debugger-on-start "waitForDebuggerOnStart"})))
+
+(s/fdef
+ auto-attach-related
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::target-id
+     ::wait-for-debugger-on-start]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::target-id
+     ::wait-for-debugger-on-start])))
  :ret
  (s/keys))
 

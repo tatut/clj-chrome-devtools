@@ -13,7 +13,10 @@
    ::vendor-string
    ::device-string
    ::driver-vendor
-   ::driver-version]))
+   ::driver-version]
+  :opt-un
+  [::sub-sys-id
+   ::revision]))
 
 (s/def
  ::size

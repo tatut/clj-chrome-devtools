@@ -444,22 +444,33 @@
 
 (defn
  stop-tracking-heap-objects
- "\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :report-progress | If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken\nwhen the tracking is stopped. (optional)"
+ "\n\nParameters map keys:\n\n\n  Key                            | Description \n  -------------------------------|------------ \n  :report-progress               | If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken\nwhen the tracking is stopped. (optional)\n  :treat-global-objects-as-roots | null (optional)\n  :capture-numeric-value         | If true, numerical values are included in the snapshot (optional)"
  ([]
   (stop-tracking-heap-objects
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [report-progress]}]
+ ([{:as params,
+    :keys
+    [report-progress
+     treat-global-objects-as-roots
+     capture-numeric-value]}]
   (stop-tracking-heap-objects
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [report-progress]}]
+ ([connection
+   {:as params,
+    :keys
+    [report-progress
+     treat-global-objects-as-roots
+     capture-numeric-value]}]
   (cmd/command
    connection
    "HeapProfiler"
    "stopTrackingHeapObjects"
    params
-   {:report-progress "reportProgress"})))
+   {:report-progress "reportProgress",
+    :treat-global-objects-as-roots "treatGlobalObjectsAsRoots",
+    :capture-numeric-value "captureNumericValue"})))
 
 (s/fdef
  stop-tracking-heap-objects
@@ -472,7 +483,9 @@
    :params
    (s/keys
     :opt-un
-    [::report-progress]))
+    [::report-progress
+     ::treat-global-objects-as-roots
+     ::capture-numeric-value]))
   :connection-and-params
   (s/cat
    :connection
@@ -481,28 +494,41 @@
    :params
    (s/keys
     :opt-un
-    [::report-progress])))
+    [::report-progress
+     ::treat-global-objects-as-roots
+     ::capture-numeric-value])))
  :ret
  (s/keys))
 
 (defn
  take-heap-snapshot
- "\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :report-progress | If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken. (optional)"
+ "\n\nParameters map keys:\n\n\n  Key                            | Description \n  -------------------------------|------------ \n  :report-progress               | If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken. (optional)\n  :treat-global-objects-as-roots | If true, a raw snapshot without artificial roots will be generated (optional)\n  :capture-numeric-value         | If true, numerical values are included in the snapshot (optional)"
  ([]
   (take-heap-snapshot
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [report-progress]}]
+ ([{:as params,
+    :keys
+    [report-progress
+     treat-global-objects-as-roots
+     capture-numeric-value]}]
   (take-heap-snapshot
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [report-progress]}]
+ ([connection
+   {:as params,
+    :keys
+    [report-progress
+     treat-global-objects-as-roots
+     capture-numeric-value]}]
   (cmd/command
    connection
    "HeapProfiler"
    "takeHeapSnapshot"
    params
-   {:report-progress "reportProgress"})))
+   {:report-progress "reportProgress",
+    :treat-global-objects-as-roots "treatGlobalObjectsAsRoots",
+    :capture-numeric-value "captureNumericValue"})))
 
 (s/fdef
  take-heap-snapshot
@@ -515,7 +541,9 @@
    :params
    (s/keys
     :opt-un
-    [::report-progress]))
+    [::report-progress
+     ::treat-global-objects-as-roots
+     ::capture-numeric-value]))
   :connection-and-params
   (s/cat
    :connection
@@ -524,6 +552,8 @@
    :params
    (s/keys
     :opt-un
-    [::report-progress])))
+    [::report-progress
+     ::treat-global-objects-as-roots
+     ::capture-numeric-value])))
  :ret
  (s/keys))

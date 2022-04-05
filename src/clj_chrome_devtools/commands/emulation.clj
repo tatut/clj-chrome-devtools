@@ -12,8 +12,48 @@
    ::angle]))
 
 (s/def
+ ::display-feature
+ (s/keys
+  :req-un
+  [::orientation
+   ::offset
+   ::mask-length]))
+
+(s/def
+ ::media-feature
+ (s/keys
+  :req-un
+  [::name
+   ::value]))
+
+(s/def
  ::virtual-time-policy
  #{"advance" "pauseIfNetworkFetchesPending" "pause"})
+
+(s/def
+ ::user-agent-brand-version
+ (s/keys
+  :req-un
+  [::brand
+   ::version]))
+
+(s/def
+ ::user-agent-metadata
+ (s/keys
+  :req-un
+  [::platform
+   ::platform-version
+   ::architecture
+   ::model
+   ::mobile]
+  :opt-un
+  [::brands
+   ::full-version-list
+   ::full-version]))
+
+(s/def
+ ::disabled-image-type
+ #{"jxl" "webp" "avif"})
 (defn
  can-emulate
  "Tells whether emulation is supported.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | True if emulation is supported."
@@ -55,7 +95,7 @@
 
 (defn
  clear-device-metrics-override
- "Clears the overriden device metrics."
+ "Clears the overridden device metrics."
  ([]
   (clear-device-metrics-override
    (c/get-current-connection)
@@ -92,7 +132,7 @@
 
 (defn
  clear-geolocation-override
- "Clears the overriden Geolocation Position and Error."
+ "Clears the overridden Geolocation Position and Error."
  ([]
   (clear-geolocation-override
    (c/get-current-connection)
@@ -208,6 +248,49 @@
  (s/keys))
 
 (defn
+ set-auto-dark-mode-override
+ "Automatically render all web contents using a dark theme.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :enabled | Whether to enable or disable automatic dark mode.\nIf not specified, any existing override will be cleared. (optional)"
+ ([]
+  (set-auto-dark-mode-override
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [enabled]}]
+  (set-auto-dark-mode-override
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [enabled]}]
+  (cmd/command
+   connection
+   "Emulation"
+   "setAutoDarkModeOverride"
+   params
+   {:enabled "enabled"})))
+
+(s/fdef
+ set-auto-dark-mode-override
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::enabled]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::enabled])))
+ :ret
+ (s/keys))
+
+(defn
  set-cpu-throttling-rate
  "Enables CPU throttling to emulate slow CPUs.\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :rate | Throttling rate as a slowdown factor (1 is no throttle, 2 is 2x slowdown, etc)."
  ([]
@@ -295,7 +378,7 @@
 
 (defn
  set-device-metrics-override
- "Overrides the values of device screen dimensions (window.screen.width, window.screen.height,\nwindow.innerWidth, window.innerHeight, and \"device-width\"/\"device-height\"-related CSS media\nquery results).\n\nParameters map keys:\n\n\n  Key                    | Description \n  -----------------------|------------ \n  :width                 | Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.\n  :height                | Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.\n  :device-scale-factor   | Overriding device scale factor value. 0 disables the override.\n  :mobile                | Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text\nautosizing and more.\n  :scale                 | Scale to apply to resulting view image. (optional)\n  :screen-width          | Overriding screen width value in pixels (minimum 0, maximum 10000000). (optional)\n  :screen-height         | Overriding screen height value in pixels (minimum 0, maximum 10000000). (optional)\n  :position-x            | Overriding view X position on screen in pixels (minimum 0, maximum 10000000). (optional)\n  :position-y            | Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). (optional)\n  :dont-set-visible-size | Do not set visible view size, rely upon explicit setVisibleSize call. (optional)\n  :screen-orientation    | Screen orientation override. (optional)\n  :viewport              | If set, the visible area of the page will be overridden to this viewport. This viewport\nchange is not observed by the page, e.g. viewport-relative elements do not change positions. (optional)"
+ "Overrides the values of device screen dimensions (window.screen.width, window.screen.height,\nwindow.innerWidth, window.innerHeight, and \"device-width\"/\"device-height\"-related CSS media\nquery results).\n\nParameters map keys:\n\n\n  Key                    | Description \n  -----------------------|------------ \n  :width                 | Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.\n  :height                | Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.\n  :device-scale-factor   | Overriding device scale factor value. 0 disables the override.\n  :mobile                | Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text\nautosizing and more.\n  :scale                 | Scale to apply to resulting view image. (optional)\n  :screen-width          | Overriding screen width value in pixels (minimum 0, maximum 10000000). (optional)\n  :screen-height         | Overriding screen height value in pixels (minimum 0, maximum 10000000). (optional)\n  :position-x            | Overriding view X position on screen in pixels (minimum 0, maximum 10000000). (optional)\n  :position-y            | Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). (optional)\n  :dont-set-visible-size | Do not set visible view size, rely upon explicit setVisibleSize call. (optional)\n  :screen-orientation    | Screen orientation override. (optional)\n  :viewport              | If set, the visible area of the page will be overridden to this viewport. This viewport\nchange is not observed by the page, e.g. viewport-relative elements do not change positions. (optional)\n  :display-feature       | If set, the display feature of a multi-segment screen. If not set, multi-segment support\nis turned-off. (optional)"
  ([]
   (set-device-metrics-override
    (c/get-current-connection)
@@ -313,7 +396,8 @@
      position-y
      dont-set-visible-size
      screen-orientation
-     viewport]}]
+     viewport
+     display-feature]}]
   (set-device-metrics-override
    (c/get-current-connection)
    params))
@@ -331,13 +415,15 @@
      position-y
      dont-set-visible-size
      screen-orientation
-     viewport]}]
+     viewport
+     display-feature]}]
   (cmd/command
    connection
    "Emulation"
    "setDeviceMetricsOverride"
    params
-   {:dont-set-visible-size "dontSetVisibleSize",
+   {:display-feature "displayFeature",
+    :dont-set-visible-size "dontSetVisibleSize",
     :device-scale-factor "deviceScaleFactor",
     :screen-orientation "screenOrientation",
     :scale "scale",
@@ -373,7 +459,8 @@
      ::position-y
      ::dont-set-visible-size
      ::screen-orientation
-     ::viewport]))
+     ::viewport
+     ::display-feature]))
   :connection-and-params
   (s/cat
    :connection
@@ -394,7 +481,8 @@
      ::position-y
      ::dont-set-visible-size
      ::screen-orientation
-     ::viewport])))
+     ::viewport
+     ::display-feature])))
  :ret
  (s/keys))
 
@@ -533,22 +621,22 @@
 
 (defn
  set-emulated-media
- "Emulates the given media for CSS media queries.\n\nParameters map keys:\n\n\n  Key    | Description \n  -------|------------ \n  :media | Media type to emulate. Empty string disables the override."
+ "Emulates the given media type or media feature for CSS media queries.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :media    | Media type to emulate. Empty string disables the override. (optional)\n  :features | Media features to emulate. (optional)"
  ([]
   (set-emulated-media
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [media]}]
+ ([{:as params, :keys [media features]}]
   (set-emulated-media
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [media]}]
+ ([connection {:as params, :keys [media features]}]
   (cmd/command
    connection
    "Emulation"
    "setEmulatedMedia"
    params
-   {:media "media"})))
+   {:media "media", :features "features"})))
 
 (s/fdef
  set-emulated-media
@@ -560,8 +648,53 @@
   (s/cat
    :params
    (s/keys
+    :opt-un
+    [::media
+     ::features]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::media
+     ::features])))
+ :ret
+ (s/keys))
+
+(defn
+ set-emulated-vision-deficiency
+ "Emulates the given vision deficiency.\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :type | Vision deficiency to emulate."
+ ([]
+  (set-emulated-vision-deficiency
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [type]}]
+  (set-emulated-vision-deficiency
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [type]}]
+  (cmd/command
+   connection
+   "Emulation"
+   "setEmulatedVisionDeficiency"
+   params
+   {:type "type"})))
+
+(s/fdef
+ set-emulated-vision-deficiency
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
     :req-un
-    [::media]))
+    [::type]))
   :connection-and-params
   (s/cat
    :connection
@@ -570,7 +703,7 @@
    :params
    (s/keys
     :req-un
-    [::media])))
+    [::type])))
  :ret
  (s/keys))
 
@@ -620,6 +753,89 @@
     [::latitude
      ::longitude
      ::accuracy])))
+ :ret
+ (s/keys))
+
+(defn
+ set-idle-override
+ "Overrides the Idle state.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :is-user-active     | Mock isUserActive\n  :is-screen-unlocked | Mock isScreenUnlocked"
+ ([]
+  (set-idle-override
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [is-user-active is-screen-unlocked]}]
+  (set-idle-override
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [is-user-active is-screen-unlocked]}]
+  (cmd/command
+   connection
+   "Emulation"
+   "setIdleOverride"
+   params
+   {:is-user-active "isUserActive",
+    :is-screen-unlocked "isScreenUnlocked"})))
+
+(s/fdef
+ set-idle-override
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::is-user-active
+     ::is-screen-unlocked]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::is-user-active
+     ::is-screen-unlocked])))
+ :ret
+ (s/keys))
+
+(defn
+ clear-idle-override
+ "Clears Idle state overrides."
+ ([]
+  (clear-idle-override
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys []}]
+  (clear-idle-override
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys []}]
+  (cmd/command
+   connection
+   "Emulation"
+   "clearIdleOverride"
+   params
+   {})))
+
+(s/fdef
+ clear-idle-override
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat :params (s/keys))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys)))
  :ret
  (s/keys))
 
@@ -801,7 +1017,7 @@
 
 (defn
  set-virtual-time-policy
- "Turns on virtual time for all frames (replacing real-time with a synthetic time source) and sets\nthe current virtual time policy.  Note this supersedes any previous time budget.\n\nParameters map keys:\n\n\n  Key                                     | Description \n  ----------------------------------------|------------ \n  :policy                                 | null\n  :budget                                 | If set, after this many virtual milliseconds have elapsed virtual time will be paused and a\nvirtualTimeBudgetExpired event is sent. (optional)\n  :max-virtual-time-task-starvation-count | If set this specifies the maximum number of tasks that can be run before virtual is forced\nforwards to prevent deadlock. (optional)\n  :wait-for-navigation                    | If set the virtual time policy change should be deferred until any frame starts navigating.\nNote any previous deferred policy change is superseded. (optional)\n  :initial-virtual-time                   | If set, base::Time::Now will be overriden to initially return this value. (optional)\n\nReturn map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :virtual-time-ticks-base | Absolute timestamp at which virtual time was first enabled (up time in milliseconds)."
+ "Turns on virtual time for all frames (replacing real-time with a synthetic time source) and sets\nthe current virtual time policy.  Note this supersedes any previous time budget.\n\nParameters map keys:\n\n\n  Key                                     | Description \n  ----------------------------------------|------------ \n  :policy                                 | null\n  :budget                                 | If set, after this many virtual milliseconds have elapsed virtual time will be paused and a\nvirtualTimeBudgetExpired event is sent. (optional)\n  :max-virtual-time-task-starvation-count | If set this specifies the maximum number of tasks that can be run before virtual is forced\nforwards to prevent deadlock. (optional)\n  :initial-virtual-time                   | If set, base::Time::Now will be overridden to initially return this value. (optional)\n\nReturn map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :virtual-time-ticks-base | Absolute timestamp at which virtual time was first enabled (up time in milliseconds)."
  ([]
   (set-virtual-time-policy
    (c/get-current-connection)
@@ -811,7 +1027,6 @@
     [policy
      budget
      max-virtual-time-task-starvation-count
-     wait-for-navigation
      initial-virtual-time]}]
   (set-virtual-time-policy
    (c/get-current-connection)
@@ -822,7 +1037,6 @@
     [policy
      budget
      max-virtual-time-task-starvation-count
-     wait-for-navigation
      initial-virtual-time]}]
   (cmd/command
    connection
@@ -833,7 +1047,6 @@
     :budget "budget",
     :max-virtual-time-task-starvation-count
     "maxVirtualTimeTaskStarvationCount",
-    :wait-for-navigation "waitForNavigation",
     :initial-virtual-time "initialVirtualTime"})))
 
 (s/fdef
@@ -851,7 +1064,6 @@
     :opt-un
     [::budget
      ::max-virtual-time-task-starvation-count
-     ::wait-for-navigation
      ::initial-virtual-time]))
   :connection-and-params
   (s/cat
@@ -865,12 +1077,54 @@
     :opt-un
     [::budget
      ::max-virtual-time-task-starvation-count
-     ::wait-for-navigation
      ::initial-virtual-time])))
  :ret
  (s/keys
   :req-un
   [::virtual-time-ticks-base]))
+
+(defn
+ set-locale-override
+ "Overrides default host system locale with the specified one.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :locale | ICU style C locale (e.g. \"en_US\"). If not specified or empty, disables the override and\nrestores default host system locale. (optional)"
+ ([]
+  (set-locale-override
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [locale]}]
+  (set-locale-override
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [locale]}]
+  (cmd/command
+   connection
+   "Emulation"
+   "setLocaleOverride"
+   params
+   {:locale "locale"})))
+
+(s/fdef
+ set-locale-override
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::locale]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::locale])))
+ :ret
+ (s/keys))
 
 (defn
  set-timezone-override
@@ -961,18 +1215,63 @@
  (s/keys))
 
 (defn
+ set-disabled-image-types
+ "\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :image-types | Image types to disable."
+ ([]
+  (set-disabled-image-types
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [image-types]}]
+  (set-disabled-image-types
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [image-types]}]
+  (cmd/command
+   connection
+   "Emulation"
+   "setDisabledImageTypes"
+   params
+   {:image-types "imageTypes"})))
+
+(s/fdef
+ set-disabled-image-types
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::image-types]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::image-types])))
+ :ret
+ (s/keys))
+
+(defn
  set-user-agent-override
- "Allows overriding user agent with the given string.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :user-agent      | User agent to use.\n  :accept-language | Browser langugage to emulate. (optional)\n  :platform        | The platform navigator.platform should return. (optional)"
+ "Allows overriding user agent with the given string.\n\nParameters map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :user-agent          | User agent to use.\n  :accept-language     | Browser langugage to emulate. (optional)\n  :platform            | The platform navigator.platform should return. (optional)\n  :user-agent-metadata | To be sent in Sec-CH-UA-* headers and returned in navigator.userAgentData (optional)"
  ([]
   (set-user-agent-override
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [user-agent accept-language platform]}]
+ ([{:as params,
+    :keys [user-agent accept-language platform user-agent-metadata]}]
   (set-user-agent-override
    (c/get-current-connection)
    params))
  ([connection
-   {:as params, :keys [user-agent accept-language platform]}]
+   {:as params,
+    :keys [user-agent accept-language platform user-agent-metadata]}]
   (cmd/command
    connection
    "Emulation"
@@ -980,7 +1279,8 @@
    params
    {:user-agent "userAgent",
     :accept-language "acceptLanguage",
-    :platform "platform"})))
+    :platform "platform",
+    :user-agent-metadata "userAgentMetadata"})))
 
 (s/fdef
  set-user-agent-override
@@ -996,7 +1296,8 @@
     [::user-agent]
     :opt-un
     [::accept-language
-     ::platform]))
+     ::platform
+     ::user-agent-metadata]))
   :connection-and-params
   (s/cat
    :connection
@@ -1008,6 +1309,50 @@
     [::user-agent]
     :opt-un
     [::accept-language
-     ::platform])))
+     ::platform
+     ::user-agent-metadata])))
+ :ret
+ (s/keys))
+
+(defn
+ set-automation-override
+ "Allows overriding the automation flag.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :enabled | Whether the override should be enabled."
+ ([]
+  (set-automation-override
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [enabled]}]
+  (set-automation-override
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [enabled]}]
+  (cmd/command
+   connection
+   "Emulation"
+   "setAutomationOverride"
+   params
+   {:enabled "enabled"})))
+
+(s/fdef
+ set-automation-override
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::enabled]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::enabled])))
  :ret
  (s/keys))

@@ -98,8 +98,11 @@
  ::private-property-descriptor
  (s/keys
   :req-un
-  [::name
-   ::value]))
+  [::name]
+  :opt-un
+  [::value
+   ::get
+   ::set]))
 
 (s/def
  ::call-argument
@@ -119,7 +122,8 @@
   :req-un
   [::id
    ::origin
-   ::name]
+   ::name
+   ::unique-id]
   :opt-un
   [::aux-data]))
 
@@ -136,7 +140,8 @@
    ::url
    ::stack-trace
    ::exception
-   ::execution-context-id]))
+   ::execution-context-id
+   ::exception-meta-data]))
 
 (s/def
  ::timestamp
@@ -237,7 +242,7 @@
 
 (defn
  call-function-on
- "Calls function with given declaration on the given object. Object group of the result is\ninherited from the target object.\n\nParameters map keys:\n\n\n  Key                   | Description \n  ----------------------|------------ \n  :function-declaration | Declaration of the function to call.\n  :object-id            | Identifier of the object to call function on. Either objectId or executionContextId should\nbe specified. (optional)\n  :arguments            | Call arguments. All call arguments must belong to the same JavaScript world as the target\nobject. (optional)\n  :silent               | In silent mode exceptions thrown during evaluation are not reported and do not pause\nexecution. Overrides `setPauseOnException` state. (optional)\n  :return-by-value      | Whether the result is expected to be a JSON object which should be sent by value. (optional)\n  :generate-preview     | Whether preview should be generated for the result. (optional)\n  :user-gesture         | Whether execution should be treated as initiated by user in the UI. (optional)\n  :await-promise        | Whether execution should `await` for resulting value and return once awaited promise is\nresolved. (optional)\n  :execution-context-id | Specifies execution context which global object will be used to call function on. Either\nexecutionContextId or objectId should be specified. (optional)\n  :object-group         | Symbolic group name that can be used to release multiple objects. If objectGroup is not\nspecified and objectId is, objectGroup will be inherited from object. (optional)\n\nReturn map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :result            | Call result.\n  :exception-details | Exception details. (optional)"
+ "Calls function with given declaration on the given object. Object group of the result is\ninherited from the target object.\n\nParameters map keys:\n\n\n  Key                   | Description \n  ----------------------|------------ \n  :function-declaration | Declaration of the function to call.\n  :object-id            | Identifier of the object to call function on. Either objectId or executionContextId should\nbe specified. (optional)\n  :arguments            | Call arguments. All call arguments must belong to the same JavaScript world as the target\nobject. (optional)\n  :silent               | In silent mode exceptions thrown during evaluation are not reported and do not pause\nexecution. Overrides `setPauseOnException` state. (optional)\n  :return-by-value      | Whether the result is expected to be a JSON object which should be sent by value. (optional)\n  :generate-preview     | Whether preview should be generated for the result. (optional)\n  :user-gesture         | Whether execution should be treated as initiated by user in the UI. (optional)\n  :await-promise        | Whether execution should `await` for resulting value and return once awaited promise is\nresolved. (optional)\n  :execution-context-id | Specifies execution context which global object will be used to call function on. Either\nexecutionContextId or objectId should be specified. (optional)\n  :object-group         | Symbolic group name that can be used to release multiple objects. If objectGroup is not\nspecified and objectId is, objectGroup will be inherited from object. (optional)\n  :throw-on-side-effect | Whether to throw an exception if side effect cannot be ruled out during evaluation. (optional)\n\nReturn map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :result            | Call result.\n  :exception-details | Exception details. (optional)"
  ([]
   (call-function-on
    (c/get-current-connection)
@@ -253,7 +258,8 @@
      user-gesture
      await-promise
      execution-context-id
-     object-group]}]
+     object-group
+     throw-on-side-effect]}]
   (call-function-on
    (c/get-current-connection)
    params))
@@ -269,7 +275,8 @@
      user-gesture
      await-promise
      execution-context-id
-     object-group]}]
+     object-group
+     throw-on-side-effect]}]
   (cmd/command
    connection
    "Runtime"
@@ -279,6 +286,7 @@
     :object-id "objectId",
     :silent "silent",
     :arguments "arguments",
+    :throw-on-side-effect "throwOnSideEffect",
     :await-promise "awaitPromise",
     :function-declaration "functionDeclaration",
     :return-by-value "returnByValue",
@@ -307,7 +315,8 @@
      ::user-gesture
      ::await-promise
      ::execution-context-id
-     ::object-group]))
+     ::object-group
+     ::throw-on-side-effect]))
   :connection-and-params
   (s/cat
    :connection
@@ -326,7 +335,8 @@
      ::user-gesture
      ::await-promise
      ::execution-context-id
-     ::object-group])))
+     ::object-group
+     ::throw-on-side-effect])))
  :ret
  (s/keys
   :req-un
@@ -507,7 +517,7 @@
 
 (defn
  evaluate
- "Evaluates expression on global object.\n\nParameters map keys:\n\n\n  Key                       | Description \n  --------------------------|------------ \n  :expression               | Expression to evaluate.\n  :object-group             | Symbolic group name that can be used to release multiple objects. (optional)\n  :include-command-line-api | Determines whether Command Line API should be available during the evaluation. (optional)\n  :silent                   | In silent mode exceptions thrown during evaluation are not reported and do not pause\nexecution. Overrides `setPauseOnException` state. (optional)\n  :context-id               | Specifies in which execution context to perform evaluation. If the parameter is omitted the\nevaluation will be performed in the context of the inspected page. (optional)\n  :return-by-value          | Whether the result is expected to be a JSON object that should be sent by value. (optional)\n  :generate-preview         | Whether preview should be generated for the result. (optional)\n  :user-gesture             | Whether execution should be treated as initiated by user in the UI. (optional)\n  :await-promise            | Whether execution should `await` for resulting value and return once awaited promise is\nresolved. (optional)\n  :throw-on-side-effect     | Whether to throw an exception if side effect cannot be ruled out during evaluation. (optional)\n  :timeout                  | Terminate execution after timing out (number of milliseconds). (optional)\n\nReturn map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :result            | Evaluation result.\n  :exception-details | Exception details. (optional)"
+ "Evaluates expression on global object.\n\nParameters map keys:\n\n\n  Key                               | Description \n  ----------------------------------|------------ \n  :expression                       | Expression to evaluate.\n  :object-group                     | Symbolic group name that can be used to release multiple objects. (optional)\n  :include-command-line-api         | Determines whether Command Line API should be available during the evaluation. (optional)\n  :silent                           | In silent mode exceptions thrown during evaluation are not reported and do not pause\nexecution. Overrides `setPauseOnException` state. (optional)\n  :context-id                       | Specifies in which execution context to perform evaluation. If the parameter is omitted the\nevaluation will be performed in the context of the inspected page.\nThis is mutually exclusive with `uniqueContextId`, which offers an\nalternative way to identify the execution context that is more reliable\nin a multi-process environment. (optional)\n  :return-by-value                  | Whether the result is expected to be a JSON object that should be sent by value. (optional)\n  :generate-preview                 | Whether preview should be generated for the result. (optional)\n  :user-gesture                     | Whether execution should be treated as initiated by user in the UI. (optional)\n  :await-promise                    | Whether execution should `await` for resulting value and return once awaited promise is\nresolved. (optional)\n  :throw-on-side-effect             | Whether to throw an exception if side effect cannot be ruled out during evaluation.\nThis implies `disableBreaks` below. (optional)\n  :timeout                          | Terminate execution after timing out (number of milliseconds). (optional)\n  :disable-breaks                   | Disable breakpoints during execution. (optional)\n  :repl-mode                        | Setting this flag to true enables `let` re-declaration and top-level `await`.\nNote that `let` variables can only be re-declared if they originate from\n`replMode` themselves. (optional)\n  :allow-unsafe-eval-blocked-by-csp | The Content Security Policy (CSP) for the target might block 'unsafe-eval'\nwhich includes eval(), Function(), setTimeout() and setInterval()\nwhen called with non-callable arguments. This flag bypasses CSP for this\nevaluation and allows unsafe-eval. Defaults to true. (optional)\n  :unique-context-id                | An alternative way to specify the execution context to evaluate in.\nCompared to contextId that may be reused across processes, this is guaranteed to be\nsystem-unique, so it can be used to prevent accidental evaluation of the expression\nin context different than intended (e.g. as a result of navigation across process\nboundaries).\nThis is mutually exclusive with `contextId`. (optional)\n\nReturn map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :result            | Evaluation result.\n  :exception-details | Exception details. (optional)"
  ([]
   (evaluate
    (c/get-current-connection)
@@ -524,7 +534,11 @@
      user-gesture
      await-promise
      throw-on-side-effect
-     timeout]}]
+     timeout
+     disable-breaks
+     repl-mode
+     allow-unsafe-eval-blocked-by-csp
+     unique-context-id]}]
   (evaluate
    (c/get-current-connection)
    params))
@@ -541,7 +555,11 @@
      user-gesture
      await-promise
      throw-on-side-effect
-     timeout]}]
+     timeout
+     disable-breaks
+     repl-mode
+     allow-unsafe-eval-blocked-by-csp
+     unique-context-id]}]
   (cmd/command
    connection
    "Runtime"
@@ -550,9 +568,13 @@
    {:object-group "objectGroup",
     :expression "expression",
     :silent "silent",
+    :repl-mode "replMode",
     :throw-on-side-effect "throwOnSideEffect",
     :await-promise "awaitPromise",
+    :allow-unsafe-eval-blocked-by-csp "allowUnsafeEvalBlockedByCSP",
+    :unique-context-id "uniqueContextId",
     :return-by-value "returnByValue",
+    :disable-breaks "disableBreaks",
     :timeout "timeout",
     :generate-preview "generatePreview",
     :include-command-line-api "includeCommandLineAPI",
@@ -581,7 +603,11 @@
      ::user-gesture
      ::await-promise
      ::throw-on-side-effect
-     ::timeout]))
+     ::timeout
+     ::disable-breaks
+     ::repl-mode
+     ::allow-unsafe-eval-blocked-by-csp
+     ::unique-context-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -601,7 +627,11 @@
      ::user-gesture
      ::await-promise
      ::throw-on-side-effect
-     ::timeout])))
+     ::timeout
+     ::disable-breaks
+     ::repl-mode
+     ::allow-unsafe-eval-blocked-by-csp
+     ::unique-context-id])))
  :ret
  (s/keys
   :req-un
@@ -690,7 +720,7 @@
 
 (defn
  get-properties
- "Returns properties of a given object. Object group of the result is inherited from the target\nobject.\n\nParameters map keys:\n\n\n  Key                       | Description \n  --------------------------|------------ \n  :object-id                | Identifier of the object to return properties for.\n  :own-properties           | If true, returns properties belonging only to the element itself, not to its prototype\nchain. (optional)\n  :accessor-properties-only | If true, returns accessor properties (with getter/setter) only; internal properties are not\nreturned either. (optional)\n  :generate-preview         | Whether preview should be generated for the results. (optional)\n\nReturn map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :result              | Object properties.\n  :internal-properties | Internal object properties (only of the element itself). (optional)\n  :private-properties  | Object private properties. (optional)\n  :exception-details   | Exception details. (optional)"
+ "Returns properties of a given object. Object group of the result is inherited from the target\nobject.\n\nParameters map keys:\n\n\n  Key                          | Description \n  -----------------------------|------------ \n  :object-id                   | Identifier of the object to return properties for.\n  :own-properties              | If true, returns properties belonging only to the element itself, not to its prototype\nchain. (optional)\n  :accessor-properties-only    | If true, returns accessor properties (with getter/setter) only; internal properties are not\nreturned either. (optional)\n  :generate-preview            | Whether preview should be generated for the results. (optional)\n  :non-indexed-properties-only | If true, returns non-indexed properties only. (optional)\n\nReturn map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :result              | Object properties.\n  :internal-properties | Internal object properties (only of the element itself). (optional)\n  :private-properties  | Object private properties. (optional)\n  :exception-details   | Exception details. (optional)"
  ([]
   (get-properties
    (c/get-current-connection)
@@ -700,7 +730,8 @@
     [object-id
      own-properties
      accessor-properties-only
-     generate-preview]}]
+     generate-preview
+     non-indexed-properties-only]}]
   (get-properties
    (c/get-current-connection)
    params))
@@ -710,7 +741,8 @@
     [object-id
      own-properties
      accessor-properties-only
-     generate-preview]}]
+     generate-preview
+     non-indexed-properties-only]}]
   (cmd/command
    connection
    "Runtime"
@@ -719,7 +751,8 @@
    {:object-id "objectId",
     :own-properties "ownProperties",
     :accessor-properties-only "accessorPropertiesOnly",
-    :generate-preview "generatePreview"})))
+    :generate-preview "generatePreview",
+    :non-indexed-properties-only "nonIndexedPropertiesOnly"})))
 
 (s/fdef
  get-properties
@@ -736,7 +769,8 @@
     :opt-un
     [::own-properties
      ::accessor-properties-only
-     ::generate-preview]))
+     ::generate-preview
+     ::non-indexed-properties-only]))
   :connection-and-params
   (s/cat
    :connection
@@ -749,7 +783,8 @@
     :opt-un
     [::own-properties
      ::accessor-properties-only
-     ::generate-preview])))
+     ::generate-preview
+     ::non-indexed-properties-only])))
  :ret
  (s/keys
   :req-un
@@ -1234,22 +1269,27 @@
 
 (defn
  add-binding
- "If executionContextId is empty, adds binding with the given name on the\nglobal objects of all inspected contexts, including those created later,\nbindings survive reloads.\nIf executionContextId is specified, adds binding only on global object of\ngiven execution context.\nBinding function takes exactly one argument, this argument should be string,\nin case of any other input, function throws an exception.\nEach binding function call produces Runtime.bindingCalled notification.\n\nParameters map keys:\n\n\n  Key                   | Description \n  ----------------------|------------ \n  :name                 | null\n  :execution-context-id | null (optional)"
+ "If executionContextId is empty, adds binding with the given name on the\nglobal objects of all inspected contexts, including those created later,\nbindings survive reloads.\nBinding function takes exactly one argument, this argument should be string,\nin case of any other input, function throws an exception.\nEach binding function call produces Runtime.bindingCalled notification.\n\nParameters map keys:\n\n\n  Key                     | Description \n  ------------------------|------------ \n  :name                   | null\n  :execution-context-id   | If specified, the binding would only be exposed to the specified\nexecution context. If omitted and `executionContextName` is not set,\nthe binding is exposed to all execution contexts of the target.\nThis parameter is mutually exclusive with `executionContextName`.\nDeprecated in favor of `executionContextName` due to an unclear use case\nand bugs in implementation (crbug.com/1169639). `executionContextId` will be\nremoved in the future. (optional)\n  :execution-context-name | If specified, the binding is exposed to the executionContext with\nmatching name, even for contexts created after the binding is added.\nSee also `ExecutionContext.name` and `worldName` parameter to\n`Page.addScriptToEvaluateOnNewDocument`.\nThis parameter is mutually exclusive with `executionContextId`. (optional)"
  ([]
   (add-binding
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [name execution-context-id]}]
+ ([{:as params,
+    :keys [name execution-context-id execution-context-name]}]
   (add-binding
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [name execution-context-id]}]
+ ([connection
+   {:as params,
+    :keys [name execution-context-id execution-context-name]}]
   (cmd/command
    connection
    "Runtime"
    "addBinding"
    params
-   {:name "name", :execution-context-id "executionContextId"})))
+   {:name "name",
+    :execution-context-id "executionContextId",
+    :execution-context-name "executionContextName"})))
 
 (s/fdef
  add-binding
@@ -1264,7 +1304,8 @@
     :req-un
     [::name]
     :opt-un
-    [::execution-context-id]))
+    [::execution-context-id
+     ::execution-context-name]))
   :connection-and-params
   (s/cat
    :connection
@@ -1275,7 +1316,8 @@
     :req-un
     [::name]
     :opt-un
-    [::execution-context-id])))
+    [::execution-context-id
+     ::execution-context-name])))
  :ret
  (s/keys))
 

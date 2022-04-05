@@ -28,6 +28,12 @@
   [::inline-style]))
 
 (s/def
+ ::inherited-pseudo-element-matches
+ (s/keys
+  :req-un
+  [::pseudo-elements]))
+
+(s/def
  ::rule-match
  (s/keys
   :req-un
@@ -60,9 +66,13 @@
    ::title
    ::disabled
    ::is-inline
+   ::is-mutable
+   ::is-constructed
    ::start-line
    ::start-column
-   ::length]
+   ::length
+   ::end-line
+   ::end-column]
   :opt-un
   [::source-map-url
    ::owner-node
@@ -77,7 +87,10 @@
    ::style]
   :opt-un
   [::style-sheet-id
-   ::media]))
+   ::media
+   ::container-queries
+   ::supports
+   ::layers]))
 
 (s/def
  ::rule-usage
@@ -169,12 +182,60 @@
    ::computed-length]))
 
 (s/def
+ ::css-container-query
+ (s/keys
+  :req-un
+  [::text]
+  :opt-un
+  [::range
+   ::style-sheet-id
+   ::name]))
+
+(s/def
+ ::css-supports
+ (s/keys
+  :req-un
+  [::text
+   ::active]
+  :opt-un
+  [::range
+   ::style-sheet-id]))
+
+(s/def
+ ::css-layer
+ (s/keys
+  :req-un
+  [::text]
+  :opt-un
+  [::range
+   ::style-sheet-id]))
+
+(s/def
+ ::css-layer-data
+ (s/keys
+  :req-un
+  [::name
+   ::order]
+  :opt-un
+  [::sub-layers]))
+
+(s/def
  ::platform-font-usage
  (s/keys
   :req-un
   [::family-name
    ::is-custom-font
    ::glyph-count]))
+
+(s/def
+ ::font-variation-axis
+ (s/keys
+  :req-un
+  [::tag
+   ::name
+   ::min-value
+   ::max-value
+   ::default-value]))
 
 (s/def
  ::font-face
@@ -187,7 +248,9 @@
    ::font-stretch
    ::unicode-range
    ::src
-   ::platform-font-family]))
+   ::platform-font-family]
+  :opt-un
+  [::font-variation-axes]))
 
 (s/def
  ::css-keyframes-rule
@@ -613,7 +676,7 @@
 
 (defn
  get-matched-styles-for-node
- "Returns requested styles for a DOM node identified by `nodeId`.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | null\n\nReturn map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :inline-style        | Inline style for the specified DOM node. (optional)\n  :attributes-style    | Attribute-defined element style (e.g. resulting from \"width=20 height=100%\"). (optional)\n  :matched-css-rules   | CSS rules matching this node, from all applicable stylesheets. (optional)\n  :pseudo-elements     | Pseudo style matches for this node. (optional)\n  :inherited           | A chain of inherited styles (from the immediate node parent up to the DOM tree root). (optional)\n  :css-keyframes-rules | A list of CSS keyframed animations matching this node. (optional)"
+ "Returns requested styles for a DOM node identified by `nodeId`.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | null\n\nReturn map keys:\n\n\n  Key                        | Description \n  ---------------------------|------------ \n  :inline-style              | Inline style for the specified DOM node. (optional)\n  :attributes-style          | Attribute-defined element style (e.g. resulting from \"width=20 height=100%\"). (optional)\n  :matched-css-rules         | CSS rules matching this node, from all applicable stylesheets. (optional)\n  :pseudo-elements           | Pseudo style matches for this node. (optional)\n  :inherited                 | A chain of inherited styles (from the immediate node parent up to the DOM tree root). (optional)\n  :inherited-pseudo-elements | A chain of inherited pseudo element styles (from the immediate node parent up to the DOM tree root). (optional)\n  :css-keyframes-rules       | A list of CSS keyframed animations matching this node. (optional)"
  ([]
   (get-matched-styles-for-node
    (c/get-current-connection)
@@ -659,6 +722,7 @@
    ::matched-css-rules
    ::pseudo-elements
    ::inherited
+   ::inherited-pseudo-elements
    ::css-keyframes-rules]))
 
 (defn
@@ -789,6 +853,133 @@
  (s/keys
   :req-un
   [::text]))
+
+(defn
+ get-layers-for-node
+ "Returns all layers parsed by the rendering engine for the tree scope of a node.\nGiven a DOM element identified by nodeId, getLayersForNode returns the root\nlayer for the nearest ancestor document or shadow root. The layer root contains\nthe full layer tree for the tree scope and their ordering.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :node-id | null\n\nReturn map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :root-layer | null"
+ ([]
+  (get-layers-for-node
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [node-id]}]
+  (get-layers-for-node
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [node-id]}]
+  (cmd/command
+   connection
+   "CSS"
+   "getLayersForNode"
+   params
+   {:node-id "nodeId"})))
+
+(s/fdef
+ get-layers-for-node
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::node-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::node-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::root-layer]))
+
+(defn
+ track-computed-style-updates
+ "Starts tracking the given computed styles for updates. The specified array of properties\nreplaces the one previously specified. Pass empty array to disable tracking.\nUse takeComputedStyleUpdates to retrieve the list of nodes that had properties modified.\nThe changes to computed style properties are only tracked for nodes pushed to the front-end\nby the DOM agent. If no changes to the tracked properties occur after the node has been pushed\nto the front-end, no updates will be issued for the node.\n\nParameters map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :properties-to-track | null"
+ ([]
+  (track-computed-style-updates
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [properties-to-track]}]
+  (track-computed-style-updates
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [properties-to-track]}]
+  (cmd/command
+   connection
+   "CSS"
+   "trackComputedStyleUpdates"
+   params
+   {:properties-to-track "propertiesToTrack"})))
+
+(s/fdef
+ track-computed-style-updates
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::properties-to-track]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::properties-to-track])))
+ :ret
+ (s/keys))
+
+(defn
+ take-computed-style-updates
+ "Polls the next batch of computed style updates.\n\nReturn map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :node-ids | The list of node Ids that have their tracked computed styles updated"
+ ([]
+  (take-computed-style-updates
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys []}]
+  (take-computed-style-updates
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys []}]
+  (cmd/command
+   connection
+   "CSS"
+   "takeComputedStyleUpdates"
+   params
+   {})))
+
+(s/fdef
+ take-computed-style-updates
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat :params (s/keys))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys)))
+ :ret
+ (s/keys
+  :req-un
+  [::node-ids]))
 
 (defn
  set-effective-property-value-for-node
@@ -936,6 +1127,104 @@
  (s/keys
   :req-un
   [::media]))
+
+(defn
+ set-container-query-text
+ "Modifies the expression of a container query.\n\nParameters map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :style-sheet-id | null\n  :range          | null\n  :text           | null\n\nReturn map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :container-query | The resulting CSS container query rule after modification."
+ ([]
+  (set-container-query-text
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [style-sheet-id range text]}]
+  (set-container-query-text
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [style-sheet-id range text]}]
+  (cmd/command
+   connection
+   "CSS"
+   "setContainerQueryText"
+   params
+   {:style-sheet-id "styleSheetId", :range "range", :text "text"})))
+
+(s/fdef
+ set-container-query-text
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::style-sheet-id
+     ::range
+     ::text]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::style-sheet-id
+     ::range
+     ::text])))
+ :ret
+ (s/keys
+  :req-un
+  [::container-query]))
+
+(defn
+ set-supports-text
+ "Modifies the expression of a supports at-rule.\n\nParameters map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :style-sheet-id | null\n  :range          | null\n  :text           | null\n\nReturn map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :supports | The resulting CSS Supports rule after modification."
+ ([]
+  (set-supports-text
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [style-sheet-id range text]}]
+  (set-supports-text
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [style-sheet-id range text]}]
+  (cmd/command
+   connection
+   "CSS"
+   "setSupportsText"
+   params
+   {:style-sheet-id "styleSheetId", :range "range", :text "text"})))
+
+(s/fdef
+ set-supports-text
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::style-sheet-id
+     ::range
+     ::text]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::style-sheet-id
+     ::range
+     ::text])))
+ :ret
+ (s/keys
+  :req-un
+  [::supports]))
 
 (defn
  set-rule-selector
@@ -1158,7 +1447,7 @@
 
 (defn
  take-coverage-delta
- "Obtain list of rules that became used since last call to this method (or since start of coverage\ninstrumentation)\n\nReturn map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :coverage | null"
+ "Obtain list of rules that became used since last call to this method (or since start of coverage\ninstrumentation)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :coverage  | null\n  :timestamp | Monotonically increasing time, in seconds."
  ([]
   (take-coverage-delta
    (c/get-current-connection)
@@ -1193,4 +1482,48 @@
  :ret
  (s/keys
   :req-un
-  [::coverage]))
+  [::coverage
+   ::timestamp]))
+
+(defn
+ set-local-fonts-enabled
+ "Enables/disables rendering of local CSS fonts (enabled by default).\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :enabled | Whether rendering of local fonts is enabled."
+ ([]
+  (set-local-fonts-enabled
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [enabled]}]
+  (set-local-fonts-enabled
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [enabled]}]
+  (cmd/command
+   connection
+   "CSS"
+   "setLocalFontsEnabled"
+   params
+   {:enabled "enabled"})))
+
+(s/fdef
+ set-local-fonts-enabled
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::enabled]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::enabled])))
+ :ret
+ (s/keys))

@@ -6,9 +6,9 @@
 
 (s/def
  ::resource-type
- #{"Script" "Media" "WebSocket" "Manifest" "SignedExchange" "XHR"
-   "Fetch" "Font" "TextTrack" "Ping" "Stylesheet" "Image" "Document"
-   "EventSource" "CSPViolationReport" "Other"})
+ #{"Script" "Media" "WebSocket" "Preflight" "Manifest" "SignedExchange"
+   "XHR" "Fetch" "Font" "TextTrack" "Ping" "Stylesheet" "Image"
+   "Document" "EventSource" "CSPViolationReport" "Other"})
 
 (s/def
  ::loader-id
@@ -48,7 +48,15 @@
 
 (s/def
  ::cookie-same-site
- #{"None" "Lax" "Extended" "Strict"})
+ #{"None" "Lax" "Strict"})
+
+(s/def
+ ::cookie-priority
+ #{"Medium" "High" "Low"})
+
+(s/def
+ ::cookie-source-scheme
+ #{"NonSecure" "Secure" "Unset"})
 
 (s/def
  ::resource-timing
@@ -65,6 +73,8 @@
    ::ssl-end
    ::worker-start
    ::worker-ready
+   ::worker-fetch-start
+   ::worker-respond-with-settled
    ::send-start
    ::send-end
    ::push-start
@@ -74,6 +84,12 @@
 (s/def
  ::resource-priority
  #{"Medium" "High" "VeryHigh" "Low" "VeryLow"})
+
+(s/def
+ ::post-data-entry
+ (s/keys
+  :opt-un
+  [::bytes]))
 
 (s/def
  ::request
@@ -88,8 +104,11 @@
   [::url-fragment
    ::post-data
    ::has-post-data
+   ::post-data-entries
    ::mixed-content-type
-   ::is-link-preload]))
+   ::is-link-preload
+   ::trust-token-params
+   ::is-same-site]))
 
 (s/def
  ::signed-certificate-timestamp
@@ -129,8 +148,55 @@
 
 (s/def
  ::blocked-reason
- #{"csp" "origin" "content-type" "collapsed-by-client"
-   "subresource-filter" "mixed-content" "other" "inspector"})
+ #{"csp" "origin" "content-type" "corp-not-same-site"
+   "coop-sandboxed-iframe-cannot-navigate-to-coop-page"
+   "corp-not-same-origin" "subresource-filter" "mixed-content"
+   "corp-not-same-origin-after-defaulted-to-same-origin-by-coep"
+   "other" "inspector" "coep-frame-resource-needs-coep-header"})
+
+(s/def
+ ::cors-error
+ #{"PreflightInvalidStatus" "PreflightMultipleAllowOriginValues"
+   "DisallowedByMode" "PreflightAllowOriginMismatch"
+   "InvalidAllowCredentials" "PreflightInvalidAllowCredentials"
+   "NoCorsRedirectModeNotFollow" "InvalidAllowOriginValue"
+   "InvalidAllowHeadersPreflightResponse" "InvalidResponse"
+   "AllowOriginMismatch" "MethodDisallowedByPreflightResponse"
+   "PreflightInvalidAllowExternal" "PreflightDisallowedRedirect"
+   "UnexpectedPrivateNetworkAccess" "MultipleAllowOriginValues"
+   "InvalidPrivateNetworkAccess" "PreflightMissingAllowExternal"
+   "PreflightInvalidAllowOriginValue" "MissingAllowOriginHeader"
+   "RedirectContainsCredentials" "WildcardOriginNotAllowed"
+   "PreflightInvalidAllowPrivateNetwork"
+   "HeaderDisallowedByPreflightResponse" "InsecurePrivateNetwork"
+   "PreflightMissingAllowOriginHeader"
+   "PreflightWildcardOriginNotAllowed" "CorsDisabledScheme"
+   "PreflightMissingAllowPrivateNetwork"
+   "InvalidAllowMethodsPreflightResponse"})
+
+(s/def
+ ::cors-error-status
+ (s/keys
+  :req-un
+  [::cors-error
+   ::failed-parameter]))
+
+(s/def
+ ::service-worker-response-source
+ #{"cache-storage" "fallback-code" "network" "http-cache"})
+
+(s/def
+ ::trust-token-params
+ (s/keys
+  :req-un
+  [::type
+   ::refresh-policy]
+  :opt-un
+  [::issuers]))
+
+(s/def
+ ::trust-token-operation-type
+ #{"Signing" "Redemption" "Issuance"})
 
 (s/def
  ::response
@@ -155,6 +221,9 @@
    ::from-service-worker
    ::from-prefetch-cache
    ::timing
+   ::service-worker-response-source
+   ::response-time
+   ::cache-storage-cache-name
    ::protocol
    ::security-details]))
 
@@ -202,7 +271,9 @@
   :opt-un
   [::stack
    ::url
-   ::line-number]))
+   ::line-number
+   ::column-number
+   ::request-id]))
 
 (s/def
  ::cookie
@@ -216,133 +287,311 @@
    ::size
    ::http-only
    ::secure
-   ::session]
+   ::session
+   ::priority
+   ::same-party
+   ::source-scheme
+   ::source-port]
   :opt-un
-  [::same-site]))
+  [::same-site
+   ::partition-key
+   ::partition-key-opaque]))
 
 (s/def
- ::set-cookie-blocked-reason
+ :user/set-cookie-blocked-reason
  #{"UnknownError" "SchemeNotSupported" "SameSiteNoneInsecure"
-   "SecureOnly" "SameSiteExtended" "SyntaxError" "InvalidDomain"
-   "OverwriteSecure" "SameSiteUnspecifiedTreatedAsLax"
-   "UserPreferences" "InvalidPrefix" "SameSiteLax" "SameSiteStrict"})
+   "SecureOnly" "NameValuePairExceedsMaxSize" "SyntaxError"
+   "InvalidDomain" "SamePartyConflictsWithOtherAttributes"
+   "OverwriteSecure" "SamePartyFromCrossPartyContext"
+   "SchemefulSameSiteUnspecifiedTreatedAsLax"
+   "SameSiteUnspecifiedTreatedAsLax" "UserPreferences" "InvalidPrefix"
+   "SameSiteLax" "SchemefulSameSiteLax" "SameSiteStrict"
+   "SchemefulSameSiteStrict"})
 
 (s/def
- ::cookie-blocked-reason
+ :user/cookie-blocked-reason
  #{"UnknownError" "SameSiteNoneInsecure" "SecureOnly"
-   "SameSiteExtended" "NotOnPath" "SameSiteUnspecifiedTreatedAsLax"
-   "DomainMismatch" "UserPreferences" "SameSiteLax" "SameSiteStrict"})
+   "NameValuePairExceedsMaxSize" "NotOnPath"
+   "SamePartyFromCrossPartyContext"
+   "SchemefulSameSiteUnspecifiedTreatedAsLax"
+   "SameSiteUnspecifiedTreatedAsLax" "DomainMismatch" "UserPreferences"
+   "SameSiteLax" "SchemefulSameSiteLax" "SameSiteStrict"
+   "SchemefulSameSiteStrict"})
 
 (s/def
- ::blocked-set-cookie-with-reason
+ :user/blocked-set-cookie-with-reason
  (s/keys
   :req-un
-  [::blocked-reason
-   ::cookie-line]
+  [:user/blocked-reasons :user/cookie-line]
   :opt-un
-  [::cookie]))
+  [:user/cookie]))
 
 (s/def
- ::blocked-cookie-with-reason
- (s/keys
-  :req-un
-  [::blocked-reason
-   ::cookie]))
+ :user/blocked-cookie-with-reason
+ (s/keys :req-un [:user/blocked-reasons :user/cookie]))
 
 (s/def
- ::cookie-param
+ :user/cookie-param
  (s/keys
   :req-un
-  [::name
-   ::value]
+  [:user/name :user/value]
   :opt-un
-  [::url
-   ::domain
-   ::path
-   ::secure
-   ::http-only
-   ::same-site
-   ::expires]))
+  [:user/url
+   :user/domain
+   :user/path
+   :user/secure
+   :user/http-only
+   :user/same-site
+   :user/expires
+   :user/priority
+   :user/same-party
+   :user/source-scheme
+   :user/source-port
+   :user/partition-key]))
 
 (s/def
- ::auth-challenge
+ :user/auth-challenge
  (s/keys
   :req-un
-  [::origin
-   ::scheme
-   ::realm]
+  [:user/origin :user/scheme :user/realm]
   :opt-un
-  [::source]))
+  [:user/source]))
 
 (s/def
- ::auth-challenge-response
+ :user/auth-challenge-response
  (s/keys
   :req-un
-  [::response]
+  [:user/response]
   :opt-un
-  [::username
-   ::password]))
+  [:user/username :user/password]))
 
 (s/def
- ::interception-stage
+ :user/interception-stage
  #{"Request" "HeadersReceived"})
 
 (s/def
- :clj-chrome-devtools.impl.define/request-pattern
+ :user/request-pattern
  (s/keys
   :opt-un
-  [:clj-chrome-devtools.impl.define/url-pattern
-   :clj-chrome-devtools.impl.define/resource-type
-   :clj-chrome-devtools.impl.define/interception-stage]))
+  [:user/url-pattern :user/resource-type :user/interception-stage]))
 
 (s/def
- :clj-chrome-devtools.impl.define/signed-exchange-signature
+ :user/signed-exchange-signature
  (s/keys
   :req-un
-  [:clj-chrome-devtools.impl.define/label
-   :clj-chrome-devtools.impl.define/signature
-   :clj-chrome-devtools.impl.define/integrity
-   :clj-chrome-devtools.impl.define/validity-url
-   :clj-chrome-devtools.impl.define/date
-   :clj-chrome-devtools.impl.define/expires]
+  [:user/label
+   :user/signature
+   :user/integrity
+   :user/validity-url
+   :user/date
+   :user/expires]
   :opt-un
-  [:clj-chrome-devtools.impl.define/cert-url
-   :clj-chrome-devtools.impl.define/cert-sha256
-   :clj-chrome-devtools.impl.define/certificates]))
+  [:user/cert-url :user/cert-sha256 :user/certificates]))
 
 (s/def
- :clj-chrome-devtools.impl.define/signed-exchange-header
+ :user/signed-exchange-header
  (s/keys
   :req-un
-  [:clj-chrome-devtools.impl.define/request-url
-   :clj-chrome-devtools.impl.define/response-code
-   :clj-chrome-devtools.impl.define/response-headers
-   :clj-chrome-devtools.impl.define/signatures
-   :clj-chrome-devtools.impl.define/header-integrity]))
+  [:user/request-url
+   :user/response-code
+   :user/response-headers
+   :user/signatures
+   :user/header-integrity]))
 
 (s/def
- :clj-chrome-devtools.impl.define/signed-exchange-error-field
+ :user/signed-exchange-error-field
  #{"signatureCertUrl" "signatureSig" "signatureCertSha256"
    "signatureValidityUrl" "signatureTimestamps" "signatureIntegrity"})
 
 (s/def
- :clj-chrome-devtools.impl.define/signed-exchange-error
+ :user/signed-exchange-error
  (s/keys
   :req-un
-  [:clj-chrome-devtools.impl.define/message]
+  [:user/message]
   :opt-un
-  [:clj-chrome-devtools.impl.define/signature-index
-   :clj-chrome-devtools.impl.define/error-field]))
+  [:user/signature-index :user/error-field]))
 
 (s/def
- :clj-chrome-devtools.impl.define/signed-exchange-info
+ :user/signed-exchange-info
  (s/keys
   :req-un
-  [:clj-chrome-devtools.impl.define/outer-response]
+  [:user/outer-response]
   :opt-un
-  [:clj-chrome-devtools.impl.define/header
-   :clj-chrome-devtools.impl.define/security-details
-   :clj-chrome-devtools.impl.define/errors]))
+  [:user/header :user/security-details :user/errors]))
+
+(s/def :user/content-encoding #{"br" "gzip" "deflate"})
+
+(s/def
+ :user/private-network-request-policy
+ #{"PreflightBlock" "Allow" "WarnFromInsecureToMorePrivate"
+   "BlockFromInsecureToMorePrivate" "PreflightWarn"})
+
+(s/def
+ :user/ip-address-space
+ #{"Private" "Public" "Unknown" "Local"})
+
+(s/def
+ :user/connect-timing
+ (s/keys :req-un [:user/request-time]))
+
+(s/def
+ :user/client-security-state
+ (s/keys
+  :req-un
+  [:user/initiator-is-secure-context
+   :user/initiator-ip-address-space
+   :user/private-network-request-policy]))
+
+(s/def
+ :user/cross-origin-opener-policy-value
+ #{"SameOriginPlusCoep" "SameOriginAllowPopups"
+   "SameOriginAllowPopupsPlusCoep" "SameOrigin" "UnsafeNone"})
+
+(s/def
+ :user/cross-origin-opener-policy-status
+ (s/keys
+  :req-un
+  [:user/value :user/report-only-value]
+  :opt-un
+  [:user/reporting-endpoint :user/report-only-reporting-endpoint]))
+
+(s/def
+ :user/cross-origin-embedder-policy-value
+ #{"None" "Credentialless" "RequireCorp"})
+
+(s/def
+ :user/cross-origin-embedder-policy-status
+ (s/keys
+  :req-un
+  [:user/value :user/report-only-value]
+  :opt-un
+  [:user/reporting-endpoint :user/report-only-reporting-endpoint]))
+
+(s/def
+ :user/security-isolation-status
+ (s/keys :opt-un [:user/coop :user/coep]))
+
+(s/def
+ :user/report-status
+ #{"Success" "MarkedForRemoval" "Pending" "Queued"})
+
+(s/def :user/report-id string?)
+
+(s/def
+ :user/reporting-api-report
+ (s/keys
+  :req-un
+  [:user/id
+   :user/initiator-url
+   :user/destination
+   :user/type
+   :user/timestamp
+   :user/depth
+   :user/completed-attempts
+   :user/body
+   :user/status]))
+
+(s/def
+ :user/reporting-api-endpoint
+ (s/keys :req-un [:user/url :user/group-name]))
+
+(s/def
+ :user/load-network-resource-page-result
+ (s/keys
+  :req-un
+  [:user/success]
+  :opt-un
+  [:user/net-error
+   :user/net-error-name
+   :user/http-status-code
+   :user/stream
+   :user/headers]))
+
+(s/def
+ :user/load-network-resource-options
+ (s/keys
+  :req-un
+  [:user/disable-cache :user/include-credentials]))
+(defn
+ set-accepted-encodings
+ "Sets a list of content encodings that will be accepted. Empty list means no encoding is accepted.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :encodings | List of accepted content encodings."
+ ([]
+  (set-accepted-encodings
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [encodings]}]
+  (set-accepted-encodings
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [encodings]}]
+  (cmd/command
+   connection
+   "Network"
+   "setAcceptedEncodings"
+   params
+   {:encodings "encodings"})))
+
+(s/fdef
+ set-accepted-encodings
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::encodings]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::encodings])))
+ :ret
+ (s/keys))
+
+(defn
+ clear-accepted-encodings-override
+ "Clears accepted encodings set by setAcceptedEncodings"
+ ([]
+  (clear-accepted-encodings-override
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys []}]
+  (clear-accepted-encodings-override
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys []}]
+  (cmd/command
+   connection
+   "Network"
+   "clearAcceptedEncodingsOverride"
+   params
+   {})))
+
+(s/fdef
+ clear-accepted-encodings-override
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat :params (s/keys))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys)))
+ :ret
+ (s/keys))
+
 (defn
  can-clear-browser-cache
  "Tells whether clearing browser cache is supported.\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :result | True if browser cache can be cleared."
@@ -536,7 +785,7 @@
 
 (defn
  continue-intercepted-request
- "Response to Network.requestIntercepted which either modifies the request to continue with any\nmodifications, or blocks it, or completes it with the provided response bytes. If a network\nfetch occurs as a result which encounters a redirect an additional Network.requestIntercepted\nevent will be sent with the same InterceptionId.\nDeprecated, use Fetch.continueRequest, Fetch.fulfillRequest and Fetch.failRequest instead.\n\nParameters map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :interception-id         | null\n  :error-reason            | If set this causes the request to fail with the given reason. Passing `Aborted` for requests\nmarked with `isNavigationRequest` also cancels the navigation. Must not be set in response\nto an authChallenge. (optional)\n  :raw-response            | If set the requests completes using with the provided base64 encoded raw response, including\nHTTP status line and headers etc... Must not be set in response to an authChallenge. (optional)\n  :url                     | If set the request url will be modified in a way that's not observable by page. Must not be\nset in response to an authChallenge. (optional)\n  :method                  | If set this allows the request method to be overridden. Must not be set in response to an\nauthChallenge. (optional)\n  :post-data               | If set this allows postData to be set. Must not be set in response to an authChallenge. (optional)\n  :headers                 | If set this allows the request headers to be changed. Must not be set in response to an\nauthChallenge. (optional)\n  :auth-challenge-response | Response to a requestIntercepted with an authChallenge. Must not be set otherwise. (optional)"
+ "Response to Network.requestIntercepted which either modifies the request to continue with any\nmodifications, or blocks it, or completes it with the provided response bytes. If a network\nfetch occurs as a result which encounters a redirect an additional Network.requestIntercepted\nevent will be sent with the same InterceptionId.\nDeprecated, use Fetch.continueRequest, Fetch.fulfillRequest and Fetch.failRequest instead.\n\nParameters map keys:\n\n\n  Key                      | Description \n  -------------------------|------------ \n  :interception-id         | null\n  :error-reason            | If set this causes the request to fail with the given reason. Passing `Aborted` for requests\nmarked with `isNavigationRequest` also cancels the navigation. Must not be set in response\nto an authChallenge. (optional)\n  :raw-response            | If set the requests completes using with the provided base64 encoded raw response, including\nHTTP status line and headers etc... Must not be set in response to an authChallenge. (Encoded as a base64 string when passed over JSON) (optional)\n  :url                     | If set the request url will be modified in a way that's not observable by page. Must not be\nset in response to an authChallenge. (optional)\n  :method                  | If set this allows the request method to be overridden. Must not be set in response to an\nauthChallenge. (optional)\n  :post-data               | If set this allows postData to be set. Must not be set in response to an authChallenge. (optional)\n  :headers                 | If set this allows the request headers to be changed. Must not be set in response to an\nauthChallenge. (optional)\n  :auth-challenge-response | Response to a requestIntercepted with an authChallenge. Must not be set otherwise. (optional)"
  ([]
   (continue-intercepted-request
    (c/get-current-connection)
@@ -921,7 +1170,7 @@
 
 (defn
  get-cookies
- "Returns all browser cookies for the current URL. Depending on the backend support, will return\ndetailed cookie information in the `cookies` field.\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :urls | The list of URLs for which applicable cookies will be fetched (optional)\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :cookies | Array of cookie objects."
+ "Returns all browser cookies for the current URL. Depending on the backend support, will return\ndetailed cookie information in the `cookies` field.\n\nParameters map keys:\n\n\n  Key   | Description \n  ------|------------ \n  :urls | The list of URLs for which applicable cookies will be fetched.\nIf not specified, it's assumed to be set to the list containing\nthe URLs of the page and all of its subframes. (optional)\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :cookies | Array of cookie objects."
  ([]
   (get-cookies
    (c/get-current-connection)
@@ -1377,21 +1626,47 @@
 
 (defn
  set-cookie
- "Sets a cookie with the given cookie data; may overwrite equivalent cookies if they exist.\n\nParameters map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :name      | Cookie name.\n  :value     | Cookie value.\n  :url       | The request-URI to associate with the setting of the cookie. This value can affect the\ndefault domain and path values of the created cookie. (optional)\n  :domain    | Cookie domain. (optional)\n  :path      | Cookie path. (optional)\n  :secure    | True if cookie is secure. (optional)\n  :http-only | True if cookie is http-only. (optional)\n  :same-site | Cookie SameSite type. (optional)\n  :expires   | Cookie expiration date, session cookie if not set (optional)\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :success | True if successfully set cookie."
+ "Sets a cookie with the given cookie data; may overwrite equivalent cookies if they exist.\n\nParameters map keys:\n\n\n  Key            | Description \n  ---------------|------------ \n  :name          | Cookie name.\n  :value         | Cookie value.\n  :url           | The request-URI to associate with the setting of the cookie. This value can affect the\ndefault domain, path, source port, and source scheme values of the created cookie. (optional)\n  :domain        | Cookie domain. (optional)\n  :path          | Cookie path. (optional)\n  :secure        | True if cookie is secure. (optional)\n  :http-only     | True if cookie is http-only. (optional)\n  :same-site     | Cookie SameSite type. (optional)\n  :expires       | Cookie expiration date, session cookie if not set (optional)\n  :priority      | Cookie Priority type. (optional)\n  :same-party    | True if cookie is SameParty. (optional)\n  :source-scheme | Cookie source scheme type. (optional)\n  :source-port   | Cookie source port. Valid values are {-1, [1, 65535]}, -1 indicates an unspecified port.\nAn unspecified port value allows protocol clients to emulate legacy cookie scope for the port.\nThis is a temporary ability and it will be removed in the future. (optional)\n  :partition-key | Cookie partition key. The site of the top-level URL the browser was visiting at the start\nof the request to the endpoint that set the cookie.\nIf not set, the cookie will be set as not partitioned. (optional)\n\nReturn map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :success | Always set to true. If an error occurs, the response indicates protocol error."
  ([]
   (set-cookie
    (c/get-current-connection)
    {}))
  ([{:as params,
     :keys
-    [name value url domain path secure http-only same-site expires]}]
+    [name
+     value
+     url
+     domain
+     path
+     secure
+     http-only
+     same-site
+     expires
+     priority
+     same-party
+     source-scheme
+     source-port
+     partition-key]}]
   (set-cookie
    (c/get-current-connection)
    params))
  ([connection
    {:as params,
     :keys
-    [name value url domain path secure http-only same-site expires]}]
+    [name
+     value
+     url
+     domain
+     path
+     secure
+     http-only
+     same-site
+     expires
+     priority
+     same-party
+     source-scheme
+     source-port
+     partition-key]}]
   (cmd/command
    connection
    "Network"
@@ -1399,9 +1674,14 @@
    params
    {:path "path",
     :same-site "sameSite",
+    :partition-key "partitionKey",
+    :same-party "sameParty",
     :name "name",
     :value "value",
+    :source-scheme "sourceScheme",
     :expires "expires",
+    :priority "priority",
+    :source-port "sourcePort",
     :url "url",
     :domain "domain",
     :secure "secure",
@@ -1427,7 +1707,12 @@
      ::secure
      ::http-only
      ::same-site
-     ::expires]))
+     ::expires
+     ::priority
+     ::same-party
+     ::source-scheme
+     ::source-port
+     ::partition-key]))
   :connection-and-params
   (s/cat
    :connection
@@ -1445,7 +1730,12 @@
      ::secure
      ::http-only
      ::same-site
-     ::expires])))
+     ::expires
+     ::priority
+     ::same-party
+     ::source-scheme
+     ::source-port
+     ::partition-key])))
  :ret
  (s/keys
   :req-un
@@ -1495,52 +1785,6 @@
  (s/keys))
 
 (defn
- set-data-size-limits-for-test
- "For testing.\n\nParameters map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :max-total-size    | Maximum total buffer size.\n  :max-resource-size | Maximum per-resource size."
- ([]
-  (set-data-size-limits-for-test
-   (c/get-current-connection)
-   {}))
- ([{:as params, :keys [max-total-size max-resource-size]}]
-  (set-data-size-limits-for-test
-   (c/get-current-connection)
-   params))
- ([connection {:as params, :keys [max-total-size max-resource-size]}]
-  (cmd/command
-   connection
-   "Network"
-   "setDataSizeLimitsForTest"
-   params
-   {:max-total-size "maxTotalSize",
-    :max-resource-size "maxResourceSize"})))
-
-(s/fdef
- set-data-size-limits-for-test
- :args
- (s/or
-  :no-args
-  (s/cat)
-  :just-params
-  (s/cat
-   :params
-   (s/keys
-    :req-un
-    [::max-total-size
-     ::max-resource-size]))
-  :connection-and-params
-  (s/cat
-   :connection
-   (s/?
-    c/connection?)
-   :params
-   (s/keys
-    :req-un
-    [::max-total-size
-     ::max-resource-size])))
- :ret
- (s/keys))
-
-(defn
  set-extra-http-headers
  "Specifies whether to always send extra HTTP headers with the requests from this page.\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :headers | Map with extra HTTP headers."
  ([]
@@ -1580,6 +1824,49 @@
    (s/keys
     :req-un
     [::headers])))
+ :ret
+ (s/keys))
+
+(defn
+ set-attach-debug-stack
+ "Specifies whether to attach a page script stack id in requests\n\nParameters map keys:\n\n\n  Key      | Description \n  ---------|------------ \n  :enabled | Whether to attach a page script stack for debugging purpose."
+ ([]
+  (set-attach-debug-stack
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [enabled]}]
+  (set-attach-debug-stack
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [enabled]}]
+  (cmd/command
+   connection
+   "Network"
+   "setAttachDebugStack"
+   params
+   {:enabled "enabled"})))
+
+(s/fdef
+ set-attach-debug-stack
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::enabled]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::enabled])))
  :ret
  (s/keys))
 
@@ -1628,17 +1915,19 @@
 
 (defn
  set-user-agent-override
- "Allows overriding user agent with the given string.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :user-agent      | User agent to use.\n  :accept-language | Browser langugage to emulate. (optional)\n  :platform        | The platform navigator.platform should return. (optional)"
+ "Allows overriding user agent with the given string.\n\nParameters map keys:\n\n\n  Key                  | Description \n  ---------------------|------------ \n  :user-agent          | User agent to use.\n  :accept-language     | Browser langugage to emulate. (optional)\n  :platform            | The platform navigator.platform should return. (optional)\n  :user-agent-metadata | To be sent in Sec-CH-UA-* headers and returned in navigator.userAgentData (optional)"
  ([]
   (set-user-agent-override
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [user-agent accept-language platform]}]
+ ([{:as params,
+    :keys [user-agent accept-language platform user-agent-metadata]}]
   (set-user-agent-override
    (c/get-current-connection)
    params))
  ([connection
-   {:as params, :keys [user-agent accept-language platform]}]
+   {:as params,
+    :keys [user-agent accept-language platform user-agent-metadata]}]
   (cmd/command
    connection
    "Network"
@@ -1646,7 +1935,8 @@
    params
    {:user-agent "userAgent",
     :accept-language "acceptLanguage",
-    :platform "platform"})))
+    :platform "platform",
+    :user-agent-metadata "userAgentMetadata"})))
 
 (s/fdef
  set-user-agent-override
@@ -1662,7 +1952,8 @@
     [::user-agent]
     :opt-un
     [::accept-language
-     ::platform]))
+     ::platform
+     ::user-agent-metadata]))
   :connection-and-params
   (s/cat
    :connection
@@ -1674,6 +1965,142 @@
     [::user-agent]
     :opt-un
     [::accept-language
-     ::platform])))
+     ::platform
+     ::user-agent-metadata])))
  :ret
  (s/keys))
+
+(defn
+ get-security-isolation-status
+ "Returns information about the COEP/COOP isolation status.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :frame-id | If no frameId is provided, the status of the target is provided. (optional)\n\nReturn map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :status | null"
+ ([]
+  (get-security-isolation-status
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [frame-id]}]
+  (get-security-isolation-status
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [frame-id]}]
+  (cmd/command
+   connection
+   "Network"
+   "getSecurityIsolationStatus"
+   params
+   {:frame-id "frameId"})))
+
+(s/fdef
+ get-security-isolation-status
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :opt-un
+    [::frame-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :opt-un
+    [::frame-id])))
+ :ret
+ (s/keys
+  :req-un
+  [::status]))
+
+(defn
+ enable-reporting-api
+ "Enables tracking for the Reporting API, events generated by the Reporting API will now be delivered to the client.\nEnabling triggers 'reportingApiReportAdded' for all existing reports.\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :enable | Whether to enable or disable events for the Reporting API"
+ ([]
+  (enable-reporting-api
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [enable]}]
+  (enable-reporting-api
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [enable]}]
+  (cmd/command
+   connection
+   "Network"
+   "enableReportingApi"
+   params
+   {:enable "enable"})))
+
+(s/fdef
+ enable-reporting-api
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::enable]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::enable])))
+ :ret
+ (s/keys))
+
+(defn
+ load-network-resource
+ "Fetches the resource and returns the content.\n\nParameters map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :frame-id | Frame id to get the resource for. Mandatory for frame targets, and\nshould be omitted for worker targets. (optional)\n  :url      | URL of the resource to get content for.\n  :options  | Options for the request.\n\nReturn map keys:\n\n\n  Key       | Description \n  ----------|------------ \n  :resource | null"
+ ([]
+  (load-network-resource
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [frame-id url options]}]
+  (load-network-resource
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [frame-id url options]}]
+  (cmd/command
+   connection
+   "Network"
+   "loadNetworkResource"
+   params
+   {:frame-id "frameId", :url "url", :options "options"})))
+
+(s/fdef
+ load-network-resource
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [:user/url :user/options]
+    :opt-un
+    [:user/frame-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [:user/url :user/options]
+    :opt-un
+    [:user/frame-id])))
+ :ret
+ (s/keys :req-un [:user/resource]))

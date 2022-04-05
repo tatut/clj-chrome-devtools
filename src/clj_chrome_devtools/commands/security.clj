@@ -14,7 +14,53 @@
 
 (s/def
  ::security-state
- #{"neutral" "info" "secure" "unknown" "insecure"})
+ #{"neutral" "info" "insecure-broken" "secure" "unknown" "insecure"})
+
+(s/def
+ ::certificate-security-state
+ (s/keys
+  :req-un
+  [::protocol
+   ::key-exchange
+   ::cipher
+   ::certificate
+   ::subject-name
+   ::issuer
+   ::valid-from
+   ::valid-to
+   ::certificate-has-weak-signature
+   ::certificate-has-sha1-signature
+   ::modern-ssl
+   ::obsolete-ssl-protocol
+   ::obsolete-ssl-key-exchange
+   ::obsolete-ssl-cipher
+   ::obsolete-ssl-signature]
+  :opt-un
+  [::key-exchange-group
+   ::mac
+   ::certificate-network-error]))
+
+(s/def
+ ::safety-tip-status
+ #{"badReputation" "lookalike"})
+
+(s/def
+ ::safety-tip-info
+ (s/keys
+  :req-un
+  [::safety-tip-status]
+  :opt-un
+  [::safe-url]))
+
+(s/def
+ ::visible-security-state
+ (s/keys
+  :req-un
+  [::security-state
+   ::security-state-issue-ids]
+  :opt-un
+  [::certificate-security-state
+   ::safety-tip-info]))
 
 (s/def
  ::security-state-explanation

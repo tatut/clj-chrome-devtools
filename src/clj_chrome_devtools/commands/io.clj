@@ -52,7 +52,7 @@
 
 (defn
  read
- "Read a chunk of the stream\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :handle | Handle of the stream to read.\n  :offset | Seek to the specified offset before reading (if not specificed, proceed with offset\nfollowing the last read). Some types of streams may only support sequential reads. (optional)\n  :size   | Maximum number of bytes to read (left upon the agent discretion if not specified). (optional)\n\nReturn map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :base64-encoded | Set if the data is base64-encoded (optional)\n  :data           | Data that were read.\n  :eof            | Set if the end-of-file condition occured while reading."
+ "Read a chunk of the stream\n\nParameters map keys:\n\n\n  Key     | Description \n  --------|------------ \n  :handle | Handle of the stream to read.\n  :offset | Seek to the specified offset before reading (if not specificed, proceed with offset\nfollowing the last read). Some types of streams may only support sequential reads. (optional)\n  :size   | Maximum number of bytes to read (left upon the agent discretion if not specified). (optional)\n\nReturn map keys:\n\n\n  Key             | Description \n  ----------------|------------ \n  :base64-encoded | Set if the data is base64-encoded (optional)\n  :data           | Data that were read.\n  :eof            | Set if the end-of-file condition occurred while reading."
  ([]
   (read
    (c/get-current-connection)

@@ -5,6 +5,10 @@
             [clj-chrome-devtools.impl.connection :as c]))
 
 (s/def
+ ::browser-context-id
+ string?)
+
+(s/def
  ::window-id
  integer?)
 
@@ -24,11 +28,12 @@
 
 (s/def
  ::permission-type
- #{"paymentHandler" "clipboardWrite" "notifications" "audioCapture"
-   "idleDetection" "geolocation" "wakeLockScreen" "sensors"
+ #{"clipboardReadWrite" "paymentHandler" "notifications" "audioCapture"
+   "idleDetection" "nfc" "geolocation" "wakeLockScreen" "sensors"
    "videoCapture" "accessibilityEvents" "wakeLockSystem"
-   "backgroundSync" "durableStorage" "midi" "flash" "clipboardRead"
-   "periodicBackgroundSync" "backgroundFetch" "midiSysex"
+   "backgroundSync" "displayCapture" "durableStorage" "midi"
+   "videoCapturePanTiltZoom" "flash" "periodicBackgroundSync"
+   "clipboardSanitizedWrite" "backgroundFetch" "midiSysex"
    "protectedMediaIdentifier"})
 
 (s/def
@@ -43,7 +48,12 @@
   :opt-un
   [::sysex
    ::user-visible-only
-   ::type]))
+   ::allow-without-sanitization
+   ::pan-tilt-zoom]))
+
+(s/def
+ ::browser-command-id
+ #{"closeTabSearch" "openTabSearch"})
 
 (s/def
  ::bucket
@@ -63,25 +73,25 @@
    ::buckets]))
 (defn
  set-permission
- "Set permission settings for given origin.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :origin             | Origin the permission applies to.\n  :permission         | Descriptor of permission to override.\n  :setting            | Setting of the permission.\n  :browser-context-id | Context to override. When omitted, default browser context is used. (optional)"
+ "Set permission settings for given origin.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :permission         | Descriptor of permission to override.\n  :setting            | Setting of the permission.\n  :origin             | Origin the permission applies to, all origins if not specified. (optional)\n  :browser-context-id | Context to override. When omitted, default browser context is used. (optional)"
  ([]
   (set-permission
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [origin permission setting browser-context-id]}]
+ ([{:as params, :keys [permission setting origin browser-context-id]}]
   (set-permission
    (c/get-current-connection)
    params))
  ([connection
-   {:as params, :keys [origin permission setting browser-context-id]}]
+   {:as params, :keys [permission setting origin browser-context-id]}]
   (cmd/command
    connection
    "Browser"
    "setPermission"
    params
-   {:origin "origin",
-    :permission "permission",
+   {:permission "permission",
     :setting "setting",
+    :origin "origin",
     :browser-context-id "browserContextId"})))
 
 (s/fdef
@@ -95,11 +105,11 @@
    :params
    (s/keys
     :req-un
-    [::origin
-     ::permission
+    [::permission
      ::setting]
     :opt-un
-    [::browser-context-id]))
+    [::origin
+     ::browser-context-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -108,34 +118,34 @@
    :params
    (s/keys
     :req-un
-    [::origin
-     ::permission
+    [::permission
      ::setting]
     :opt-un
-    [::browser-context-id])))
+    [::origin
+     ::browser-context-id])))
  :ret
  (s/keys))
 
 (defn
  grant-permissions
- "Grant specific permissions to the given origin and reject all others.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :origin             | null\n  :permissions        | null\n  :browser-context-id | BrowserContext to override permissions. When omitted, default browser context is used. (optional)"
+ "Grant specific permissions to the given origin and reject all others.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :permissions        | null\n  :origin             | Origin the permission applies to, all origins if not specified. (optional)\n  :browser-context-id | BrowserContext to override permissions. When omitted, default browser context is used. (optional)"
  ([]
   (grant-permissions
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [origin permissions browser-context-id]}]
+ ([{:as params, :keys [permissions origin browser-context-id]}]
   (grant-permissions
    (c/get-current-connection)
    params))
  ([connection
-   {:as params, :keys [origin permissions browser-context-id]}]
+   {:as params, :keys [permissions origin browser-context-id]}]
   (cmd/command
    connection
    "Browser"
    "grantPermissions"
    params
-   {:origin "origin",
-    :permissions "permissions",
+   {:permissions "permissions",
+    :origin "origin",
     :browser-context-id "browserContextId"})))
 
 (s/fdef
@@ -149,10 +159,10 @@
    :params
    (s/keys
     :req-un
-    [::origin
-     ::permissions]
+    [::permissions]
     :opt-un
-    [::browser-context-id]))
+    [::origin
+     ::browser-context-id]))
   :connection-and-params
   (s/cat
    :connection
@@ -161,10 +171,10 @@
    :params
    (s/keys
     :req-un
-    [::origin
-     ::permissions]
+    [::permissions]
     :opt-un
-    [::browser-context-id])))
+    [::origin
+     ::browser-context-id])))
  :ret
  (s/keys))
 
@@ -206,6 +216,110 @@
     c/connection?)
    :params
    (s/keys
+    :opt-un
+    [::browser-context-id])))
+ :ret
+ (s/keys))
+
+(defn
+ set-download-behavior
+ "Set the behavior when downloading a file.\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :behavior           | Whether to allow all or deny all download requests, or use default Chrome behavior if\navailable (otherwise deny). |allowAndName| allows download and names files according to\ntheir dowmload guids.\n  :browser-context-id | BrowserContext to set download behavior. When omitted, default browser context is used. (optional)\n  :download-path      | The default path to save downloaded files to. This is required if behavior is set to 'allow'\nor 'allowAndName'. (optional)\n  :events-enabled     | Whether to emit download events (defaults to false). (optional)"
+ ([]
+  (set-download-behavior
+   (c/get-current-connection)
+   {}))
+ ([{:as params,
+    :keys [behavior browser-context-id download-path events-enabled]}]
+  (set-download-behavior
+   (c/get-current-connection)
+   params))
+ ([connection
+   {:as params,
+    :keys [behavior browser-context-id download-path events-enabled]}]
+  (cmd/command
+   connection
+   "Browser"
+   "setDownloadBehavior"
+   params
+   {:behavior "behavior",
+    :browser-context-id "browserContextId",
+    :download-path "downloadPath",
+    :events-enabled "eventsEnabled"})))
+
+(s/fdef
+ set-download-behavior
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::behavior]
+    :opt-un
+    [::browser-context-id
+     ::download-path
+     ::events-enabled]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::behavior]
+    :opt-un
+    [::browser-context-id
+     ::download-path
+     ::events-enabled])))
+ :ret
+ (s/keys))
+
+(defn
+ cancel-download
+ "Cancel a download if in progress\n\nParameters map keys:\n\n\n  Key                 | Description \n  --------------------|------------ \n  :guid               | Global unique identifier of the download.\n  :browser-context-id | BrowserContext to perform the action in. When omitted, default browser context is used. (optional)"
+ ([]
+  (cancel-download
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [guid browser-context-id]}]
+  (cancel-download
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [guid browser-context-id]}]
+  (cmd/command
+   connection
+   "Browser"
+   "cancelDownload"
+   params
+   {:guid "guid", :browser-context-id "browserContextId"})))
+
+(s/fdef
+ cancel-download
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::guid]
+    :opt-un
+    [::browser-context-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::guid]
     :opt-un
     [::browser-context-id])))
  :ret
@@ -638,7 +752,7 @@
 
 (defn
  set-dock-tile
- "Set dock tile details, platform-specific.\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :badge-label | null (optional)\n  :image       | Png encoded image. (optional)"
+ "Set dock tile details, platform-specific.\n\nParameters map keys:\n\n\n  Key          | Description \n  -------------|------------ \n  :badge-label | null (optional)\n  :image       | Png encoded image. (Encoded as a base64 string when passed over JSON) (optional)"
  ([]
   (set-dock-tile
    (c/get-current-connection)
@@ -678,5 +792,48 @@
     :opt-un
     [::badge-label
      ::image])))
+ :ret
+ (s/keys))
+
+(defn
+ execute-browser-command
+ "Invoke custom browser commands used by telemetry.\n\nParameters map keys:\n\n\n  Key         | Description \n  ------------|------------ \n  :command-id | null"
+ ([]
+  (execute-browser-command
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [command-id]}]
+  (execute-browser-command
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [command-id]}]
+  (cmd/command
+   connection
+   "Browser"
+   "executeBrowserCommand"
+   params
+   {:command-id "commandId"})))
+
+(s/fdef
+ execute-browser-command
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::command-id]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::command-id])))
  :ret
  (s/keys))

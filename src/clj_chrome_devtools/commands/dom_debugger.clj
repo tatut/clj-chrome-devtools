@@ -9,6 +9,10 @@
  #{"attribute-modified" "subtree-modified" "node-removed"})
 
 (s/def
+ ::csp-violation-type
+ #{"trustedtype-sink-violation" "trustedtype-policy-violation"})
+
+(s/def
  ::event-listener
  (s/keys
   :req-un
@@ -249,6 +253,49 @@
    (s/keys
     :req-un
     [::url])))
+ :ret
+ (s/keys))
+
+(defn
+ set-break-on-csp-violation
+ "Sets breakpoint on particular CSP violations.\n\nParameters map keys:\n\n\n  Key              | Description \n  -----------------|------------ \n  :violation-types | CSP Violations to stop upon."
+ ([]
+  (set-break-on-csp-violation
+   (c/get-current-connection)
+   {}))
+ ([{:as params, :keys [violation-types]}]
+  (set-break-on-csp-violation
+   (c/get-current-connection)
+   params))
+ ([connection {:as params, :keys [violation-types]}]
+  (cmd/command
+   connection
+   "DOMDebugger"
+   "setBreakOnCSPViolation"
+   params
+   {:violation-types "violationTypes"})))
+
+(s/fdef
+ set-break-on-csp-violation
+ :args
+ (s/or
+  :no-args
+  (s/cat)
+  :just-params
+  (s/cat
+   :params
+   (s/keys
+    :req-un
+    [::violation-types]))
+  :connection-and-params
+  (s/cat
+   :connection
+   (s/?
+    c/connection?)
+   :params
+   (s/keys
+    :req-un
+    [::violation-types])))
  :ret
  (s/keys))
 

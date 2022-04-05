@@ -109,6 +109,7 @@
  (s/keys
   :req-un
   [::document-url
+   ::title
    ::base-url
    ::content-language
    ::encoding-name
@@ -120,7 +121,9 @@
    ::text-boxes]
   :opt-un
   [::scroll-offset-x
-   ::scroll-offset-y]))
+   ::scroll-offset-y
+   ::content-width
+   ::content-height]))
 
 (s/def
  ::node-tree-snapshot
@@ -128,6 +131,7 @@
   :opt-un
   [::parent-index
    ::node-type
+   ::shadow-root-type
    ::node-name
    ::node-value
    ::backend-node-id
@@ -152,9 +156,12 @@
    ::text
    ::stacking-contexts]
   :opt-un
-  [::offset-rects
+  [::paint-orders
+   ::offset-rects
    ::scroll-rects
-   ::client-rects]))
+   ::client-rects
+   ::blended-background-colors
+   ::text-color-opacities]))
 
 (s/def
  ::text-box-snapshot
@@ -309,23 +316,40 @@
 
 (defn
  capture-snapshot
- "Returns a document snapshot, including the full DOM tree of the root node (including iframes,\ntemplate contents, and imported documents) in a flattened array, as well as layout and\nwhite-listed computed style information for the nodes. Shadow DOM in the returned DOM tree is\nflattened.\n\nParameters map keys:\n\n\n  Key                | Description \n  -------------------|------------ \n  :computed-styles   | Whitelist of computed styles to return.\n  :include-dom-rects | Whether to include DOM rectangles (offsetRects, clientRects, scrollRects) into the snapshot (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :documents | The nodes in the DOM tree. The DOMNode at index 0 corresponds to the root document.\n  :strings   | Shared string table that all string properties refer to with indexes."
+ "Returns a document snapshot, including the full DOM tree of the root node (including iframes,\ntemplate contents, and imported documents) in a flattened array, as well as layout and\nwhite-listed computed style information for the nodes. Shadow DOM in the returned DOM tree is\nflattened.\n\nParameters map keys:\n\n\n  Key                                | Description \n  -----------------------------------|------------ \n  :computed-styles                   | Whitelist of computed styles to return.\n  :include-paint-order               | Whether to include layout object paint orders into the snapshot. (optional)\n  :include-dom-rects                 | Whether to include DOM rectangles (offsetRects, clientRects, scrollRects) into the snapshot (optional)\n  :include-blended-background-colors | Whether to include blended background colors in the snapshot (default: false).\nBlended background color is achieved by blending background colors of all elements\nthat overlap with the current element. (optional)\n  :include-text-color-opacities      | Whether to include text color opacity in the snapshot (default: false).\nAn element might have the opacity property set that affects the text color of the element.\nThe final text color opacity is computed based on the opacity of all overlapping elements. (optional)\n\nReturn map keys:\n\n\n  Key        | Description \n  -----------|------------ \n  :documents | The nodes in the DOM tree. The DOMNode at index 0 corresponds to the root document.\n  :strings   | Shared string table that all string properties refer to with indexes."
  ([]
   (capture-snapshot
    (c/get-current-connection)
    {}))
- ([{:as params, :keys [computed-styles include-dom-rects]}]
+ ([{:as params,
+    :keys
+    [computed-styles
+     include-paint-order
+     include-dom-rects
+     include-blended-background-colors
+     include-text-color-opacities]}]
   (capture-snapshot
    (c/get-current-connection)
    params))
- ([connection {:as params, :keys [computed-styles include-dom-rects]}]
+ ([connection
+   {:as params,
+    :keys
+    [computed-styles
+     include-paint-order
+     include-dom-rects
+     include-blended-background-colors
+     include-text-color-opacities]}]
   (cmd/command
    connection
    "DOMSnapshot"
    "captureSnapshot"
    params
    {:computed-styles "computedStyles",
-    :include-dom-rects "includeDOMRects"})))
+    :include-paint-order "includePaintOrder",
+    :include-dom-rects "includeDOMRects",
+    :include-blended-background-colors
+    "includeBlendedBackgroundColors",
+    :include-text-color-opacities "includeTextColorOpacities"})))
 
 (s/fdef
  capture-snapshot
@@ -340,7 +364,10 @@
     :req-un
     [::computed-styles]
     :opt-un
-    [::include-dom-rects]))
+    [::include-paint-order
+     ::include-dom-rects
+     ::include-blended-background-colors
+     ::include-text-color-opacities]))
   :connection-and-params
   (s/cat
    :connection
@@ -351,7 +378,10 @@
     :req-un
     [::computed-styles]
     :opt-un
-    [::include-dom-rects])))
+    [::include-paint-order
+     ::include-dom-rects
+     ::include-blended-background-colors
+     ::include-text-color-opacities])))
  :ret
  (s/keys
   :req-un
