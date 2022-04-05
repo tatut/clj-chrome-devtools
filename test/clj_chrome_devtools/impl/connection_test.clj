@@ -1,16 +1,12 @@
 (ns clj-chrome-devtools.impl.connection-test
-  (:require [clj-chrome-devtools.automation :refer [create-automation current-automation evaluate
-                                                    sel text-of to]]
+  (:require [clj-chrome-devtools.automation :refer [create-automation sel text-of to]]
             [clj-chrome-devtools.automation.fixture :refer [create-chrome-fixture]]
             [clj-chrome-devtools.impl.connection :as c]
             [clj-chrome-devtools.impl.util :as util]
             [clojure.java.io :as io]
             [clojure.spec.test.alpha :as stest]
-            [clojure.string :refer [join]]
-            [clojure.test :as t :refer [deftest is testing]]
-            [clojure.tools.logging :as log]
-            [clojure.tools.logging.test :as logtest :refer [logged? with-log]])
-  (:import [java.util.concurrent ExecutionException]))
+            [clojure.test :as t :refer [deftest is testing]])
+  (:import [java.util.concurrent CompletionException]))
 
 (stest/instrument)
 
@@ -41,4 +37,6 @@
         (is (= (map #(text-of auto %)
                     (sel auto "ul#thelist li"))
                '("foo" "bar" "baz"))))
-      (is (thrown-with-msg? ExecutionException #"ClosedChannelException" (to auto test-page))))))
+      (is (thrown-with-msg?
+           CompletionException #"Output closed"
+           (to auto test-page))))))
