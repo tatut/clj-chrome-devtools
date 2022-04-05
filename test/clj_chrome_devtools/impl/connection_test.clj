@@ -8,7 +8,7 @@
             [clojure.spec.test.alpha :as stest]
             [clojure.string :refer [join]]
             [clojure.test :as t :refer [deftest is testing]]
-            [taoensso.timbre :as log])
+            [clojure.tools.logging :as log])
   (:import [java.util.concurrent ExecutionException]))
 
 (stest/instrument)
