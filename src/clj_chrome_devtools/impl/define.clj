@@ -104,16 +104,14 @@
               ([~'connection {:keys [~@params] :as ~'params}]
                (let [id# (next-command-id!)
                      method# ~(str domain "." name)
-                     ch# (async/chan)
                      payload# (command-payload id# method# ~'params
-                                               ~param-names)]
-                 (connection/send-command ~'connection payload# id# #(go (>! ch# %)))
-                 (let [result# (<!! ch#)]
-                   (if-let [error# (:error result#)]
-                     (throw (ex-info (str "Error in command " method# ": " (:message error#))
-                                     {:request payload#
-                                      :error error#}))
-                     (:result result#))))))
+                                               ~param-names)
+                     result (connection/send-command ~'connection payload# id#)]
+                 (if-let [error# (:error result#)]
+                   (throw (ex-info (str "Error in command " method# ": " (:message error#))
+                                   {:request payload#
+                                    :error error#}))
+                   (:result result#)))))
             (s/fdef ~fn-name
                     :args (s/or :no-args
                                 (s/cat)

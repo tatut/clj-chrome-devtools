@@ -1,25 +1,35 @@
 (ns clj-chrome-devtools.events
   "Listening to events coming from Chrome."
-  (:require [clj-chrome-devtools.impl.connection :as connection]
-            [clojure.core.async :as async :refer [go-loop go <! >! <!! >!!]]))
+  (:require [clj-chrome-devtools.impl.connection :as connection]))
 
 (def default-wait-ms 30000)
 
 (defn listen
   "Subscribe to listen to given domain event. Both domain and event are keywords.
-  Returns a core.async channel where events can be read from."
+  Returns a 0-arity function that removes the listener when invoked."
+  ([domain event callback]
+   (listen (connection/get-current-connection) domain event callback))
+  ([connection domain event callback]
+   (connection/listen connection domain event callback)))
+
+(defn listen-once
+  "Synchronously listen for an event once, remove the listener and return the event."
   ([domain event]
-   (listen (connection/get-current-connection) domain event))
+   (listen-once (connection/get-current-connection) domain event))
   ([connection domain event]
-   (connection/listen connection domain event)))
+   (let [p (promise)
+         unlisten (listen connection domain event #(deliver p %))
+         val @p]
+     (unlisten)
+     val)))
 
 (defn unlisten
-  "Remove the listening channel from the subscribers of the specified
+  "Remove the listening callback from the subscribers of the specified
   domain event type."
-  ([domain event listening-ch]
-   (unlisten (connection/get-current-connection) domain event listening-ch))
-  ([connection domain event listening-ch]
-   (connection/unlisten connection domain event listening-ch)))
+  ([domain event callback]
+   (unlisten (connection/get-current-connection) domain event callback))
+  ([connection domain event callback]
+   (connection/unlisten connection domain event callback)))
 
 (defn wait-for-event
   "Synchronously wait for an event with specific parameters."
@@ -28,25 +38,21 @@
   ([connection domain event params]
    (wait-for-event connection domain event params default-wait-ms))
   ([connection domain event params timeout-ms]
-   (let [timeout-ch (async/timeout timeout-ms)
-         ch (listen connection domain event)
-         read! #(async/alts!! [timeout-ch ch])]
-     (try
-       (loop [[val chan] (read!)]
-         (cond
-           (= chan timeout-ch)
-           (throw (ex-info "Timeout! Specified event was not received."
-                           {:domain domain :event event :params params
-                            :timeout timeout-ms}))
-
-           (= params (select-keys (:params val) (keys params)))
-           (:params val)
-
-           :default
-           (recur (read!))))
-       (finally
-         (unlisten connection domain event ch)
-         (async/close! ch))))))
+   (wait-for-event connection domain event params timeout-ms nil))
+  ([connection domain event params timeout-ms after-attach-listener-fn]
+   (let [p (promise)
+         callback #(when (= params (select-keys (:params %) (keys params)))
+                     (deliver p (:params %)))
+         unlisten (listen connection domain event callback)
+         _ (when after-attach-listener-fn
+             (after-attach-listener-fn))
+         val (deref p timeout-ms ::timeout)]
+     (unlisten)
+     (if (= val ::timeout)
+       (throw (ex-info "Timeout! Specified event was not received."
+                       {:domain domain :event event :params params
+                        :timeout timeout-ms}))
+       val))))
 
 (defmacro with-event-wait
   "Execute body that causes some later events and wait for the event before returning.
@@ -56,22 +62,6 @@
   ([connection domain event body]
    `(with-event-wait ~connection ~domain ~event default-wait-ms ~body))
   ([connection domain event timeout-ms body]
-   `(let [con# ~connection
-          domain# ~domain
-          event# ~event
-          timeout-ms# ~timeout-ms
-          ch# (listen con# domain# event#)
-          p# (async/promise-chan)]
-      ;; Fulfill promise channel from event channel
-      (go (>! p# (<! ch#)))
-      (try
-        (let [response# ~body
-              t# (async/timeout timeout-ms#)
-              [_# chan#] (async/alts!! [t# p#])]
-          (if (= chan# t#)
-            (throw (ex-info "Timeout! Specified event was not received."
-                            {:domain domain# :event event# :timeout timeout-ms#}))
-            response#))
-        (finally
-          (unlisten con# domain# event# ch#)
-          (async/close! ch#))))))
+   `(wait-for-event ~connection ~domain ~event {} ~timeout-ms
+                    (fn []
+                      ~@body))))

@@ -7,8 +7,7 @@
             [clj-chrome-devtools.commands.network :as network]
             [clj-chrome-devtools.events :as events]
             [clj-chrome-devtools.impl.connection :as connection]
-            [taoensso.timbre :as log]
-            [clojure.core.async :as async :refer [go-loop go thread <!! <!]]
+            [clojure.tools.logging :as log]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.spec.alpha :as s])
@@ -56,11 +55,12 @@
 
 ;; Automation context wraps a low-level CDP connection with state handling
 (defrecord Automation [connection root on-close]
-  java.lang.AutoCloseable
-  (close [this]
-    (.close ^java.lang.AutoCloseable connection)
-    (when on-close
-      (on-close this))))
+  #?@(:bb []
+      :clj [java.lang.AutoCloseable
+            (close [this]
+                   (.close ^java.lang.AutoCloseable connection)
+                   (when on-close
+                     (on-close this)))]))
 
 (defn automation?
   [a]
@@ -106,14 +106,14 @@
   ([connection] (create-automation connection :ignore))
   ([connection on-close]
    (let [root-atom (atom nil)
-         ch (events/listen connection :page :frame-stopped-loading)]
-     (go-loop [v (<! ch)]
-       (when v
-         (let [root (:root (<! (thread (dom/get-document connection {}))))]
-           (log/trace "Document updated, new root: " root)
-           (reset! root-atom root))
-         (recur (<! ch))))
-     (->Automation connection root-atom on-close))))
+         unlisten (events/listen connection :page :frame-stopped-loading
+                                 (fn [_]
+                                   (let [root (:root (dom/get-document connection {}))]
+                                     (log/trace "Document updated, new root: " root)
+                                     (reset! root-atom root))))]
+     (->Automation connection root-atom
+                   #(do (unlisten)
+                        (on-close %))))))
 
 (defn start!
   "Start a new CDP connection and an automation context for it.
@@ -126,7 +126,8 @@
   "Dispose the current automation and set it to nil."
   []
   (swap! current-automation
-         (fn [^java.lang.AutoCloseable automation]
+         (fn [#?(:bb automation
+                 :clj ^java.lang.AutoCloseable automation)]
            (when automation
              (.close automation))
            nil)))
@@ -164,9 +165,7 @@
   ([{c :connection r :root} url]
    (reset! r nil)
    (page/enable c {})
-   (events/with-event-wait c :page :frame-stopped-loading
-     (page/navigate c {:url (as-string url)}))
-
+   (page/navigate c {:url (as-string url)})
    ;; Wait for root element to have been updated
    (wait :navigate nil @r)))
 
@@ -325,25 +324,18 @@
   ([{c :connection :as ctx} url-pattern interaction-fn]
    (network/enable c {})
    (page/enable c {})
-   (let [response-ch (events/listen c :network :response-received)
-         timeout-ch (async/timeout (:navigate *wait-ms*))
-         file-request
-         (go-loop [[v ch] (async/alts! [response-ch timeout-ch])]
-           (cond
-             (= ch timeout-ch)
-             nil
-
-             (->> v :params :response :url (re-find url-pattern))
-             (:params v)
-
-             :else
-             (recur (async/alts! [response-ch timeout-ch]))))]
+   (let [p (promise)
+         unlisten (events/listen c :network :response-received
+                                 (fn [v]
+                                   (when (->> v :params :response :url (re-find url-pattern))
+                                     (deliver p (:response (:params v))))))]
      (interaction-fn)
-     (let [file (<!! file-request)]
-       (events/unlisten c :network :response-received response-ch)
-       (when file
-         ;; PENDING: get-response-body does not work for downloaded files
-         (:response file))))))
+     (let [file (deref p (:element *wait-ms*) ::timeout)]
+       (unlisten)
+       (if (= file ::timeout)
+         (throw (ex-info "Timeout waiting for response"
+                         {}))
+         file)))))
 
 (defn wait-request
   "Run the given interaction-fn that causes the page to fetch some resource.

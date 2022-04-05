@@ -1,3 +1,10 @@
+## 20220405
+- Major changes under the hood
+- Add support for using with Babashka
+- Remove jetty (use JDK11 HTTP library native WebSocket)
+- Remove timbre (prefer clojure.tools.logging in libraries)
+- Remove core.async (use simpler promises and callbacks)
+
 ## 20200423
 - Avoid blocking IO in go-block (#27)
 

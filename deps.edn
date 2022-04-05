@@ -1,13 +1,14 @@
 {:deps {org.clojure/clojure    {:mvn/version "1.9.0"}
-        http-kit               {:mvn/version "2.3.0"}
-        cheshire               {:mvn/version "5.9.0"}
-        stylefruits/gniazdo    {:mvn/version "1.1.2"}
-        org.clojure/core.async {:mvn/version "0.4.500"}
-        com.taoensso/timbre    {:mvn/version "4.10.0"}}
+        cheshire/cheshire      {:mvn/version "5.10.2"}
+        org.clojure/tools.logging {:mvn/version "1.2.4"}
+        java-http-clj/java-http-clj {:mvn/version "0.4.3"}
+        }
  :paths ["src" "resources"]
  :aliases
- {:test {:extra-paths ["test"]
+ {:bb {:extra-deps {org.babashka/spec.alpha {:git/url "https://github.com/babashka/spec.alpha"
+                                             :git/sha "1a841c4cc1d4f6dab7505a98ed2d532dd9d56b78"}}}
+  :test {:extra-paths ["test"]
          ; This is a simplistic test runner but it’s sufficient for now.
-         :extra-deps {test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
-                                   :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}}
+         :extra-deps {test-runner/test-runner {:git/url "https://github.com/cognitect-labs/test-runner"
+                                               :sha "209b64504cb3bd3b99ecfec7937b358a879f55c1"}}
          :main-opts ["-m" "cognitect.test-runner"]}}}
