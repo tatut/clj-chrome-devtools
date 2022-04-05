@@ -7,7 +7,7 @@
 ;; /some/chrome-binary --remote-debugging-port=9222 --headless &
 ;;
 ;; Run with:
-;; $ bb --classpath $(cat .classpath)
+;; $ bb --classpath $(cat .classpath) bb.clj
 
 (require '[clj-chrome-devtools.core :as core]
          '[clj-chrome-devtools.automation :as auto])
