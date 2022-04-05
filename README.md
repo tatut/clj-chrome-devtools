@@ -7,6 +7,11 @@ Chrome DevTools Protocol. The protocol is based on a websocket connection betwee
 clojure and chrome. All the functions are automatically generated from the protocol
 specification JSON files.
 
+## Quick start with Babashka
+
+See [bb.clj](https://github.com/tatut/clj-chrome-devtools/blob/master/bb.clj) file for a quick
+script that can be used from [Babashka](https://babashka.org).
+
 ## Goals
 
 The goal of the project is to provide a general purpose library for using headless chrome, both in
