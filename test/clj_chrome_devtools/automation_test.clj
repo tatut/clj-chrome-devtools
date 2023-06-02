@@ -3,11 +3,12 @@
             [clj-chrome-devtools.automation.fixture :refer [create-chrome-fixture]]
             [clojure.spec.test.alpha :as stest]
             [clojure.test :as t :refer [deftest is testing]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.java.io :as io]))
 
 (stest/instrument)
 
-(defonce chrome-fixture (create-chrome-fixture))
+(defonce chrome-fixture (create-chrome-fixture {:url-to-open (str (io/resource "test-page.html"))}))
 (t/use-fixtures :each chrome-fixture)
 
 (deftest evaluate
