@@ -130,7 +130,7 @@
                (filter (comp #{"page"} :type))
                (keep :web-socket-debugger-url)
                first)
-      (throw (ex-info "No debuggable pages found"
+      (throw (ex-info "No debuggable pages found. In headless mode, Chrome requires a :url-to-open parameter in options."
                       {:pages pages}))))
 
 #_(defn make-ws-client

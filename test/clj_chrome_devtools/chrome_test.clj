@@ -8,11 +8,11 @@
 
 (stest/instrument)
 
-(defonce chrome-fixture (create-chrome-fixture))
-(t/use-fixtures :each chrome-fixture)
-
 (def test-page
   (io/resource "test-page.html"))
+
+(defonce chrome-fixture (create-chrome-fixture {:url-to-open (str test-page)}))
+(t/use-fixtures :each chrome-fixture)
 
 (deftest simple-page-load
   (to test-page)

@@ -14,7 +14,8 @@
 ;; pass the same port number to c/connect.
 (defonce port (util/random-free-port))
 
-(defonce chrome-fixture (create-chrome-fixture {:remote-debugging-port port}))
+(defonce chrome-fixture (create-chrome-fixture {:remote-debugging-port port
+                                                :url-to-open (io/resource "test-page.html")}))
 (t/use-fixtures :each chrome-fixture)
 
 (defn- make-conn

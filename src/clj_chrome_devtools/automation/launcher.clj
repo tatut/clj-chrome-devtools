@@ -45,7 +45,8 @@
                       (when (:headless? options) "--headless")
                       (when (:no-sandbox? options) "--no-sandbox")
                       "--disable-gpu"
-                      (str "--remote-debugging-port=" remote-debugging-port)])]
+                      (str "--remote-debugging-port=" remote-debugging-port)
+                      (when-let [url (:url-to-open options)] (str url))])]
     (.exec (Runtime/getRuntime)
            ^"[Ljava.lang.String;" (into-array String args))))
 
