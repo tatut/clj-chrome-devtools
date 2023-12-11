@@ -64,4 +64,4 @@
   ([connection domain event timeout-ms body]
    `(wait-for-event ~connection ~domain ~event {} ~timeout-ms
                     (fn []
-                      ~@body))))
+                      ~body))))
