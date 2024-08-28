@@ -40,13 +40,14 @@
   (log/trace "Launching Chrome headless, binary: " binary-path
              ", remote debugging port: " remote-debugging-port
              ", options: " (pr-str options))
-  (let [args (remove nil?
-                     [binary-path
-                      (when (:headless? options) "--headless")
-                      (when (:no-sandbox? options) "--no-sandbox")
-                      "--disable-gpu"
-                      (str "--remote-debugging-port=" remote-debugging-port)
-                      (when-let [url (:url-to-open options)] (str url))])]
+  (let [args (->> [binary-path
+                   (when (:headless? options) "--headless")
+                   (when (:no-sandbox? options) "--no-sandbox")
+                   (when-not (:enable-gpu? options) "--disable-gpu")
+                   (str "--remote-debugging-port=" remote-debugging-port)
+                   (:args options)]
+                  flatten
+                  (remove nil?))]
     (.exec (Runtime/getRuntime)
            ^"[Ljava.lang.String;" (into-array String args))))
 
